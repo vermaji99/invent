@@ -1,0 +1,140 @@
+.orders-container {
+  padding: 20px;
+  color: var(--text-primary);
+}
+
+.orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.orders-header h2 {
+  color: var(--gold-primary);
+}
+
+.orders-filters {
+  display: flex;
+  gap: 15px;
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border-color);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+}
+
+.filter-group select, .filter-group input {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 5px 10px;
+  flex: 1;
+  max-width: 300px;
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  padding: 5px;
+  width: 100%;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.search-icon {
+    color: var(--text-secondary);
+}
+
+.orders-table-container {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th, .orders-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.orders-table th {
+  background-color: var(--bg-tertiary);
+  font-weight: 600;
+  color: var(--gold-primary);
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-pending { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); }
+.status-partially_paid { background-color: rgba(59, 130, 246, 0.1); color: var(--info); border: 1px solid var(--info); }
+.status-ready { background-color: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); }
+.status-delivered { background-color: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+.status-cancelled { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+
+.payment-unpaid { color: var(--danger); }
+.payment-advance_paid { color: var(--warning); }
+.payment-full_paid { color: var(--success); }
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.action-btn:hover {
+  color: var(--gold-primary);
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--gold-primary);
+  color: var(--bg-primary);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.add-btn:hover {
+  background-color: var(--gold-dark);
+}

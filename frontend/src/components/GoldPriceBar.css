@@ -1,0 +1,144 @@
+.gold-price-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-bottom: 2px solid var(--gold-primary);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
+}
+
+.gold-price-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.price-group {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+}
+
+.price-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.price-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.price-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--gold-primary);
+}
+
+.price-change {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.price-change.positive {
+  color: var(--success);
+}
+
+.price-change.negative {
+  color: var(--danger);
+}
+
+.price-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.last-updated {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.refresh-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--gold-primary);
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media print {
+  .gold-price-bar {
+    display: none !important;
+  }
+}
+
+
+.refresh-btn:hover {
+  background: var(--gold-primary);
+  color: var(--bg-primary);
+}
+
+.gold-price-loading {
+  color: var(--text-muted);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .gold-price-bar {
+    padding: 0 1rem;
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .gold-price-content {
+    justify-content: flex-start;
+    gap: 1.5rem;
+  }
+
+  .price-group {
+    gap: 1.5rem;
+  }
+
+  .price-item {
+    min-width: fit-content;
+  }
+
+  .price-label {
+    font-size: 0.65rem;
+  }
+
+  .price-value {
+    font-size: 1rem;
+  }
+
+  .price-change {
+    font-size: 0.65rem;
+  }
+
+  .last-updated {
+    display: none; /* Hide last updated on mobile to save space */
+  }
+  
+  .price-meta {
+    margin-left: auto; /* Push refresh button to right if possible, or just let it flow */
+  }
+}

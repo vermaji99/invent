@@ -1,0 +1,28 @@
+# Root ignores
+mongodb_data/
+*.log
+*.tmp
+.DS_Store
+
+# Env files
+.env*
+backend/.env*
+frontend/.env*
+
+# Node modules and build artifacts
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+build/
+dist/
+
+# Coverage and cache
+coverage/
+.cache/
+
+# Local databases/backups
+*.wt
+WiredTiger*
+_mdb_catalog.wt
+storage.bson
+mongod.lock

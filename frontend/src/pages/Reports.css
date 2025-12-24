@@ -1,0 +1,232 @@
+.reports-page {
+  padding: 2rem;
+}
+
+.report-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .reports-page {
+    padding: 1rem;
+  }
+
+  .report-card {
+    padding: 1rem;
+  }
+
+  .pl-summary, .stock-summary, .aging-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+.report-card h2 {
+  color: var(--gold-primary);
+  margin-bottom: 1.5rem;
+}
+
+.pl-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.pl-item {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.pl-item span:first-child {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.pl-item span:last-child {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--gold-primary);
+}
+
+.pl-item.pl-profit {
+  border: 2px solid var(--gold-primary);
+}
+
+.stock-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stock-item {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.stock-item span:first-child {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.stock-item span:last-child {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--gold-primary);
+}
+
+.aging-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.aging-group {
+  padding: 1.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.aging-group h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.aging-group p {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--gold-primary);
+  margin-bottom: 0.5rem;
+}
+
+.aging-group span {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.reports-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  border-color: var(--gold-primary);
+}
+
+.aging-amount {
+  font-size: 1.5rem !important;
+  font-weight: bold;
+  color: var(--gold-primary) !important;
+}
+
+.aging-amount.aging-critical {
+  color: var(--danger) !important;
+}
+
+.aging-details {
+  margin-top: 2rem;
+}
+
+.aging-table-section {
+  margin-top: 1.5rem;
+}
+
+.aging-table-section h3 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.aging-table-section table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.aging-table-section th {
+  background: var(--bg-primary);
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.aging-table-section td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.aging-table-section tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+.aging-table-section td.critical {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-primary);
+  border-color: var(--gold-primary);
+}
+

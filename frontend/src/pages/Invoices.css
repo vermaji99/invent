@@ -1,0 +1,481 @@
+.invoices-page {
+  padding: 2rem;
+}
+
+.invoices-table {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.invoices-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invoices-table thead {
+  background: var(--bg-tertiary);
+}
+
+.invoices-table th {
+  padding: 1rem;
+  text-align: left;
+  color: var(--text-primary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.invoices-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.invoices-table tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.paid {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success);
+}
+
+.status-badge.partial {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+
+.status-badge.pending {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+}
+
+.due {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-right: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+  color: var(--gold-primary);
+}
+
+.invoices-table-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .invoices-page {
+    padding: 1rem;
+  }
+  
+  .invoices-table th, 
+  .invoices-table td {
+    padding: 0.75rem;
+    white-space: nowrap;
+  }
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.invoice-number {
+  font-weight: 600;
+  color: var(--gold-primary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Invoice View Modal */
+.invoice-view-modal {
+  max-width: 900px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.invoice-details {
+  padding: 1rem 0;
+}
+
+.invoice-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.shop-name {
+  font-size: 2rem;
+  color: var(--gold-primary);
+  margin: 0;
+}
+
+.invoice-label {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin: 0.5rem 0 0 0;
+}
+
+.invoice-meta {
+  text-align: right;
+}
+
+.invoice-meta p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+}
+
+.invoice-customer-section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.invoice-customer-section h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.invoice-customer-section p {
+  margin: 0.25rem 0;
+  color: var(--text-secondary);
+}
+
+.invoice-items-section {
+  margin-bottom: 2rem;
+  overflow-x: auto;
+}
+
+.invoice-items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invoice-items-table th {
+  background: var(--bg-tertiary);
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.invoice-items-table td {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.invoice-totals-section {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--border-color);
+}
+
+.totals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.total-row.total-final {
+  border-top: 2px solid var(--gold-primary);
+  border-bottom: 2px solid var(--gold-primary);
+  padding: 1rem 0;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--gold-primary);
+}
+
+.total-row.due-row {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.payment-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.payment-info p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+}
+
+.payment-breakdown {
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+}
+
+.gold-rate-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.gold-rate-info p {
+  margin: 0.25rem 0;
+  color: var(--text-secondary);
+}
+
+.invoice-notes {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.invoice-payment-action {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--border-color);
+}
+
+.btn-add-payment {
+  width: 100%;
+  padding: 1rem;
+  background: var(--success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.btn-add-payment:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+/* Print Invoice View */
+.invoice-print-view {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  color: black;
+}
+
+.print-invoice-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #000;
+  padding-bottom: 1rem;
+}
+
+.print-invoice-header h1 {
+  font-size: 2rem;
+  margin: 0;
+  color: #000;
+}
+
+.print-invoice-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.print-invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.print-invoice-table th,
+.print-invoice-table td {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.print-invoice-table th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+.print-invoice-totals {
+  text-align: right;
+  margin-top: 1rem;
+}
+
+.print-invoice-totals p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+
+.print-invoice-totals .total {
+  font-size: 1.25rem;
+  font-weight: bold;
+  border-top: 2px solid #000;
+  padding-top: 0.5rem;
+  margin-top: 1rem;
+}
+
+.cart-total-row {
+  background: rgba(212, 175, 55, 0.1);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--gold-primary);
+}
+
+.print-payment-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.print-payment-details p {
+  margin: 0.5rem 0;
+}
+
+@media print {
+  .invoices-page > *:not(.invoice-print-view) {
+    display: none !important;
+  }
+  
+  .invoice-print-view {
+    display: block !important;
+  }
+  
+  .modal-overlay,
+  .modal-content {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .invoices-table {
+    overflow-x: auto;
+  }
+  
+  .invoice-view-modal {
+    width: 98%;
+  }
+  
+  .totals-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .invoice-header-section {
+    flex-direction: column;
+  }
+  
+  .invoice-meta {
+    text-align: left;
+    margin-top: 1rem;
+  }
+}
+
+.btn-payment {
+  color: var(--success) !important;
+}
+
+.btn-payment:hover {
+  color: var(--success) !important;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.payment-modal {
+  max-width: 500px;
+  width: 95%;
+}
+
+.payment-modal-content {
+  padding: 1rem 0;
+}
+
+.invoice-payment-info {
+  background: var(--bg-tertiary);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.invoice-payment-info p {
+  margin: 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.invoice-payment-info .due-amount {
+  color: var(--warning);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.payment-preview {
+  background: var(--bg-tertiary);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border-left: 4px solid var(--gold-primary);
+}
+
+.payment-preview p {
+  margin: 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.payment-preview .will-clear {
+  color: var(--success);
+  font-weight: 600;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
