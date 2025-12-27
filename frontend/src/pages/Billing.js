@@ -133,7 +133,12 @@ const Billing = () => {
       return;
     }
 
-    let filtered = products.filter(p => p.quantity > 0);
+    let filtered = products.filter(p => {
+      if (p.isWeightManaged) {
+        return (p.availableWeight || 0) > 0;
+      }
+      return (p.quantity || 0) > 0;
+    });
     
     if (productSearch) {
       const searchLower = productSearch.toLowerCase();
@@ -226,14 +231,14 @@ const Billing = () => {
       sku: product.sku || 'N/A',
       category: product.category,
       quantity: 1,
-      weight: product.netWeight || 0,
+      weight: product.isWeightManaged ? 0 : (product.netWeight || 0),
       rate: product.sellingPrice || 0,
       makingCharge: 0,
       wastage: 0,
       gst: 0,
       discount: 0,
       oldGoldAdjustment: 0,
-      subtotal: (product.sellingPrice || 0) * (product.netWeight || 0)
+      subtotal: (product.sellingPrice || 0) * (product.isWeightManaged ? 0 : (product.netWeight || 0))
     };
     setCart([...cart, cartItem]);
     setProductSearch('');
@@ -515,7 +520,9 @@ const Billing = () => {
                     <div key={product._id} className="product-item" onClick={() => handleAddToCart(product)}>
                       <div>
                         <strong>{product.name}</strong>
-                        <p>{product.sku} | {product.category} | {product.netWeight}g</p>
+                        <p>
+                          {product.sku} | {product.category} | {product.isWeightManaged ? `${product.availableWeight}g avail` : `${product.netWeight}g`}
+                        </p>
                       </div>
                       <div className="product-price">{formatCurrency(product.sellingPrice)}</div>
                     </div>

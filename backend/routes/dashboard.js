@@ -328,57 +328,105 @@ router.get('/stats', auth, async (req, res) => {
 
     // Stock net weight totals by category (netWeight * quantity)
     const stockWeightsAgg = await Product.aggregate([
-      { $match: { isActive: true, quantity: { $gt: 0 } } },
+      { $match: { isActive: true, $or: [ { quantity: { $gt: 0 } }, { availableWeight: { $gt: 0 } } ] } },
       {
         $group: {
           _id: '$category',
-          totalNetWeight: { $sum: { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] } }
+          totalNetWeight: { 
+            $sum: { 
+              $cond: [
+                { $eq: ['$isWeightManaged', true] },
+                { $ifNull: ['$availableWeight', 0] },
+                { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] }
+              ]
+            } 
+          }
         }
       }
     ]);
     const stockWeightsByCategory = stockWeightsAgg.map(x => ({ category: x._id, totalNetWeight: x.totalNetWeight }));
     const goldAgg = await Product.aggregate([
-      { $match: { isActive: true, quantity: { $gt: 0 }, category: 'Gold' } },
+      { $match: { isActive: true, category: 'Gold', $or: [ { quantity: { $gt: 0 } }, { availableWeight: { $gt: 0 } } ] } },
       {
         $group: {
           _id: null,
-          totalNetWeight: { $sum: { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] } }
+          totalNetWeight: { 
+            $sum: { 
+              $cond: [
+                { $eq: ['$isWeightManaged', true] },
+                { $ifNull: ['$availableWeight', 0] },
+                { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] }
+              ]
+            } 
+          }
         }
       }
     ]);
     const silverAgg = await Product.aggregate([
-      { $match: { isActive: true, quantity: { $gt: 0 }, category: 'Silver' } },
+      { $match: { isActive: true, category: 'Silver', $or: [ { quantity: { $gt: 0 } }, { availableWeight: { $gt: 0 } } ] } },
       {
         $group: {
           _id: null,
-          totalNetWeight: { $sum: { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] } }
+          totalNetWeight: { 
+            $sum: { 
+              $cond: [
+                { $eq: ['$isWeightManaged', true] },
+                { $ifNull: ['$availableWeight', 0] },
+                { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] }
+              ]
+            } 
+          }
         }
       }
     ]);
     const diamondAgg = await Product.aggregate([
-      { $match: { isActive: true, quantity: { $gt: 0 }, category: 'Diamond' } },
+      { $match: { isActive: true, category: 'Diamond', $or: [ { quantity: { $gt: 0 } }, { availableWeight: { $gt: 0 } } ] } },
       {
         $group: {
           _id: null,
-          totalNetWeight: { $sum: { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] } }
+          totalNetWeight: { 
+            $sum: { 
+              $cond: [
+                { $eq: ['$isWeightManaged', true] },
+                { $ifNull: ['$availableWeight', 0] },
+                { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] }
+              ]
+            } 
+          }
         }
       }
     ]);
     const platinumAgg = await Product.aggregate([
-      { $match: { isActive: true, quantity: { $gt: 0 }, category: 'Platinum' } },
+      { $match: { isActive: true, category: 'Platinum', $or: [ { quantity: { $gt: 0 } }, { availableWeight: { $gt: 0 } } ] } },
       {
         $group: {
           _id: null,
-          totalNetWeight: { $sum: { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] } }
+          totalNetWeight: { 
+            $sum: { 
+              $cond: [
+                { $eq: ['$isWeightManaged', true] },
+                { $ifNull: ['$availableWeight', 0] },
+                { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] }
+              ]
+            } 
+          }
         }
       }
     ]);
     const otherAgg = await Product.aggregate([
-      { $match: { isActive: true, quantity: { $gt: 0 }, category: 'Other' } },
+      { $match: { isActive: true, category: 'Other', $or: [ { quantity: { $gt: 0 } }, { availableWeight: { $gt: 0 } } ] } },
       {
         $group: {
           _id: null,
-          totalNetWeight: { $sum: { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] } }
+          totalNetWeight: { 
+            $sum: { 
+              $cond: [
+                { $eq: ['$isWeightManaged', true] },
+                { $ifNull: ['$availableWeight', 0] },
+                { $multiply: [{ $ifNull: ['$netWeight', 0] }, { $ifNull: ['$quantity', 0] }] }
+              ]
+            } 
+          }
         }
       }
     ]);

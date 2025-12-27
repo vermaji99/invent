@@ -11,6 +11,11 @@ let liveMetalsCache = {
   timestamp: 0
 };
 const LIVE_METALS_TTL_MS = 60 * 1000; // 1 minute
+let metalsLiveCache = {
+  data: null,
+  timestamp: 0
+};
+const METALS_LIVE_TTL_MS = 6 * 60 * 60 * 1000;
 
 // @route   GET /api/gold-price
 // @desc    Get latest saved gold price (used for billing / INR rates)
@@ -152,12 +157,24 @@ router.get('/live', async (req, res) => {
       };
     }
 
+    // Convert spot metals to INR/g if FX available
+    let metalsInINR = null;
+    if (usdPerInr) {
+      const inrPerUsd = 1 / usdPerInr;
+      metalsInINR = {
+        gold: (metals.gold ?? null) != null ? metals.gold * inrPerUsd : null,
+        silver: (metals.silver ?? null) != null ? metals.silver * inrPerUsd : null,
+        platinum: (metals.platinum ?? null) != null ? metals.platinum * inrPerUsd : null,
+        palladium: (metals.palladium ?? null) != null ? metals.palladium * inrPerUsd : null
+      };
+    }
+
     const payload = {
       status: data.status || 'success',
-      currency: data.currency || 'USD',
+      currency: metalsInINR ? 'INR' : (data.currency || 'USD'),
       unit: data.unit || 'g',
       timestamp: data.timestamps?.metal || Date.now(),
-      metals: {
+      metals: metalsInINR || {
         gold: metals.gold ?? null,
         silver: metals.silver ?? null,
         platinum: metals.platinum ?? null,

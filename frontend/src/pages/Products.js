@@ -11,10 +11,21 @@ const Products = () => {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [huidFilter, setHuidFilter] = useState('');
+  const [weightFilter, setWeightFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showWeightModal, setShowWeightModal] = useState(false);
+  const [weightFormData, setWeightFormData] = useState({
+    name: '',
+    category: 'Gold',
+    sku: '',
+    purity: '22K',
+    totalWeight: '',
+    purchasePrice: '',
+    sellingPrice: ''
+  });
   
   // Image states
   const [imageFiles, setImageFiles] = useState([]);
@@ -36,7 +47,7 @@ const Products = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [category, search, huidFilter]);
+  }, [category, search, huidFilter, weightFilter]);
 
   const fetchProducts = async () => {
     try {
@@ -46,12 +57,46 @@ const Products = () => {
       if (huidFilter) {
         params.huidEnabled = huidFilter === 'enabled' ? 'true' : (huidFilter === 'disabled' ? 'false' : '');
       }
+      if (weightFilter) {
+        params.weightManaged = weightFilter === 'weight' ? 'true' : (weightFilter === 'qty' ? 'false' : '');
+      }
       const response = await api.get('/api/products', { params });
       setProducts(response.data);
     } catch (error) {
       toast.error('Failed to load products');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWeightSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        name: weightFormData.name,
+        category: weightFormData.category,
+        sku: weightFormData.sku,
+        purity: weightFormData.purity,
+        totalWeight: parseFloat(weightFormData.totalWeight) || 0,
+        purchasePrice: parseFloat(weightFormData.purchasePrice) || 0,
+        sellingPrice: parseFloat(weightFormData.sellingPrice) || 0
+      };
+      const res = await api.post('/api/products/weight-managed', payload);
+      toast.success('Weight-based stock updated');
+      setShowWeightModal(false);
+      setWeightFormData({
+        name: '',
+        category: 'Gold',
+        sku: '',
+        purity: '22K',
+        totalWeight: '',
+        purchasePrice: '',
+        sellingPrice: ''
+      });
+      fetchProducts();
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Failed to add weight-based product';
+      toast.error(msg);
     }
   };
 
@@ -207,6 +252,12 @@ const Products = () => {
           </button>
           <button 
             className="btn-primary" 
+            onClick={() => setShowWeightModal(true)}
+          >
+            <FiPlus /> Bulk Add by Weight
+          </button>
+          <button 
+            className="btn-primary" 
             onClick={() => setShowPrintModal(true)} 
             disabled={selectedIds.length === 0}
             style={{ opacity: selectedIds.length === 0 ? 0.6 : 1 }}
@@ -239,6 +290,11 @@ const Products = () => {
           <option value="">All Stock</option>
           <option value="enabled">HUID Enabled</option>
           <option value="disabled">Non-HUID Stock</option>
+        </select>
+        <select value={weightFilter} onChange={(e) => setWeightFilter(e.target.value)}>
+          <option value="">All Types</option>
+          <option value="weight">Weight-managed</option>
+          <option value="qty">Quantity-based</option>
         </select>
       </div>
 
@@ -303,13 +359,19 @@ const Products = () => {
                   <span className="meta-label">Weight</span>
                   <span className="meta-value">{product.netWeight}g</span>
                 </div>
+                {product.isWeightManaged && (
+                  <div className="meta-item">
+                    <span className="meta-label">Available Weight</span>
+                    <span className="meta-value">{product.availableWeight}g</span>
+                  </div>
+                )}
                 <div className="meta-item">
                   <span className="meta-label">Purity</span>
                   <span className="meta-value">{product.purity}</span>
                 </div>
                 <div className="meta-item">
                   <span className="meta-label">Stock</span>
-                  <span className={`meta-value ${product.quantity <= product.lowStockAlert ? 'low-stock' : ''}`}>{product.quantity}</span>
+                  <span className={`meta-value ${product.quantity <= product.lowStockAlert ? 'low-stock' : ''}`}>{product.isWeightManaged ? 'N/A' : product.quantity}</span>
                 </div>
                 <div className="meta-item">
                   <span className="meta-label">Price</span>
@@ -492,6 +554,101 @@ const Products = () => {
                 </button>
                 <button type="submit" className="btn-primary">
                   {editingProduct ? 'Update Product' : 'Create Product'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showWeightModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Bulk Add by Weight</h2>
+            <form onSubmit={handleWeightSubmit}>
+              <div className="form-group">
+                <label>Product Name</label>
+                <input
+                  type="text"
+                  value={weightFormData.name}
+                  onChange={(e) => setWeightFormData({ ...weightFormData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Category</label>
+                  <select
+                    value={weightFormData.category}
+                    onChange={(e) => setWeightFormData({ ...weightFormData, category: e.target.value })}
+                  >
+                    <option value="Gold">Gold</option>
+                    <option value="Silver">Silver</option>
+                    <option value="Diamond">Diamond</option>
+                    <option value="Platinum">Platinum</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>SKU</label>
+                  <input
+                    type="text"
+                    value={weightFormData.sku}
+                    onChange={(e) => setWeightFormData({ ...weightFormData, sku: e.target.value })}
+                    placeholder="Auto if empty"
+                  />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Purity</label>
+                  <select
+                    value={weightFormData.purity}
+                    onChange={(e) => setWeightFormData({ ...weightFormData, purity: e.target.value })}
+                  >
+                    <option value="24K">24K</option>
+                    <option value="22K">22K</option>
+                    <option value="18K">18K</option>
+                    <option value="14K">14K</option>
+                    <option value="Silver 925">Silver 925</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Total Weight (g)</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    value={weightFormData.totalWeight}
+                    onChange={(e) => setWeightFormData({ ...weightFormData, totalWeight: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Purchase Price</label>
+                  <input
+                    type="number"
+                    value={weightFormData.purchasePrice}
+                    onChange={(e) => setWeightFormData({ ...weightFormData, purchasePrice: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Selling Price</label>
+                  <input
+                    type="number"
+                    value={weightFormData.sellingPrice}
+                    onChange={(e) => setWeightFormData({ ...weightFormData, sellingPrice: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={() => setShowWeightModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Save
                 </button>
               </div>
             </form>

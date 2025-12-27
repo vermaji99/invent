@@ -12,13 +12,7 @@ const GoldPriceBar = () => {
   useEffect(() => {
     fetchGoldPrice();
     fetchLiveMetals();
-
-    const interval = setInterval(() => {
-      fetchGoldPrice();
-      fetchLiveMetals();
-    }, 60000); // Update every minute
-
-    return () => clearInterval(interval);
+    // Quota-safe: no frequent auto-refresh. Users can click manual refresh.
   }, []);
 
   const fetchGoldPrice = async () => {
@@ -44,16 +38,13 @@ const GoldPriceBar = () => {
   const fetchLiveMetals = async () => {
     try {
       setLiveError(null);
-      const frontendApiKey = process.env.REACT_APP_METALS_DEV_API_KEY;
-      const url = frontendApiKey
-        ? `/api/gold-price/live?api_key=${frontendApiKey}`
-        : '/api/gold-price/live';
-
-      const response = await api.get(url);
+      if (!navigator.onLine) {
+        return;
+      }
+      const response = await api.get('/api/metals/live');
       setLiveMetals(response.data);
     } catch (error) {
-      console.error('Error fetching live metal prices:', error);
-      setLiveError('Live feed unavailable');
+      // Silent fallback: don't surface error to UI
     }
   };
 
@@ -106,11 +97,11 @@ const GoldPriceBar = () => {
 
   // Prefer live INR rates (derived from spot price) if available, otherwise fall back to saved DB rates
   const effective24K =
-    liveMetals?.inrRates?.rate24K ?? goldPrice.rate24K;
+    liveMetals?.gold_rates?.['24k'] ?? goldPrice.rate24K;
   const effective22K =
-    liveMetals?.inrRates?.rate22K ?? goldPrice.rate22K;
+    liveMetals?.gold_rates?.['22k'] ?? goldPrice.rate22K;
   const effective18K =
-    liveMetals?.inrRates?.rate18K ?? goldPrice.rate18K;
+    liveMetals?.gold_rates?.['18k'] ?? goldPrice.rate18K;
 
   // Prefer live metals timestamp for "Updated" label if available
   const updatedTimestamp = liveMetals?.timestamp
@@ -149,54 +140,52 @@ const GoldPriceBar = () => {
           </button>
         </div>
 
-        {liveMetals && (
+        {liveMetals?.source === 'live' && (
           <div className="live-metals">
             <div className="live-metals-header">
               <span>Live Spot Prices</span>
               <span className="live-metals-unit">
-                {liveMetals.currency} / {liveMetals.unit?.toUpperCase?.() || 'TOZ'}
+                {liveMetals.currency} / {liveMetals.unit?.toUpperCase?.() || 'G'}
               </span>
             </div>
             <div className="live-metals-grid">
-              <div className="live-metal-item">
-                <span className="live-metal-label">Gold</span>
-                <span className="live-metal-value">
-                  {formatNumber(liveMetals.metals?.gold)}
-                </span>
-              </div>
-              <div className="live-metal-item">
-                <span className="live-metal-label">Silver</span>
-                <span className="live-metal-value">
-                  {formatNumber(liveMetals.metals?.silver)}
-                </span>
-              </div>
-              <div className="live-metal-item">
-                <span className="live-metal-label">Platinum</span>
-                <span className="live-metal-value">
-                  {formatNumber(liveMetals.metals?.platinum)}
-                </span>
-              </div>
-              <div className="live-metal-item">
-                <span className="live-metal-label">Palladium</span>
-                <span className="live-metal-value">
-                  {formatNumber(liveMetals.metals?.palladium)}
-                </span>
-              </div>
-            </div>
-            <span className="live-metals-timestamp">
-              Live as of:{' '}
-              {formatTime(
-                liveMetals.timestamp
-                  ? new Date(liveMetals.timestamp)
-                  : new Date()
+              {liveMetals.spot?.gold != null && (
+                <div className="live-metal-item">
+                  <span className="live-metal-label">Gold</span>
+                  <span className="live-metal-value">
+                    {formatNumber(liveMetals.spot.gold)}
+                  </span>
+                </div>
               )}
-            </span>
+              {liveMetals.spot?.silver != null && (
+                <div className="live-metal-item">
+                  <span className="live-metal-label">Silver</span>
+                  <span className="live-metal-value">
+                    {formatNumber(liveMetals.spot.silver)}
+                  </span>
+                </div>
+              )}
+              {liveMetals.spot?.platinum != null && (
+                <div className="live-metal-item">
+                  <span className="live-metal-label">Platinum</span>
+                  <span className="live-metal-value">
+                    {formatNumber(liveMetals.spot.platinum)}
+                  </span>
+                </div>
+              )}
+              {liveMetals.spot?.palladium != null && (
+                <div className="live-metal-item">
+                  <span className="live-metal-label">Palladium</span>
+                  <span className="live-metal-value">
+                    {formatNumber(liveMetals.spot.palladium)}
+                  </span>
+                </div>
+              )}
+            </div>
+            <span className="live-metals-timestamp">Live</span>
           </div>
         )}
 
-        {liveError && !liveMetals && (
-          <div className="live-metals-error">{liveError}</div>
-        )}
       </div>
     </div>
   );

@@ -100,6 +100,59 @@
   color: var(--text-muted);
 }
 
+/* Live metals row */
+.live-metals {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: 2rem;
+}
+
+.live-metals-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.live-metals-unit {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.live-metals-grid {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.live-metal-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.live-metal-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.live-metal-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.live-metals-timestamp {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-primary);
+  border: 1px solid var(--gold-primary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
 /* Responsive Styles */
 @media (max-width: 768px) {
   .gold-price-bar {
@@ -140,5 +193,9 @@
   
   .price-meta {
     margin-left: auto; /* Push refresh button to right if possible, or just let it flow */
+  }
+  
+  .live-metals {
+    margin-left: 1rem;
   }
 }

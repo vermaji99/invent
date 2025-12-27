@@ -33,8 +33,10 @@ app.use('/api/suppliers', require('./routes/suppliers'));
 app.use('/api/purchases', require('./routes/purchases'));
 app.use('/api/old-gold', require('./routes/oldGold'));
 app.use('/api/gold-price', require('./routes/goldPrice'));
+app.use('/api/metals', require('./routes/metals'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/sub-categories', require('./routes/subCategories'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/orders', require('./routes/orders'));
@@ -54,4 +56,3 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log('Routes loaded: /api/orders, /api/upload, /api/gold-price and more...');
 });
-

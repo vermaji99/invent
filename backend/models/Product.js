@@ -109,6 +109,14 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 5
   },
+  isWeightManaged: {
+    type: Boolean,
+    default: false
+  },
+  availableWeight: {
+    type: Number,
+    default: 0
+  },
   barcodeBase64: {
     type: String
   }

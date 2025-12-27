@@ -122,11 +122,37 @@ router.post('/', [
       totalGST += item.gst || 0;
 
       // Update product stock
-      if (product.quantity < item.quantity) {
-        return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
+      if (product.isWeightManaged) {
+        const wt = Number(item.weight || 0);
+        if (wt <= 0) {
+          return res.status(400).json({ message: `Weight required for ${product.name}` });
+        }
+        if ((product.availableWeight || 0) < wt) {
+          return res.status(400).json({ message: `Insufficient weight for ${product.name}` });
+        }
+        product.availableWeight = (product.availableWeight || 0) - wt;
+        product.history = product.history || [];
+        product.history.push({
+          type: 'SOLD',
+          date: new Date(),
+          reference: { model: 'Invoice', id: null },
+          details: { quantity: item.quantity, weight: wt, rate: item.rate }
+        });
+        await product.save();
+      } else {
+        if (product.quantity < item.quantity) {
+          return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
+        }
+        product.quantity -= item.quantity;
+        product.history = product.history || [];
+        product.history.push({
+          type: 'SOLD',
+          date: new Date(),
+          reference: { model: 'Invoice', id: null },
+          details: { quantity: item.quantity, weight: item.weight, rate: item.rate }
+        });
+        await product.save();
       }
-      product.quantity -= item.quantity;
-      await product.save();
     }
 
     // Process Exchange
@@ -358,7 +384,25 @@ router.put('/:id', auth, async (req, res) => {
       .populate('customer')
       .populate('items.product');
 
-    res.json(populatedInvoice);
+    for (const item of populatedInvoice.items) {
+      try {
+        const prod = await Product.findById(item.product._id);
+        if (!prod) continue;
+        if (prod.isWeightManaged) {
+          await Transaction.create({
+            type: 'CREDIT',
+            category: 'SALES',
+            amount: item.subtotal,
+            paymentMode: paymentMode || 'Cash',
+            description: `Sold by weight: ${prod.name}`,
+            reference: { model: 'Invoice', id: invoice._id },
+            performedBy: req.user.id
+          });
+        }
+      } catch (e) {}
+    }
+
+    res.status(201).json(populatedInvoice);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

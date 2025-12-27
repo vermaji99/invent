@@ -27,7 +27,7 @@ const upload = multer({ storage: storage });
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const { category, search, lowStock, huidEnabled } = req.query;
+    const { category, search, lowStock, huidEnabled, weightManaged } = req.query;
     let query = { isActive: true };
 
     if (category) {
@@ -54,6 +54,12 @@ router.get('/', auth, async (req, res) => {
         { huid: null },
         { huid: '' }
       ];
+    }
+
+    if (weightManaged === 'true') {
+      query.isWeightManaged = true;
+    } else if (weightManaged === 'false') {
+      query.isWeightManaged = { $in: [false, null] };
     }
 
     const products = await Product.find(query)
@@ -122,6 +128,78 @@ router.post('/qr-codes', auth, async (req, res) => {
       });
     }
     res.json({ items });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/products/weight-managed
+// @desc    Create or update a weight-managed product by SKU
+// @access  Private
+router.post('/weight-managed', [
+  auth,
+  body('name').trim().notEmpty().withMessage('Product name is required'),
+  body('category').isIn(['Gold', 'Silver', 'Diamond', 'Platinum', 'Other']).withMessage('Invalid category'),
+  body('purity').notEmpty().withMessage('Purity is required'),
+  body('totalWeight').isFloat({ min: 0.0001 }).withMessage('Total weight must be positive'),
+  body('purchasePrice').optional().isFloat({ min: 0 }),
+  body('sellingPrice').optional().isFloat({ min: 0 }),
+  body('sku').optional().isString()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { name, category, purity, totalWeight, purchasePrice, sellingPrice } = req.body;
+    let { sku } = req.body;
+
+    if (!sku) {
+      const count = await Product.countDocuments();
+      const prefix = category.substring(0, 3).toUpperCase();
+      sku = `${prefix}-${(count + 1).toString().padStart(6, '0')}`;
+    }
+
+    let product = await Product.findOne({ sku, isActive: true });
+    if (product) {
+      if (!product.isWeightManaged) {
+        return res.status(400).json({ message: 'Existing SKU is not weight-managed' });
+      }
+      product.availableWeight = (product.availableWeight || 0) + Number(totalWeight || 0);
+      if (purchasePrice !== undefined) product.purchasePrice = purchasePrice;
+      if (sellingPrice !== undefined) product.sellingPrice = sellingPrice;
+      await product.save();
+      return res.json(product);
+    }
+
+    product = new Product({
+      name,
+      category,
+      sku,
+      purity,
+      purchasePrice: purchasePrice || 0,
+      sellingPrice: sellingPrice || 0,
+      grossWeight: 0,
+      netWeight: 0,
+      quantity: 0,
+      isWeightManaged: true,
+      availableWeight: Number(totalWeight || 0),
+      createdBy: req.user.id
+    });
+
+    await product.save();
+
+    try {
+      const barcodeBuffer = await generateBarcode(sku);
+      product.barcodeBase64 = barcodeBuffer.toString('base64');
+      product.barcode = sku;
+      await product.save();
+    } catch (bcError) {
+    }
+
+    res.status(201).json(product);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
