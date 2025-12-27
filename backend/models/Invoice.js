@@ -4,7 +4,7 @@ const invoiceItemSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product',
-    required: true
+    required: false
   },
   quantity: {
     type: Number,
@@ -27,6 +27,10 @@ const invoiceItemSchema = new mongoose.Schema({
     default: 0
   },
   wastage: {
+    type: Number,
+    default: 0
+  },
+  otherCost: {
     type: Number,
     default: 0
   },

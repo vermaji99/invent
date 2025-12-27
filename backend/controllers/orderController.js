@@ -3,6 +3,7 @@ const Product = require('../models/Product');
 const Customer = require('../models/Customer');
 const Invoice = require('../models/Invoice');
 const Transaction = require('../models/Transaction');
+const GoldPrice = require('../models/GoldPrice');
 
 // Helper to map Payment Mode to Transaction Enum
 const mapPaymentMode = (mode) => {
@@ -362,22 +363,120 @@ exports.deliverOrder = async (req, res) => {
 
     // 3. Create Invoice (Sale)
     // We map Order to Invoice
+    const latestGoldRate = await GoldPrice.getLatest();
     const invoice = new Invoice({
         invoiceNumber: `INV-${Date.now()}`, // Or sequential
         customer: order.customer,
-        items: order.items.map(item => ({
-            product: item.product,
-            quantity: item.quantity,
-            weight: item.weight || 0,
-            rate: item.price,
-            subtotal: item.price * item.quantity
+        items: await Promise.all(order.items.map(async (item) => {
+            // Derive total weight for line
+            let unitWeight = Number(item.weight || 0);
+            let purchaseRate = 0; // cost per gram
+            let makingCharge = 0;
+            let wastage = 0;
+            let metalRate = 0;
+            const q = Number(item.quantity || 1);
+            // Inventory product
+            if (item.product) {
+                const prod = await Product.findById(item.product);
+                if (prod) {
+                    // Use product snapshot or current values
+                    unitWeight = unitWeight || Number(prod.grossWeight || 0);
+                    // Purchase rate per gram from product (fallback to purchasePrice/grossWeight)
+                    const perGramCost = (Number(prod.purchasePrice || 0) && Number(prod.grossWeight || 0))
+                      ? (Number(prod.purchasePrice) / Number(prod.grossWeight))
+                      : 0;
+                    purchaseRate = Number(item.purchaseRate || perGramCost || 0);
+                    const totalWeight = unitWeight * q;
+                    const autoMaking = (Number(prod.makingChargePerGram || 0) * totalWeight) + Number(prod.makingChargeFixed || 0);
+                    // Determine per-gram metal rate (₹/g): prefer manualRate, then appliedRate, then latest
+                    if (prod.category === 'Gold') {
+                        const purity = (item.purity || prod.purity || '22K').replace(/\s+/g, '');
+                        const rateKey = purity === '24K' ? 'rate24K' : purity === '18K' ? 'rate18K' : 'rate22K';
+                        const latestRate = latestGoldRate ? (latestGoldRate[rateKey] || latestGoldRate.rate22K || 0) : 0;
+                        metalRate = Number(item.manualRate) > 0 
+                          ? Number(item.manualRate) 
+                          : (Number(item.appliedRate) > 0 ? Number(item.appliedRate) : latestRate);
+                    } else {
+                        metalRate = Number(item.appliedRate || 0);
+                    }
+                    const baseMetalVal = metalRate * totalWeight;
+                    const autoWastage = baseMetalVal * (Number(prod.wastagePercent || 0) / 100);
+                    makingCharge = Number(item.makingCharge ?? autoMaking ?? 0);
+                    wastage = Number(item.wastage ?? autoWastage ?? 0);
+                    // Build invoice line for inventory product
+                    const otherCost = Number(item.otherCost || 0);
+                    const discount = Number(item.discount || 0);
+                    const oldGoldAdjustment = Number(item.oldGoldAdjustment || 0);
+                    return {
+                        product: item.product,
+                        quantity: q,
+                        weight: totalWeight,
+                        rate: Math.round(metalRate),
+                        purchaseRate,
+                        makingCharge,
+                        wastage,
+                        otherCost,
+                        discount,
+                        oldGoldAdjustment,
+                        subtotal: Math.round(baseMetalVal + makingCharge + wastage + otherCost - discount - oldGoldAdjustment)
+                    };
+                }
+            } else {
+                // Custom item: approximate purchase rate from gold price and purity if known
+                // Weight fallback: parse targetWeight if provided
+                if (!unitWeight && item.targetWeight) {
+                    const parsed = parseFloat(String(item.targetWeight).replace(/[^\d\.]/g, ''));
+                    if (!isNaN(parsed)) unitWeight = parsed;
+                }
+                if (latestGoldRate) {
+                    const purity = (item.purity || '22K').replace(/\s+/g, '');
+                    const rateKey = purity === '24K' ? 'rate24K' : purity === '18K' ? 'rate18K' : 'rate22K';
+                    purchaseRate = Number(item.purchaseRate || latestGoldRate[rateKey] || latestGoldRate.rate22K || 0);
+                }
+                makingCharge = Number(item.makingCharge || 0);
+                wastage = Number(item.wastage || 0);
+                // Determine per-gram metal rate for custom
+                const rateKey = (item.purity || '22K').replace(/\s+/g, '') === '24K' ? 'rate24K' 
+                  : ((item.purity || '22K').replace(/\s+/g, '') === '18K' ? 'rate18K' : 'rate22K');
+                const latestRate = latestGoldRate ? (latestGoldRate[rateKey] || latestGoldRate.rate22K || 0) : 0;
+                metalRate = Number(item.manualRate) > 0 
+                  ? Number(item.manualRate) 
+                  : (Number(item.appliedRate) > 0 ? Number(item.appliedRate) : latestRate);
+                const totalWeight = unitWeight * q;
+                const baseMetalVal = metalRate * totalWeight;
+                const otherCost = Number(item.otherCost || 0);
+                const discount = Number(item.discount || 0);
+                const oldGoldAdjustment = Number(item.oldGoldAdjustment || 0);
+                return {
+                    product: item.product,
+                    quantity: q,
+                    weight: totalWeight,
+                    rate: Math.round(metalRate),
+                    purchaseRate,
+                    makingCharge,
+                    wastage,
+                    otherCost,
+                    discount,
+                    oldGoldAdjustment,
+                    subtotal: Math.round(baseMetalVal + makingCharge + wastage + otherCost - discount - oldGoldAdjustment)
+                };
+            }
         })),
         subtotal: order.totalAmount,
         total: order.totalAmount,
-        paymentMode: order.payments[0]?.method || 'Cash', // Simplify or use Mixed
+        paymentMode: mapPaymentMode(order.payments[0]?.method) || 'Cash',
         paidAmount: order.totalAmount - order.remainingAmount,
-        dueAmount: order.remainingAmount > 0 ? order.remainingAmount : 0
+        dueAmount: order.remainingAmount > 0 ? order.remainingAmount : 0,
+        status: (order.remainingAmount > 0) ? ((order.totalAmount - order.remainingAmount) > 0 ? 'Partial' : 'Pending') : 'Paid',
+        createdBy: req.user._id
     });
+    
+    if (invoice.items && invoice.items.length) {
+        const computedSubtotal = invoice.items.reduce((sum, it) => sum + Number(it.subtotal || 0), 0);
+        invoice.subtotal = computedSubtotal;
+        invoice.gst = invoice.gst || 0;
+        invoice.total = computedSubtotal + Number(invoice.gst || 0) - Number(invoice.discount || 0);
+    }
     
     await invoice.save();
 
@@ -488,4 +587,174 @@ exports.getDeliveryAlerts = async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
+};
+
+// @desc    Delete a single item from an order and recalculate totals
+// @route   DELETE /api/orders/:id/items/:itemId
+// @access  Private
+exports.deleteOrderItem = async (req, res) => {
+  try {
+    const { id, itemId } = req.params;
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    if (order.isDelivered) {
+      return res.status(400).json({ message: 'Cannot modify items of a delivered order' });
+    }
+    const idx = order.items.findIndex(it => it._id?.toString() === itemId);
+    if (idx === -1) {
+      return res.status(404).json({ message: 'Item not found in order' });
+    }
+    if (order.items.length <= 1) {
+      return res.status(400).json({ message: 'Order must contain at least one item' });
+    }
+    order.items.splice(idx, 1);
+    const subtotal = order.items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity)), 0);
+    order.totalAmount = subtotal;
+    // Do NOT double-count advance: it's already recorded in payments with type 'ADVANCE'
+    const totalPaid = order.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    order.remainingAmount = Math.max(0, subtotal - totalPaid);
+    if (order.remainingAmount <= 0) {
+      order.paymentStatus = 'FULL_PAID';
+      order.remainingAmount = 0;
+    } else if (totalPaid > 0) {
+      order.paymentStatus = 'ADVANCE_PAID';
+    } else {
+      order.paymentStatus = 'UNPAID';
+    }
+    await order.save();
+    const populated = await Order.findById(order._id)
+      .populate('customer')
+      .populate('items.product');
+    res.json(populated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Update a single item in an order and recalculate totals
+// @route   PATCH /api/orders/:id/items/:itemId
+// @access  Private
+exports.updateOrderItem = async (req, res) => {
+  try {
+    const { id, itemId } = req.params;
+    const { 
+      quantity, 
+      price, 
+      name, 
+      targetWeight, 
+      size, 
+      itemType, 
+      specialInstructions, 
+      designImage, 
+      weight, 
+      recalculate,
+      manualRate,
+      purchaseRate,
+      makingCharge,
+      wastage,
+      discount,
+      oldGoldAdjustment,
+      otherCost
+    } = req.body;
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    if (order.isDelivered) {
+      return res.status(400).json({ message: 'Cannot modify items of a delivered order' });
+    }
+    const item = order.items.find(it => it._id?.toString() === itemId);
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found in order' });
+    }
+    if (quantity !== undefined) item.quantity = Number(quantity);
+    if (weight !== undefined) item.weight = Number(weight);
+    if (price !== undefined) item.price = Number(price);
+    if (purchaseRate !== undefined) item.purchaseRate = Number(purchaseRate);
+    if (makingCharge !== undefined) item.makingCharge = Number(makingCharge);
+    if (wastage !== undefined) item.wastage = Number(wastage);
+    if (discount !== undefined) item.discount = Number(discount);
+    if (oldGoldAdjustment !== undefined) item.oldGoldAdjustment = Number(oldGoldAdjustment);
+    if (otherCost !== undefined) item.otherCost = Number(otherCost);
+    if (manualRate !== undefined) item.manualRate = Number(manualRate);
+    if ((recalculate || weight !== undefined) && item.product) {
+      try {
+        const product = await Product.findById(item.product);
+        const latestPrice = await GoldPrice.getLatest();
+        if (product && latestPrice && product.category === 'Gold') {
+          const purity = (item.purity || product.purity || '22K').replace(/\s+/g, '');
+          const rateKey = purity === '24K' ? 'rate24K' : purity === '18K' ? 'rate18K' : 'rate22K';
+          const metalRate = Number(manualRate) > 0 ? Number(manualRate) : (latestPrice[rateKey] || latestPrice.rate22K);
+          const wt = Number(item.weight || product.grossWeight || 0);
+          const baseMetal = metalRate * wt;
+          const autoWastage = baseMetal * (Number(product.wastagePercent || 0) / 100);
+          const autoMaking = (Number(product.makingChargePerGram || 0) * wt) + Number(product.makingChargeFixed || 0);
+          const finalPrice = Math.round(baseMetal + (item.wastage ?? autoWastage) + (item.makingCharge ?? autoMaking));
+          item.price = finalPrice;
+          item.appliedRate = metalRate;
+        }
+      } catch (err) {
+        console.error('Recalculation failed:', err);
+      }
+    }
+    // Optional auto price recalculation for custom items
+    if (item.isCustom && (recalculate || weight !== undefined)) {
+      try {
+        const latestPrice = await GoldPrice.getLatest();
+        const purity = (item.purity || '22K').replace(/\s+/g, '');
+        const rateKey = purity === '24K' ? 'rate24K' : purity === '18K' ? 'rate18K' : 'rate22K';
+        const metalRate = Number(manualRate) > 0 
+          ? Number(manualRate) 
+          : (latestPrice ? (latestPrice[rateKey] || latestPrice.rate22K || 0) : 0);
+        let unitWeight = Number(item.weight || 0);
+        if (!unitWeight && item.targetWeight) {
+          const parsed = parseFloat(String(item.targetWeight).replace(/[^\d\.]/g, ''));
+          if (!isNaN(parsed)) unitWeight = parsed;
+        }
+        const q = Number(item.quantity || 1);
+        const baseMetalUnit = metalRate * unitWeight;
+        const perUnitMaking = Number(item.makingCharge || 0) / q;
+        const perUnitWastage = Number(item.wastage || 0) / q;
+        const perUnitOther = Number(item.otherCost || 0) / q;
+        const perUnitDiscount = Number(item.discount || 0) / q;
+        const perUnitOldGold = Number(item.oldGoldAdjustment || 0) / q;
+        const finalUnitPrice = Math.round(baseMetalUnit + perUnitMaking + perUnitWastage + perUnitOther - perUnitDiscount - perUnitOldGold);
+        item.price = finalUnitPrice;
+        item.appliedRate = metalRate;
+      } catch (err) {
+        console.error('Custom item recalculation failed:', err);
+      }
+    }
+    if (item.isCustom) {
+      if (name !== undefined) item.name = name;
+      if (targetWeight !== undefined) item.targetWeight = targetWeight;
+      if (size !== undefined) item.size = size;
+      if (itemType !== undefined) item.itemType = itemType;
+      if (specialInstructions !== undefined) item.specialInstructions = specialInstructions;
+      if (designImage !== undefined) item.designImage = designImage;
+    }
+    const subtotal = order.items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity)), 0);
+    order.totalAmount = subtotal;
+    const totalPaid = order.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    order.remainingAmount = Math.max(0, subtotal - totalPaid);
+    if (order.remainingAmount <= 0) {
+      order.paymentStatus = 'FULL_PAID';
+      order.remainingAmount = 0;
+    } else if (totalPaid > 0) {
+      order.paymentStatus = 'ADVANCE_PAID';
+    } else {
+      order.paymentStatus = 'UNPAID';
+    }
+    await order.save();
+    const populated = await Order.findById(order._id)
+      .populate('customer')
+      .populate('items.product');
+    res.json(populated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
 };

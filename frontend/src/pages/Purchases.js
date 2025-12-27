@@ -11,6 +11,10 @@ const Purchases = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState(null);
+  const [expanded, setExpanded] = useState({});
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentPurchase, setPaymentPurchase] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({ amount: 0, mode: 'Cash' });
   const [formData, setFormData] = useState({
     supplier: '',
     purchaseDate: new Date().toISOString().split('T')[0],
@@ -82,6 +86,11 @@ const Purchases = () => {
       amount: parseFloat(newItem.weight) * parseFloat(newItem.rate) * (parseInt(newItem.quantity) || 1)
     };
 
+    // Prevent sending empty product id which causes ObjectId cast error
+    if (typeof item.product === 'string' && item.product.trim() === '') {
+      delete item.product;
+    }
+
     setItems([...items, item]);
     setNewItem({
       name: '',
@@ -138,7 +147,15 @@ const Purchases = () => {
       fetchPurchases();
       fetchProducts(); // Refresh products in case new ones were created
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Operation failed');
+      const errors = error.response?.data?.errors;
+      if (Array.isArray(errors) && errors.length > 0) {
+        errors.forEach(err => {
+          const msg = err.msg || err.message || 'Validation error';
+          toast.error(msg);
+        });
+      } else {
+        toast.error(error.response?.data?.message || 'Operation failed');
+      }
     }
   };
 
@@ -241,7 +258,91 @@ const Purchases = () => {
                       {formatCurrency(purchase.dueAmount)}
                     </span>
                   </div>
+                  <div className="detail">
+                    <span>GST:</span>
+                    <span>{formatCurrency(purchase.gst || 0)}</span>
+                  </div>
+                  <div className="detail">
+                    <span>Created By:</span>
+                    <span>{purchase.createdBy?.name || '—'}</span>
+                  </div>
                 </div>
+                
+                <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setExpanded({ ...expanded, [purchase._id]: !expanded[purchase._id] })}
+                  >
+                    {expanded[purchase._id] ? 'Hide Items' : 'Show Items'}
+                  </button>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    Subtotal: {formatCurrency(purchase.subtotal || (purchase.total - (purchase.gst || 0)))}
+                  </div>
+                </div>
+
+                {purchase.dueAmount > 0 && (
+                  <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => {
+                        setPaymentPurchase(purchase);
+                        setPaymentForm({
+                          amount: Math.max(0, Number(purchase.dueAmount || 0)),
+                          mode: 'Cash'
+                        });
+                        setShowPaymentModal(true);
+                      }}
+                    >
+                      Clear Due ({formatCurrency(purchase.dueAmount)})
+                    </button>
+                  </div>
+                )}
+
+                {expanded[purchase._id] && (
+                  <div className="items-list" style={{ marginTop: '0.75rem' }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Item</th>
+                          <th>Category</th>
+                          <th>Purity</th>
+                          <th>Weight (g/unit)</th>
+                          <th>Rate (₹/g)</th>
+                          <th>Qty</th>
+                          <th>Amount (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(purchase.items || []).map((item, index) => {
+                          const qty = Number(item.quantity || 1);
+                          const weight = Number(item.weight || 0);
+                          const rate = Number(item.rate || 0);
+                          const amount = rate * weight * qty;
+                          return (
+                            <tr key={index}>
+                              <td>{item.name || item.product?.name || '—'}</td>
+                              <td>{item.category || item.product?.category || '—'}</td>
+                              <td>{item.purity || item.product?.purity || '—'}</td>
+                              <td>{weight ? `${weight}g` : '—'}</td>
+                              <td>{formatCurrency(rate)}</td>
+                              <td>{qty}</td>
+                              <td>{formatCurrency(item.amount || amount)}</td>
+                            </tr>
+                          );
+                        })}
+                        {(!purchase.items || purchase.items.length === 0) && (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                              No items
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -560,6 +661,97 @@ const Purchases = () => {
           </div>
         </div>
       )}
+
+      {showPaymentModal && paymentPurchase && (
+        <div className="modal-overlay" onClick={() => { setShowPaymentModal(false); setPaymentPurchase(null); }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Clear Due — {paymentPurchase.purchaseNumber}</h2>
+              <button className="modal-close" onClick={() => { setShowPaymentModal(false); setPaymentPurchase(null); }}>
+                <FiX />
+              </button>
+            </div>
+            <div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Payment Mode *</label>
+                  <select
+                    value={paymentForm.mode}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, mode: e.target.value })}
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Card">Card</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Amount (₹)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={paymentForm.amount}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                    min="0"
+                    max={Number(paymentPurchase.dueAmount || 0)}
+                  />
+                </div>
+              </div>
+              <div className="totals-display">
+                <div className="total-row">
+                  <span>Total Bill:</span>
+                  <span>{formatCurrency(paymentPurchase.total || 0)}</span>
+                </div>
+                <div className="total-row">
+                  <span>Already Paid:</span>
+                  <span>{formatCurrency(paymentPurchase.paidAmount || 0)}</span>
+                </div>
+                <div className="total-row">
+                  <span>Current Due:</span>
+                  <span className="due">{formatCurrency(paymentPurchase.dueAmount || 0)}</span>
+                </div>
+              </div>
+            </div>
+            <div className="form-actions">
+              <button type="button" onClick={() => { setShowPaymentModal(false); setPaymentPurchase(null); }}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={async () => {
+                  try {
+                    const pay = Math.max(0, Number(paymentForm.amount || 0));
+                    const maxDue = Number(paymentPurchase.dueAmount || 0);
+                    if (pay <= 0) {
+                      toast.error('Enter a valid amount');
+                      return;
+                    }
+                    if (pay > maxDue) {
+                      toast.error('Amount exceeds due');
+                      return;
+                    }
+                    const newPaid = Number(paymentPurchase.paidAmount || 0) + pay;
+                    await api.put(`/api/purchases/${paymentPurchase._id}`, {
+                      paidAmount: newPaid,
+                      paymentMode: paymentForm.mode
+                    });
+                    toast.success('Due cleared successfully');
+                    setShowPaymentModal(false);
+                    setPaymentPurchase(null);
+                    fetchPurchases();
+                  } catch (error) {
+                    toast.error(error.response?.data?.message || 'Failed to clear due');
+                  }
+                }}
+              >
+                Confirm Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

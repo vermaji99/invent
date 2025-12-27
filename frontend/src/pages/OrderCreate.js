@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiUser, FiSearch, FiTrash2, FiPlus, FiMinus, FiX, FiUpload } from 'react-icons/fi';
+import { FiUser, FiSearch, FiTrash2, FiPlus, FiMinus, FiX, FiUpload, FiEdit } from 'react-icons/fi';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import './OrderCreate.css';
@@ -9,6 +9,12 @@ const OrderCreate = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addProduct, setAddProduct] = useState(null);
+  const [addQty, setAddQty] = useState(1);
+  const [addPrice, setAddPrice] = useState('');
   
   // Customer State
   const [customers, setCustomers] = useState([]);
@@ -94,23 +100,43 @@ const OrderCreate = () => {
     }
   };
 
-  const addToCart = (product) => {
-    const existing = cart.find(item => item.product === product._id);
+  const openAddItemModal = (product) => {
+    setAddProduct(product);
+    setAddQty(1);
+    setAddPrice(product.sellingPrice);
+    setShowAddModal(true);
+  };
+
+  const confirmAddItem = () => {
+    if (!addProduct) return;
+    const qty = Number(addQty);
+    const price = Number(addPrice);
+    if (!qty || qty <= 0) {
+      toast.error('Quantity must be at least 1');
+      return;
+    }
+    if (!price || price <= 0) {
+      toast.error('Price must be positive');
+      return;
+    }
+    const existing = cart.find(item => item.product === addProduct._id);
     if (existing) {
       setCart(cart.map(item => 
-        item.product === product._id 
-          ? { ...item, quantity: item.quantity + 1 }
+        item.product === addProduct._id 
+          ? { ...item, quantity: item.quantity + qty, price }
           : item
       ));
     } else {
       setCart([...cart, {
-        product: product._id,
-        name: product.name,
-        price: product.sellingPrice,
-        quantity: 1,
-        image: product.images?.[0]
+        product: addProduct._id,
+        name: addProduct.name,
+        price,
+        quantity: qty,
+        image: addProduct.images?.[0]
       }]);
     }
+    setShowAddModal(false);
+    setAddProduct(null);
   };
 
   const handleImageUpload = async (e) => {
@@ -171,10 +197,12 @@ const OrderCreate = () => {
   };
 
   const removeFromCart = (itemToRemove) => {
+    const ok = window.confirm('Remove this item from order?');
+    if (!ok) return;
     if (itemToRemove.isCustom) {
-        setCart(cart.filter(item => item.tempId !== itemToRemove.tempId));
+      setCart(cart.filter(item => item.tempId !== itemToRemove.tempId));
     } else {
-        setCart(cart.filter(item => item.product !== itemToRemove.product));
+      setCart(cart.filter(item => item.product !== itemToRemove.product));
     }
   };
 
@@ -190,6 +218,63 @@ const OrderCreate = () => {
       }
       return item;
     }));
+  };
+
+  const openEditItem = (item) => {
+    const snapshot = { ...item };
+    setEditingItem(snapshot);
+    setShowEditModal(true);
+  };
+
+  const handleEditImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !editingItem) return;
+    const formData = new FormData();
+    formData.append('image', file);
+    setUploading(true);
+    try {
+      const response = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setEditingItem(prev => ({ ...prev, designImage: response.data.url }));
+      toast.success('Image uploaded');
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setUploading(false);
+      e.target.value = null;
+    }
+  };
+
+  const applyEditItem = () => {
+    if (!editingItem) return;
+    if (editingItem.isCustom) {
+      if (!editingItem.name || !editingItem.price || !editingItem.quantity) {
+        toast.error('Fill required fields for custom item');
+        return;
+      }
+      setCart(prev => prev.map(it => (it.tempId === editingItem.tempId ? {
+        ...it,
+        name: editingItem.name,
+        targetWeight: editingItem.targetWeight,
+        size: editingItem.size,
+        itemType: editingItem.itemType,
+        designImage: editingItem.designImage,
+        specialInstructions: editingItem.specialInstructions,
+        price: Number(editingItem.price),
+        quantity: Number(editingItem.quantity)
+      } : it)));
+    } else {
+      if (!editingItem.quantity || editingItem.quantity <= 0) {
+        toast.error('Quantity must be at least 1');
+        return;
+      }
+      setCart(prev => prev.map(it => (it.product === editingItem.product ? {
+        ...it,
+        quantity: Number(editingItem.quantity),
+        price: editingItem.price ? Number(editingItem.price) : it.price
+      } : it)));
+    }
+    setShowEditModal(false);
+    setEditingItem(null);
   };
 
   const calculateTotal = () => {
@@ -324,7 +409,7 @@ const OrderCreate = () => {
               />
               <div className="products-grid" style={{ overflowY: 'auto', flex: 1 }}>
                 {filteredProducts.map(product => (
-                  <div key={product._id} className="product-card" onClick={() => addToCart(product)}>
+                  <div key={product._id} className="product-card" onClick={() => openAddItemModal(product)}>
                     <div style={{ fontWeight: 'bold' }}>{product.name}</div>
                     <div style={{ fontSize: '0.9rem', color: '#666' }}>{product.sku}</div>
                     <div style={{ marginTop: '5px', fontWeight: 'bold', color: '#2e7d32' }}>
@@ -447,35 +532,54 @@ const OrderCreate = () => {
         <div className="section-title">Order Summary</div>
         
         <div className="cart-items">
+          <div className="section-title" style={{ marginBottom: '8px' }}>Selected Items</div>
           {cart.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>
               No items in order
             </div>
           ) : (
-            cart.map(item => (
-              <div key={item.isCustom ? item.tempId : item.product} className="cart-item">
-                <div className="cart-item-details">
-                  <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                     {item.name} 
-                     {item.isCustom && <span style={{ fontSize: '0.7rem', background: 'var(--gold-secondary)', color: '#000', padding: '2px 6px', borderRadius: '4px' }}>Custom</span>}
-                  </h4>
-                  <p>₹{item.price.toLocaleString()} x {item.quantity}</p>
-                  {item.isCustom && item.targetWeight && (
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Target: {item.targetWeight}</div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div className="qty-control">
-                    <button className="qty-btn" onClick={() => updateQuantity(item, -1)}><FiMinus size={12}/></button>
-                    <span>{item.quantity}</span>
-                    <button className="qty-btn" onClick={() => updateQuantity(item, 1)}><FiPlus size={12}/></button>
-                  </div>
-                  <button className="action-btn" onClick={() => removeFromCart(item)}>
-                    <FiTrash2 color="var(--danger)" />
-                  </button>
-                </div>
-              </div>
-            ))
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '8px' }}>Item</th>
+                  <th style={{ textAlign: 'left', padding: '8px' }}>Type</th>
+                  <th style={{ textAlign: 'right', padding: '8px' }}>Price</th>
+                  <th style={{ textAlign: 'center', padding: '8px' }}>Qty</th>
+                  <th style={{ textAlign: 'right', padding: '8px' }}>Total</th>
+                  <th style={{ textAlign: 'center', padding: '8px' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map(item => (
+                  <tr key={item.isCustom ? item.tempId : item.product} style={{ borderTop: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontWeight: 600 }}>{item.name}</span>
+                        {item.isCustom && <span style={{ fontSize: '0.7rem', background: 'var(--gold-secondary)', color: '#000', padding: '2px 6px', borderRadius: '4px' }}>Custom</span>}
+                      </div>
+                    </td>
+                    <td style={{ padding: '8px' }}>{item.isCustom ? 'Custom' : 'Inventory'}</td>
+                    <td style={{ padding: '8px', textAlign: 'right' }}>₹{item.price.toLocaleString()}</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>
+                      <div className="qty-control" style={{ justifyContent: 'center' }}>
+                        <button className="qty-btn" onClick={() => updateQuantity(item, -1)}><FiMinus size={12}/></button>
+                        <span style={{ minWidth: 24, display: 'inline-block' }}>{item.quantity}</span>
+                        <button className="qty-btn" onClick={() => updateQuantity(item, 1)}><FiPlus size={12}/></button>
+                      </div>
+                    </td>
+                    <td style={{ padding: '8px', textAlign: 'right' }}>₹{(item.price * item.quantity).toLocaleString()}</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>
+                      <button className="action-btn" onClick={() => openEditItem(item)} title="Edit item" style={{ marginRight: '6px' }}>
+                        <FiEdit />
+                      </button>
+                      <button className="action-btn" onClick={() => removeFromCart(item)} title="Remove item" style={{ color: 'var(--danger)' }}>
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
 
@@ -527,6 +631,46 @@ const OrderCreate = () => {
           </div>
         </div>
 
+        {/* Selected Items (compact list near totals for visibility) */}
+        {cart.length > 0 && (
+          <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
+            <div className="section-title" style={{ marginBottom: '8px' }}>Selected Items</div>
+            <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-tertiary)' }}>
+                    <th style={{ textAlign: 'left', padding: '8px' }}>Item</th>
+                    <th style={{ textAlign: 'center', padding: '8px' }}>Qty</th>
+                    <th style={{ textAlign: 'right', padding: '8px' }}>Price</th>
+                    <th style={{ textAlign: 'right', padding: '8px' }}>Total</th>
+                    <th style={{ textAlign: 'center', padding: '8px' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cart.map(item => (
+                    <tr key={item.isCustom ? item.tempId : item.product} style={{ borderTop: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: 600 }}>{item.name}</span>
+                          {item.isCustom && <span style={{ fontSize: '0.7rem', background: 'var(--gold-secondary)', color: '#000', padding: '2px 6px', borderRadius: '4px' }}>Custom</span>}
+                        </div>
+                      </td>
+                      <td style={{ padding: '8px', textAlign: 'center' }}>{item.quantity}</td>
+                      <td style={{ padding: '8px', textAlign: 'right' }}>₹{item.price.toLocaleString()}</td>
+                      <td style={{ padding: '8px', textAlign: 'right' }}>₹{(item.price * item.quantity).toLocaleString()}</td>
+                      <td style={{ padding: '8px', textAlign: 'center' }}>
+                        <button className="action-btn" onClick={() => removeFromCart(item)} title="Remove item" style={{ color: 'var(--danger)' }}>
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         <div className="summary-section">
           <div className="summary-row">
             <span>Subtotal</span>
@@ -541,6 +685,113 @@ const OrderCreate = () => {
             <span style={{ color: '#d32f2f' }}>₹{balanceAmount.toLocaleString()}</span>
           </div>
         </div>
+
+        {showEditModal && editingItem && (
+          <div className="modal-overlay" onClick={() => { setShowEditModal(false); setEditingItem(null); }}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>{editingItem.isCustom ? 'Edit Custom Item' : 'Edit Item'}</h3>
+                <button className="modal-close" onClick={() => { setShowEditModal(false); setEditingItem(null); }}><FiX /></button>
+              </div>
+              {editingItem.isCustom ? (
+                <div className="custom-item-form" style={{ padding: '10px' }}>
+                  <div className="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" className="form-control" value={editingItem.name} onChange={e => setEditingItem({ ...editingItem, name: e.target.value })} />
+                  </div>
+                  <div className="form-row" style={{ display: 'flex', gap: '10px' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Target Weight</label>
+                      <input type="text" className="form-control" value={editingItem.targetWeight || ''} onChange={e => setEditingItem({ ...editingItem, targetWeight: e.target.value })} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Size</label>
+                      <input type="text" className="form-control" value={editingItem.size || ''} onChange={e => setEditingItem({ ...editingItem, size: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="form-row" style={{ display: 'flex', gap: '10px' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Type</label>
+                      <input type="text" className="form-control" value={editingItem.itemType || ''} onChange={e => setEditingItem({ ...editingItem, itemType: e.target.value })} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Quantity *</label>
+                      <input type="number" className="form-control" value={editingItem.quantity} onChange={e => setEditingItem({ ...editingItem, quantity: e.target.value })} min="1" />
+                    </div>
+                  </div>
+                  <div className="form-row" style={{ display: 'flex', gap: '10px' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Price *</label>
+                      <input type="number" className="form-control" value={editingItem.price} onChange={e => setEditingItem({ ...editingItem, price: e.target.value })} />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Design Image</label>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <input type="text" className="form-control" value={editingItem.designImage || ''} onChange={e => setEditingItem({ ...editingItem, designImage: e.target.value })} />
+                        <label className="btn-secondary" style={{ cursor: 'pointer', marginBottom: 0 }}>
+                          <FiUpload />
+                          <input type="file" hidden onChange={handleEditImageUpload} accept="image/*" disabled={uploading} />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Instructions</label>
+                    <textarea className="form-control" rows="2" value={editingItem.specialInstructions || ''} onChange={e => setEditingItem({ ...editingItem, specialInstructions: e.target.value })} />
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: '10px' }}>
+                  <div className="form-row" style={{ display: 'flex', gap: '10px' }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Quantity *</label>
+                      <input type="number" className="form-control" value={editingItem.quantity} onChange={e => setEditingItem({ ...editingItem, quantity: e.target.value })} min="1" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Price (optional override)</label>
+                      <input type="number" className="form-control" value={editingItem.price} onChange={e => setEditingItem({ ...editingItem, price: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => { setShowEditModal(false); setEditingItem(null); }}>Cancel</button>
+                <button className="btn btn-primary" onClick={applyEditItem}>Save</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAddModal && addProduct && (
+          <div className="modal-overlay" onClick={() => { setShowAddModal(false); setAddProduct(null); }}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Add Item</h3>
+                <button className="modal-close" onClick={() => { setShowAddModal(false); setAddProduct(null); }}><FiX /></button>
+              </div>
+              <div className="form-row" style={{ display: 'flex', gap: '10px' }}>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Product</label>
+                  <input type="text" className="form-control" value={`${addProduct.name} (${addProduct.sku || ''})`} readOnly />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Quantity *</label>
+                  <input type="number" className="form-control" value={addQty} onChange={e => setAddQty(e.target.value)} min="1" />
+                </div>
+              </div>
+              <div className="form-row" style={{ display: 'flex', gap: '10px' }}>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Price (₹)</label>
+                  <input type="number" className="form-control" value={addPrice} onChange={e => setAddPrice(e.target.value)} min="0" />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => { setShowAddModal(false); setAddProduct(null); }}>Cancel</button>
+                <button className="btn btn-primary" onClick={confirmAddItem}>Add to Order</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div style={{ marginTop: '20px' }}>
             <button 

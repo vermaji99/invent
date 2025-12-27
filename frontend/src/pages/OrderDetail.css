@@ -170,7 +170,7 @@
 }
 
 /* Modal Styles */
-.modal-overlay {
+.order-detail-container .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -184,12 +184,12 @@
     backdrop-filter: blur(2px);
 }
 
-.modal-content {
+.order-detail-container .modal-content {
     background: var(--bg-secondary);
     padding: 20px;
     border-radius: 8px;
-    width: 400px;
-    max-width: 90%;
+    width: min(100%, 900px);
+    max-width: 95vw;
     border: 1px solid var(--border-color);
     color: var(--text-primary);
 }

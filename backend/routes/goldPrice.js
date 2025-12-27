@@ -14,8 +14,8 @@ const LIVE_METALS_TTL_MS = 60 * 1000; // 1 minute
 
 // @route   GET /api/gold-price
 // @desc    Get latest saved gold price (used for billing / INR rates)
-// @access  Private
-router.get('/', auth, async (req, res) => {
+// @access  Public
+router.get('/', async (req, res) => {
   try {
     let goldPrice = await GoldPrice.getLatest();
 
@@ -61,10 +61,28 @@ router.get('/live', async (req, res) => {
       process.env.REACT_APP_METALS_DEV_API_KEY;
 
     if (!apiKey) {
-      return res.status(500).json({
-        message: 'Live metals API key is not configured',
-        details: 'Set METALS_DEV_API_KEY in your backend .env file or pass ?api_key=YOUR_KEY in the request.'
-      });
+      const latest = await GoldPrice.getLatest();
+      const fallbackPayload = {
+        status: 'success',
+        currency: 'INR',
+        unit: 'g',
+        timestamp: Date.now(),
+        metals: {
+          gold: null,
+          silver: null,
+          platinum: null,
+          palladium: null
+        },
+        inrRates: latest
+          ? {
+              rate24K: latest.rate24K,
+              rate22K: latest.rate22K,
+              rate18K: latest.rate18K
+            }
+          : null,
+        cached: true
+      };
+      return res.json(fallbackPayload);
     }
 
     // Metals.Dev expects an `api_key` query parameter
@@ -79,20 +97,28 @@ router.get('/live', async (req, res) => {
         });
     } catch (apiError) {
         console.error('Metals API Error:', apiError.message);
-        if (apiError.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            return res.status(apiError.response.status).json({
-                message: 'External Metals API Error',
-                details: apiError.response.data
-            });
-        } else if (apiError.request) {
-            // The request was made but no response was received
-            return res.status(503).json({ message: 'No response from Metals API' });
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            return res.status(500).json({ message: 'Error setting up Metals API request' });
-        }
+        const latest = await GoldPrice.getLatest();
+        const fallbackPayload = {
+          status: 'success',
+          currency: 'INR',
+          unit: 'g',
+          timestamp: Date.now(),
+          metals: {
+            gold: null,
+            silver: null,
+            platinum: null,
+            palladium: null
+          },
+          inrRates: latest
+            ? {
+                rate24K: latest.rate24K,
+                rate22K: latest.rate22K,
+                rate18K: latest.rate18K
+              }
+            : null,
+          cached: true
+        };
+        return res.json(fallbackPayload);
     }
 
     const data = response.data || {};
@@ -236,4 +262,3 @@ router.post('/fetch', [
 });
 
 module.exports = router;
-

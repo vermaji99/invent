@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiCheckCircle, FiClock, FiDollarSign, FiPackage, FiAlertTriangle, FiX, FiPrinter } from 'react-icons/fi';
+import { FiCheckCircle, FiClock, FiDollarSign, FiPackage, FiAlertTriangle, FiX, FiPrinter, FiEdit } from 'react-icons/fi';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import './OrderDetail.css';
@@ -12,11 +12,15 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDeliverModal, setShowDeliverModal] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   
   // Payment Form
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [paymentNotes, setPaymentNotes] = useState('');
+  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -41,9 +45,18 @@ const OrderDetail = () => {
   };
 
   const handleAddPayment = async () => {
+    if (isPaying) return;
+    const amt = Number(paymentAmount);
+    if (!amt || amt <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    const confirmed = window.confirm(`Add payment of ₹${amt.toLocaleString()} via ${paymentMethod}?`);
+    if (!confirmed) return;
     try {
+      setIsPaying(true);
       await api.post(`/api/orders/${id}/pay`, {
-        amount: Number(paymentAmount),
+        amount: amt,
         method: paymentMethod,
         notes: paymentNotes
       });
@@ -51,7 +64,9 @@ const OrderDetail = () => {
       setShowPaymentModal(false);
       fetchOrder();
     } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to add payment');
+      toast.error(error.response?.data?.message || 'Failed to add payment');
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -79,6 +94,19 @@ const OrderDetail = () => {
         toast.error(error.response?.data?.message || 'Failed to deliver order');
     }
   };
+  const handleGenerateInvoice = async () => {
+    try {
+      const response = await api.post(`/api/orders/${id}/deliver`, {});
+      toast.success('Invoice generated from order');
+      if (response.data?.invoice?._id) {
+        navigate('/invoices');
+      } else {
+        navigate('/invoices');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to generate invoice');
+    }
+  };
 
   const handleStatusUpdate = async (newStatus) => {
       try {
@@ -99,6 +127,71 @@ const OrderDetail = () => {
 
   const isOverdue = new Date(order.expectedDeliveryDate) < new Date() && order.orderStatus !== 'DELIVERED';
   const isNearDue = !isOverdue && new Date(order.expectedDeliveryDate) < new Date(Date.now() + 24 * 60 * 60 * 1000) && order.orderStatus !== 'DELIVERED';
+  const resolveImageUrl = (item) => {
+    const candidate = item.image || item.designImage;
+    if (!candidate) return null;
+    return String(candidate).startsWith('/') ? `http://localhost:5000${candidate}` : candidate;
+  };
+  const totalPaid = order.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const advancePaid = order.payments.filter(p => p.type === 'ADVANCE').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const paidSince = Math.max(0, totalPaid - advancePaid);
+  const openEditItem = (item) => {
+    setEditingItem({
+      id: item._id || item.id,
+      isCustom: !!item.isCustom,
+      name: item.name || '',
+      quantity: item.quantity,
+      price: item.price,
+      weight: item.weight || '',
+      targetWeight: item.targetWeight || '',
+      size: item.size || '',
+      itemType: item.itemType || '',
+      specialInstructions: item.specialInstructions || '',
+      designImage: item.designImage || '',
+      purchaseRate: item.purchaseRate ?? '',
+      makingCharge: item.makingCharge ?? '',
+      wastage: item.wastage ?? '',
+      discount: item.discount ?? '',
+      oldGoldAdjustment: item.oldGoldAdjustment ?? '',
+      otherCost: item.otherCost ?? '',
+      recalculate: false,
+      manualRate: item.manualRate ?? ''
+    });
+    setShowEditModal(true);
+  };
+  const applyEditItem = async () => {
+    if (!editingItem) return;
+    try {
+      const payload = {
+        quantity: Number(editingItem.quantity),
+        price: Number(editingItem.price),
+        weight: editingItem.weight !== '' ? Number(editingItem.weight) : undefined,
+        recalculate: !!editingItem.recalculate,
+        manualRate: editingItem.manualRate !== '' ? Number(editingItem.manualRate) : undefined,
+        purchaseRate: editingItem.purchaseRate !== '' ? Number(editingItem.purchaseRate) : undefined,
+        makingCharge: editingItem.makingCharge !== '' ? Number(editingItem.makingCharge) : undefined,
+        wastage: editingItem.wastage !== '' ? Number(editingItem.wastage) : undefined,
+        discount: editingItem.discount !== '' ? Number(editingItem.discount) : undefined,
+        oldGoldAdjustment: editingItem.oldGoldAdjustment !== '' ? Number(editingItem.oldGoldAdjustment) : undefined,
+        otherCost: editingItem.otherCost !== '' ? Number(editingItem.otherCost) : undefined
+      };
+      if (editingItem.isCustom) {
+        payload.name = editingItem.name;
+        payload.targetWeight = editingItem.targetWeight;
+        payload.size = editingItem.size;
+        payload.itemType = editingItem.itemType;
+        payload.specialInstructions = editingItem.specialInstructions;
+        payload.designImage = editingItem.designImage;
+      }
+      await api.patch(`/api/orders/${order._id}/items/${editingItem.id}`, payload);
+      toast.success('Item updated');
+      setShowEditModal(false);
+      setEditingItem(null);
+      fetchOrder();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update item');
+    }
+  };
 
   return (
     <div className="order-detail-container">
@@ -118,6 +211,15 @@ const OrderDetail = () => {
            <button className="btn btn-secondary" onClick={handlePrint}>
                <FiPrinter /> Print Order
            </button>
+           {order.orderStatus === 'DELIVERED' ? (
+             <button className="btn btn-primary" onClick={() => navigate('/invoices')}>
+                 <FiPackage /> View Invoice
+             </button>
+           ) : (
+             <button className="btn btn-primary" onClick={handleGenerateInvoice}>
+                 <FiPackage /> Generate Invoice
+             </button>
+           )}
            {order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'CANCELLED' && (
              <>
                 <button className="btn btn-secondary" onClick={() => handleStatusUpdate('READY')}>Mark Ready</button>
@@ -133,7 +235,7 @@ const OrderDetail = () => {
                      setPaymentAmount(order.remainingAmount); // Default to clearing balance
                      setShowDeliverModal(true);
                 }}>
-                    <FiCheckCircle /> Deliver
+                     <FiCheckCircle /> Deliver
                 </button>
                 <button className="btn btn-danger" onClick={() => {
                     if(window.confirm('Are you sure you want to cancel this order?')) {
@@ -177,8 +279,27 @@ const OrderDetail = () => {
                       {order.items.map((item, idx) => (
                           <tr key={idx}>
                               <td>
-                                  <div style={{ fontWeight: '500' }}>{item.name}</div>
-                                  {item.isCustom && <span style={{ fontSize: '0.8rem', color: 'var(--gold-primary)', border: '1px solid var(--gold-primary)', padding: '2px 4px', borderRadius: '4px' }}>Custom</span>}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      {resolveImageUrl(item) && (
+                                        <img
+                                          src={resolveImageUrl(item)}
+                                          alt={item.name}
+                                          style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border-color)', cursor: 'zoom-in' }}
+                                          onClick={() => setPreviewImage(resolveImageUrl(item))}
+                                        />
+                                      )}
+                                      <span style={{ fontWeight: '500' }}>{item.name}</span>
+                                      {order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'CANCELLED' && (
+                                        <button 
+                                          className="btn btn-secondary" 
+                                          style={{ padding: '4px 8px' }} 
+                                          onClick={() => openEditItem(item)}
+                                          title="Edit item"
+                                        >
+                                          <FiEdit /> Edit
+                                        </button>
+                                      )}
+                                  </div>
                               </td>
                               <td>
                                   {item.isCustom ? (
@@ -187,12 +308,32 @@ const OrderDetail = () => {
                                           {item.size && <div>Size: {item.size}</div>}
                                           {item.itemType && <div>Type: {item.itemType}</div>}
                                           {item.specialInstructions && <div style={{ fontStyle: 'italic' }}>Note: {item.specialInstructions}</div>}
+                                          {((item.manualRate > 0) || (item.appliedRate > 0) || item.makingCharge > 0 || item.wastage > 0 || item.discount > 0 || item.oldGoldAdjustment > 0 || item.otherCost > 0) && (
+                                            <div style={{ marginTop: 6 }}>
+                                              {(item.manualRate > 0 || item.appliedRate > 0) && <div>Rate: ₹{(item.manualRate > 0 ? item.manualRate : item.appliedRate)}/g</div>}
+                                              {item.makingCharge > 0 && <div>Making: ₹{item.makingCharge}</div>}
+                                              {item.wastage > 0 && <div>Wastage: ₹{item.wastage}</div>}
+                                              {item.discount > 0 && <div>Discount: -₹{item.discount}</div>}
+                                              {item.oldGoldAdjustment > 0 && <div>Old Gold: -₹{item.oldGoldAdjustment}</div>}
+                                              {item.otherCost > 0 && <div>Other: ₹{item.otherCost}</div>}
+                                            </div>
+                                          )}
                                       </div>
                                   ) : (
                                       <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                                           SKU: {item.sku}<br/>
                                           {item.purity && <span>{item.purity} | </span>}
                                           {item.weight && <span>{item.weight}g</span>}
+                                          {((item.manualRate > 0) || (item.appliedRate > 0) || item.makingCharge > 0 || item.wastage > 0 || item.discount > 0 || item.oldGoldAdjustment > 0 || item.otherCost > 0) && (
+                                            <div style={{ marginTop: 6 }}>
+                                              {(item.manualRate > 0 || item.appliedRate > 0) && <div>Rate: ₹{(item.manualRate > 0 ? item.manualRate : item.appliedRate)}/g</div>}
+                                              {item.makingCharge > 0 && <div>Making: ₹{item.makingCharge}</div>}
+                                              {item.wastage > 0 && <div>Wastage: ₹{item.wastage}</div>}
+                                              {item.discount > 0 && <div>Discount: -₹{item.discount}</div>}
+                                              {item.oldGoldAdjustment > 0 && <div>Old Gold: -₹{item.oldGoldAdjustment}</div>}
+                                              {item.otherCost > 0 && <div>Other: ₹{item.otherCost}</div>}
+                                            </div>
+                                          )}
                                       </div>
                                   )}
                               </td>
@@ -251,12 +392,12 @@ const OrderDetail = () => {
                 </div>
                 <div className="info-row">
                     <span className="info-label">Advance Paid</span>
-                    <span className="info-value" style={{ color: 'var(--success)' }}>- ₹{order.advanceAmount.toLocaleString()}</span>
+                    <span className="info-value" style={{ color: 'var(--success)' }}>- ₹{advancePaid.toLocaleString()}</span>
                 </div>
                 <div className="info-row">
                     <span className="info-label">Paid Since</span>
                     <span className="info-value" style={{ color: 'var(--success)' }}>
-                        - ₹{(order.totalAmount - order.remainingAmount - order.advanceAmount).toLocaleString()}
+                        - ₹{paidSince.toLocaleString()}
                     </span>
                 </div>
                 <div className="info-row" style={{ marginTop: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
@@ -324,7 +465,9 @@ const OrderDetail = () => {
                 </div>
                 <div className="modal-footer">
                     <button className="btn btn-secondary" onClick={() => setShowPaymentModal(false)}>Cancel</button>
-                    <button className="btn btn-primary" onClick={handleAddPayment}>Save Payment</button>
+                    <button className="btn btn-primary" onClick={handleAddPayment} disabled={isPaying}>
+                      {isPaying ? 'Processing...' : 'Save Payment'}
+                    </button>
                 </div>
             </div>
         </div>
@@ -378,6 +521,200 @@ const OrderDetail = () => {
         </div>
       )}
 
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="modal-overlay" onClick={() => setPreviewImage(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Image Preview</h3>
+              <button onClick={() => setPreviewImage(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <FiX size={20} />
+              </button>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <img
+                src={previewImage}
+                alt="Preview"
+                style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: 6, border: '1px solid var(--border-color)' }}
+                onClick={() => window.open(previewImage, '_blank')}
+              />
+            </div>
+            <div className="modal-footer">
+              <a className="btn btn-secondary" href={previewImage} target="_blank" rel="noopener noreferrer">Open in new tab</a>
+              <button className="btn btn-primary" onClick={() => setPreviewImage(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Item Modal */}
+      {showEditModal && editingItem && (
+        <div className="modal-overlay" onClick={() => { setShowEditModal(false); setEditingItem(null); }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editingItem.isCustom ? 'Edit Custom Item' : 'Edit Item'}</h3>
+              <button onClick={() => { setShowEditModal(false); setEditingItem(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <FiX size={20} />
+              </button>
+            </div>
+            {editingItem.isCustom ? (
+              <div>
+                <div className="form-group">
+                  <label>Item Name</label>
+                  <input type="text" className="form-control" value={editingItem.name} onChange={e => setEditingItem({ ...editingItem, name: e.target.value })} />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Weight (g)</label>
+                    <input type="number" className="form-control" value={editingItem.weight} onChange={e => setEditingItem({ ...editingItem, weight: e.target.value })} step="0.001" min="0" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Target Weight</label>
+                    <input type="text" className="form-control" value={editingItem.targetWeight} onChange={e => setEditingItem({ ...editingItem, targetWeight: e.target.value })} />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Size</label>
+                    <input type="text" className="form-control" value={editingItem.size} onChange={e => setEditingItem({ ...editingItem, size: e.target.value })} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Type</label>
+                    <input type="text" className="form-control" value={editingItem.itemType} onChange={e => setEditingItem({ ...editingItem, itemType: e.target.value })} />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Quantity</label>
+                    <input type="number" className="form-control" value={editingItem.quantity} onChange={e => setEditingItem({ ...editingItem, quantity: e.target.value })} min="1" />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Price</label>
+                    <input type="number" className="form-control" value={editingItem.price} onChange={e => setEditingItem({ ...editingItem, price: e.target.value })} />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Design Image URL</label>
+                    <input type="text" className="form-control" value={editingItem.designImage} onChange={e => setEditingItem({ ...editingItem, designImage: e.target.value })} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Auto Recalculate</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input type="checkbox" checked={editingItem.recalculate} onChange={e => setEditingItem({ ...editingItem, recalculate: e.target.checked })} />
+                    <span style={{ color: 'var(--text-secondary)' }}>Uses latest gold rate (or manual)</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Manual Rate (₹/g)</label>
+                    <input type="number" className="form-control" value={editingItem.manualRate} onChange={e => setEditingItem({ ...editingItem, manualRate: e.target.value })} step="0.01" />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Instructions</label>
+                  <textarea className="form-control" rows="2" value={editingItem.specialInstructions} onChange={e => setEditingItem({ ...editingItem, specialInstructions: e.target.value })} />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Purchase Rate (₹/g)</label>
+                    <input type="number" className="form-control" value={editingItem.purchaseRate} onChange={e => setEditingItem({ ...editingItem, purchaseRate: e.target.value })} step="0.01" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Making Charge (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.makingCharge} onChange={e => setEditingItem({ ...editingItem, makingCharge: e.target.value })} step="1" />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Wastage (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.wastage} onChange={e => setEditingItem({ ...editingItem, wastage: e.target.value })} step="1" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Discount (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.discount} onChange={e => setEditingItem({ ...editingItem, discount: e.target.value })} step="1" />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Old Gold Adjustment (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.oldGoldAdjustment} onChange={e => setEditingItem({ ...editingItem, oldGoldAdjustment: e.target.value })} step="1" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Other Cost (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.otherCost} onChange={e => setEditingItem({ ...editingItem, otherCost: e.target.value })} step="1" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Weight (g)</label>
+                    <input type="number" className="form-control" value={editingItem.weight} onChange={e => setEditingItem({ ...editingItem, weight: e.target.value })} step="0.001" min="0" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Quantity</label>
+                    <input type="number" className="form-control" value={editingItem.quantity} onChange={e => setEditingItem({ ...editingItem, quantity: e.target.value })} min="1" />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Price</label>
+                    <input type="number" className="form-control" value={editingItem.price} onChange={e => setEditingItem({ ...editingItem, price: e.target.value })} />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Auto Recalculate</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input type="checkbox" checked={editingItem.recalculate} onChange={e => setEditingItem({ ...editingItem, recalculate: e.target.checked })} />
+                      <span style={{ color: 'var(--text-secondary)' }}>Uses latest gold rate (or manual)</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Manual Rate (₹/g)</label>
+                    <input type="number" className="form-control" value={editingItem.manualRate} onChange={e => setEditingItem({ ...editingItem, manualRate: e.target.value })} step="0.01" />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Purchase Rate (₹/g)</label>
+                    <input type="number" className="form-control" value={editingItem.purchaseRate} onChange={e => setEditingItem({ ...editingItem, purchaseRate: e.target.value })} step="0.01" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Making Charge (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.makingCharge} onChange={e => setEditingItem({ ...editingItem, makingCharge: e.target.value })} step="1" />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Wastage (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.wastage} onChange={e => setEditingItem({ ...editingItem, wastage: e.target.value })} step="1" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Discount (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.discount} onChange={e => setEditingItem({ ...editingItem, discount: e.target.value })} step="1" />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Old Gold Adjustment (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.oldGoldAdjustment} onChange={e => setEditingItem({ ...editingItem, oldGoldAdjustment: e.target.value })} step="1" />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Other Cost (₹)</label>
+                    <input type="number" className="form-control" value={editingItem.otherCost} onChange={e => setEditingItem({ ...editingItem, otherCost: e.target.value })} step="1" />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => { setShowEditModal(false); setEditingItem(null); }}>Cancel</button>
+              <button className="btn btn-primary" onClick={applyEditItem}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

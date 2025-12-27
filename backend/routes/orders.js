@@ -16,5 +16,7 @@ router.get('/:id', auth, orderController.getOrderById);
 router.patch('/:id/status', auth, orderController.updateOrderStatus);
 router.post('/:id/pay', auth, orderController.addPayment);
 router.post('/:id/deliver', auth, orderController.deliverOrder);
+router.patch('/:id/items/:itemId', auth, orderController.updateOrderItem);
+router.delete('/:id/items/:itemId', auth, orderController.deleteOrderItem);
 
 module.exports = router;

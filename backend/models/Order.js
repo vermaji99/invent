@@ -32,7 +32,16 @@ const orderItemSchema = new mongoose.Schema({
   designImage: String, // URL or Path
   specialInstructions: String,
   size: String,
-  itemType: String // e.g. "Ring", "Chain"
+  itemType: String, // e.g. "Ring", "Chain"
+  purchaseRate: { type: Number, default: 0 },
+  makingCharge: { type: Number, default: 0 },
+  wastage: { type: Number, default: 0 },
+  discount: { type: Number, default: 0 },
+  oldGoldAdjustment: { type: Number, default: 0 },
+  otherCost: { type: Number, default: 0 },
+  manualRate: { type: Number, default: 0 }
+  ,
+  appliedRate: { type: Number, default: 0 } // last used metal rate (₹/g)
 });
 
 const paymentSchema = new mongoose.Schema({

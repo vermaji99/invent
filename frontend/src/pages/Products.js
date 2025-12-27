@@ -60,6 +60,12 @@ const Products = () => {
     try {
       const data = new FormData();
       Object.keys(formData).forEach(key => {
+        if (key === 'huid') {
+          const v = (formData.huid || '').trim();
+          if (v.length === 0) return;
+          data.append('huid', v);
+          return;
+        }
         data.append(key, formData[key]);
       });
       
@@ -95,7 +101,15 @@ const Products = () => {
       resetForm();
       fetchProducts();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Operation failed');
+      const errors = error.response?.data?.errors;
+      if (Array.isArray(errors) && errors.length > 0) {
+        errors.forEach(err => {
+          const msg = err.msg || err.message || 'Validation error';
+          toast.error(msg);
+        });
+      } else {
+        toast.error(error.response?.data?.message || 'Operation failed');
+      }
     }
   };
 

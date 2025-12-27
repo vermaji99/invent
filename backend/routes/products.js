@@ -5,14 +5,19 @@ const Product = require('../models/Product');
 const { body, validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 // Multer config
+const uploadDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/')
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname))
+    cb(null, Date.now() + path.extname(file.originalname));
   }
 });
 const upload = multer({ storage: storage });
@@ -137,7 +142,7 @@ router.post('/', [
   body('purchasePrice').isFloat({ min: 0 }).withMessage('Purchase price must be positive'),
   body('sellingPrice').isFloat({ min: 0 }).withMessage('Selling price must be positive'),
   body('quantity').isInt({ min: 0 }).withMessage('Quantity must be non-negative'),
-  body('huid').optional().isLength({ min: 6, max: 6 }).matches(/^[A-Za-z0-9]{6}$/).withMessage('Invalid HUID format')
+  body('huid').optional({ checkFalsy: true }).isLength({ min: 6, max: 6 }).matches(/^[A-Za-z0-9]{6}$/).withMessage('Invalid HUID format')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -153,6 +158,10 @@ router.post('/', [
       images: imageUrls,
       createdBy: req.user.id
     };
+
+    if (productData.huid === '') {
+      delete productData.huid;
+    }
 
     // Auto-generate SKU if not provided
     if (!productData.sku) {

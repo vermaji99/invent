@@ -31,7 +31,12 @@ router.get('/', auth, async (req, res) => {
 router.post('/', [
   auth,
   body('supplier').notEmpty().withMessage('Supplier is required'),
-  body('items').isArray({ min: 1 }).withMessage('At least one item is required')
+  body('items').isArray({ min: 1 }).withMessage('At least one item is required'),
+  body('items.*.name').trim().notEmpty().withMessage('Item name is required'),
+  body('items.*.category').isIn(['Gold', 'Silver', 'Diamond', 'Platinum', 'Other']).withMessage('Invalid item category'),
+  body('items.*.weight').isFloat({ min: 0.0001 }).withMessage('Item weight must be positive'),
+  body('items.*.rate').isFloat({ min: 0.01 }).withMessage('Item rate must be positive'),
+  body('items.*.quantity').isInt({ min: 1 }).withMessage('Item quantity must be at least 1')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -42,25 +47,36 @@ router.post('/', [
     const count = await Purchase.countDocuments();
     const purchaseNumber = `PUR-${String(count + 1).padStart(6, '0')}`;
 
-    const { items, supplier, gst, paymentMode, purchaseDate } = req.body;
+  const { items, supplier, gst, paymentMode, purchaseDate } = req.body;
 
-    let subtotal = 0;
-    // Calculate amounts
-    items.forEach(item => {
-      item.amount = item.rate * item.weight * item.quantity;
-      subtotal += item.amount;
-    });
+  let subtotal = 0;
+  // Calculate amounts
+  items.forEach(item => {
+    const rate = Number(item.rate);
+    const weight = Number(item.weight);
+    const quantity = Number(item.quantity);
+    const amount = rate * weight * quantity;
+    item.amount = Math.round(amount * 100) / 100;
+    subtotal += item.amount;
+  });
 
-    // Create/Update products BEFORE saving purchase so we can link product IDs
-    for (let item of items) {
-      if (item.product) {
-        const product = await Product.findById(item.product);
-        if (product) {
-          product.quantity += item.quantity;
-          product.purchasePrice = item.rate;
-          await product.save();
-        }
-      } else if (item.createProduct) {
+  // Normalize product field: remove empty strings to avoid ObjectId cast errors
+  for (const item of items) {
+    if (typeof item.product === 'string' && item.product.trim() === '') {
+      delete item.product;
+    }
+  }
+
+  // Create/Update products BEFORE saving purchase so we can link product IDs
+  for (let item of items) {
+    if (item.product) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        product.quantity += item.quantity;
+        product.purchasePrice = item.rate;
+        await product.save();
+      }
+    } else if (item.createProduct) {
         const count = await Product.countDocuments();
         const sku = item.sku || `SKU-${String(count + 1).padStart(6, '0')}`;
         const newProduct = new Product({
@@ -154,6 +170,10 @@ router.post('/', [
     res.status(201).json(populatedPurchase);
   } catch (error) {
     console.error(error);
+    if (error.name === 'ValidationError') {
+      const errs = Object.values(error.errors || {}).map(e => ({ msg: e.message }));
+      return res.status(400).json({ errors: errs.length ? errs : [{ msg: 'Validation error' }] });
+    }
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -192,14 +212,23 @@ router.put('/:id', auth, async (req, res) => {
     const { items, supplier, gst, paymentMode, paidAmount, purchaseDate, notes } = req.body;
 
     let subtotal = 0;
-    if (items) {
-      items.forEach(item => {
-        item.amount = item.rate * item.weight * item.quantity;
-        subtotal += item.amount;
-      });
-    } else {
-      subtotal = purchase.subtotal;
+  if (items) {
+    items.forEach(item => {
+      item.amount = item.rate * item.weight * item.quantity;
+      subtotal += item.amount;
+    });
+  } else {
+    subtotal = purchase.subtotal;
+  }
+
+  // Normalize product field in items to avoid ObjectId cast errors
+  if (items) {
+    for (const item of items) {
+      if (typeof item.product === 'string' && item.product.trim() === '') {
+        delete item.product;
+      }
     }
+  }
 
     const totalGST = gst !== undefined ? gst : purchase.gst;
     const total = subtotal + totalGST;

@@ -24,7 +24,7 @@ router.get('/stats', auth, async (req, res) => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
 
     // --- SALES ---
     const todaySales = await Invoice.aggregate([
@@ -33,85 +33,137 @@ router.get('/stats', auth, async (req, res) => {
     ]);
 
     const monthlySales = await Invoice.aggregate([
-      { $match: { createdAt: { $gte: startOfMonth, $lte: endOfMonth } } },
+      { $match: { createdAt: { $gte: startOfMonth, $lt: startOfNextMonth } } },
       { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } }
     ]);
 
     // --- PROFIT & LOSS (Today and Month) ---
-    async function computeNetProfit(start, end) {
-      const matchQuery = {};
-      if (start || end) {
-        matchQuery.createdAt = {};
-        if (start) matchQuery.createdAt.$gte = start;
-        if (end) matchQuery.createdAt.$lte = end;
-      }
-      const salesAgg = await Invoice.aggregate([
-        { $match: matchQuery },
-        { $unwind: '$items' },
-        {
-          $group: {
-            _id: null,
-            grossSales: {
-              $sum: {
-                $add: [
-                  '$items.subtotal',
-                  { $ifNull: ['$items.oldGoldAdjustment', 0] },
-                  { $ifNull: ['$items.discount', 0] }
-                ]
-              }
-            },
-            cogs: {
-              $sum: {
-                $multiply: [{ $ifNull: ['$items.purchaseRate', 0] }, '$items.weight']
-              }
-            },
-            makingCharges: { $sum: '$items.makingCharge' },
-            wastage: { $sum: '$items.wastage' },
-            itemDiscounts: { $sum: '$items.discount' },
-            oldGoldAdj: { $sum: { $ifNull: ['$items.oldGoldAdjustment', 0] } }
-          }
-        }
-      ]);
-      let agg = salesAgg[0];
-      if (!agg) {
-        const invoices = await Invoice.find(matchQuery, { items: 1, _id: 0 });
-        agg = {
-          grossSales: 0,
-          cogs: 0,
-          makingCharges: 0,
-          wastage: 0,
-          itemDiscounts: 0,
-          oldGoldAdj: 0
-        };
-        for (const inv of invoices) {
-          for (const it of (inv.items || [])) {
-            agg.grossSales += (it.subtotal || 0) + (it.oldGoldAdjustment || 0) + (it.discount || 0);
-            agg.cogs += ((it.purchaseRate || 0) * (it.weight || 0));
-            agg.makingCharges += (it.makingCharge || 0);
-            agg.wastage += (it.wastage || 0);
-            agg.itemDiscounts += (it.discount || 0);
-            agg.oldGoldAdj += (it.oldGoldAdjustment || 0);
-          }
+  async function computeNetProfit(start, end) {
+    const matchQuery = {};
+    if (start || end) {
+      matchQuery.createdAt = {};
+      if (start) matchQuery.createdAt.$gte = start;
+      if (end) matchQuery.createdAt.$lt = end;
+    }
+    const salesAgg = await Invoice.aggregate([
+      { $match: matchQuery },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: null,
+          grossSales: {
+            $sum: {
+              $add: [
+                { $ifNull: ['$items.subtotal', 0] },
+                { $ifNull: ['$items.oldGoldAdjustment', 0] },
+                { $ifNull: ['$items.discount', 0] }
+              ]
+            }
+          },
+          cogs: {
+            $sum: {
+              $add: [
+                { $multiply: [{ $ifNull: ['$items.purchaseRate', 0] }, '$items.weight'] },
+                { $ifNull: ['$items.otherCost', 0] }
+              ]
+            }
+          },
+          makingCharges: { $sum: '$items.makingCharge' },
+          wastage: { $sum: '$items.wastage' },
+          itemDiscounts: { $sum: '$items.discount' },
+          oldGoldAdj: { $sum: { $ifNull: ['$items.oldGoldAdjustment', 0] } }
         }
       }
-      const invoiceDiscounts = await Invoice.aggregate([
-        { $match: matchQuery },
-        { $group: { _id: null, totalDiscount: { $sum: '$discount' } } }
-      ]);
-      const totalDiscounts = (invoiceDiscounts[0]?.totalDiscount || 0) + (agg.itemDiscounts || 0);
-      const netSales = (agg.grossSales || 0) - totalDiscounts;
+    ]);
+    let agg = salesAgg[0];
+    if (!agg) {
+      const invoices = await Invoice.find(matchQuery, { items: 1, _id: 0 });
+      agg = {
+        grossSales: 0,
+        cogs: 0,
+        makingCharges: 0,
+        wastage: 0,
+        itemDiscounts: 0,
+        oldGoldAdj: 0
+      };
+      for (const inv of invoices) {
+        for (const it of (inv.items || [])) {
+          agg.grossSales += (it.subtotal || 0) + (it.oldGoldAdjustment || 0) + (it.discount || 0);
+          agg.cogs += ((it.purchaseRate || 0) * (it.weight || 0)) + (it.otherCost || 0);
+          agg.makingCharges += (it.makingCharge || 0);
+          agg.wastage += (it.wastage || 0);
+          agg.itemDiscounts += (it.discount || 0);
+          agg.oldGoldAdj += (it.oldGoldAdjustment || 0);
+        }
+      }
+    }
+    // Include Delivered Orders when invoices are missing or incomplete
+    const orderMatch = { orderStatus: 'DELIVERED' };
+    if (start || end) {
+      orderMatch.actualDeliveryDate = {};
+      if (start) orderMatch.actualDeliveryDate.$gte = start;
+      if (end) orderMatch.actualDeliveryDate.$lt = end;
+    }
+    const invCount = await Invoice.countDocuments(matchQuery);
+    if (invCount === 0) {
+      const deliveredOrders = await Order.find(orderMatch).populate('items.product');
+      if (deliveredOrders.length > 0) {
+        const latestGoldRate = await GoldPrice.getLatest();
+        for (const ord of deliveredOrders) {
+          for (const it of (ord.items || [])) {
+            const qty = Number(it.quantity || 1);
+            const wt = Number(it.weight || 0) * qty;
+            const subtotal = Number(it.price || 0) * qty;
+            agg.grossSales += subtotal;
+            // Compute COGS (approx) for orders without invoice
+            let purchaseRate = 0;
+            if (it.product) {
+              const prod = it.product;
+              purchaseRate = (Number(prod.purchasePrice || 0) && Number(prod.grossWeight || 0))
+                ? (Number(prod.purchasePrice) / Number(prod.grossWeight))
+                : 0;
+            } else if (latestGoldRate) {
+              const purity = (it.purity || '22K').replace(/\s+/g, '');
+              const rateKey = purity === '24K' ? 'rate24K' : purity === '18K' ? 'rate18K' : 'rate22K';
+              purchaseRate = latestGoldRate[rateKey] || latestGoldRate.rate22K || 0;
+            }
+            agg.cogs += purchaseRate * wt;
+          }
+        }
+      }
+    }
+    const invoiceDiscounts = await Invoice.aggregate([
+      { $match: matchQuery },
+      { $group: { _id: null, totalDiscount: { $sum: '$discount' } } }
+    ]);
+    const globalDiscount = invoiceDiscounts[0]?.totalDiscount || 0;
+    const itemDiscounts = agg.itemDiscounts || 0;
+    const totalDiscounts = globalDiscount + itemDiscounts;
+      const rawRevenue = agg.grossSales || 0;
+      const netSales = rawRevenue - totalDiscounts;
       const grossProfit = netSales - (agg.cogs || 0);
-      const expenseMatch = {};
-      if (start || end) {
-        expenseMatch.date = {};
-        if (start) expenseMatch.date.$gte = start;
-        if (end) expenseMatch.date.$lte = end;
-      }
+      const expenseDateRange = {};
+      if (start) expenseDateRange.$gte = start;
+      if (end) expenseDateRange.$lt = end;
+      const expenseMatch = (start || end)
+        ? { $or: [ { date: expenseDateRange }, { createdAt: expenseDateRange } ] }
+        : {};
       const expenseAgg = await Expense.aggregate([
         { $match: expenseMatch },
         { $group: { _id: null, total: { $sum: '$amount' } } }
       ]);
-      const totalExpenses = expenseAgg[0]?.total || 0;
+      const txDateRange = {};
+      if (start) txDateRange.$gte = start;
+      if (end) txDateRange.$lt = end;
+      const txMatch = (start || end)
+        ? { category: 'EXPENSE', $or: [ { date: txDateRange }, { createdAt: txDateRange } ] }
+        : { category: 'EXPENSE' };
+      const txExpenseAgg = await Transaction.aggregate([
+        { $match: txMatch },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]);
+      const txTotalExpenses = txExpenseAgg[0]?.total || 0;
+      const totalExpenses = (expenseAgg[0]?.total || 0) || txTotalExpenses;
       const netProfit = grossProfit - totalExpenses;
       const salesByCategory = await Invoice.aggregate([
         { $match: matchQuery },
@@ -127,11 +179,14 @@ router.get('/stats', auth, async (req, res) => {
         },
         { $sort: { salesAmount: -1 } }
       ]);
-      const expensesByCategory = await Expense.aggregate([
+      let expensesByCategory = await Expense.aggregate([
         { $match: expenseMatch },
         { $group: { _id: '$category', total: { $sum: '$amount' } } },
         { $sort: { total: -1 } }
       ]);
+      if ((!expensesByCategory || expensesByCategory.length === 0) && txTotalExpenses > 0) {
+        expensesByCategory = [{ _id: 'Expenses', total: txTotalExpenses }];
+      }
       return {
         netSales,
         cogs: agg.cogs || 0,
@@ -152,7 +207,7 @@ router.get('/stats', auth, async (req, res) => {
     }
 
     const todayPL = await computeNetProfit(today, tomorrow);
-    const monthPL = await computeNetProfit(startOfMonth, endOfMonth);
+    const monthPL = await computeNetProfit(startOfMonth, startOfNextMonth);
 
     // --- PROFIT (Improved Logic) ---
     // Note: To fix Profit & Loss correctly (Item 4), we need detailed cost tracking.
@@ -265,7 +320,7 @@ router.get('/stats', auth, async (req, res) => {
       {
         $group: {
           _id: '$category',
-          totalValue: { $sum: { $multiply: ['$sellingPrice', '$quantity'] } },
+          totalValue: { $sum: { $multiply: ['$purchasePrice', '$quantity'] } },
           totalQuantity: { $sum: '$quantity' }
         }
       }
