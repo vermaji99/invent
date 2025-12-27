@@ -37,6 +37,10 @@
 }
 
 @media (max-width: 480px) {
+
+.exchange-section .exchange-inputs input {
+  width:140px;
+}
   .billing-page {
     padding: 0.75rem;
   }
@@ -55,6 +59,11 @@
   .page-header p {
     font-size: 0.85rem;
   }
+  .cart-section{
+    width:300px;
+  }
+  .payment-section{
+    width:300px;
 }
 
 .page-header {
@@ -607,6 +616,9 @@
 }
 
 @media (max-width: 480px) {
+  .cart-section{
+    width: 300px;
+  }
   .product-search-box {
     width: 100%;
     height: 44px;
@@ -642,7 +654,7 @@
     padding: 0.8rem;
     font-size: 1rem;
   }
-}
+}}
 .billing-actions {
   display: flex;
   flex-direction: column;
