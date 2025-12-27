@@ -246,7 +246,7 @@ const Products = () => {
           <h1>Inventory Management</h1>
           <p>Manage your products and stock</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="header-actions">
           <button className="btn-primary" onClick={() => { setShowModal(true); resetForm(); setEditingProduct(null); }}>
             <FiPlus /> Add Product
           </button>
@@ -293,8 +293,8 @@ const Products = () => {
         </select>
         <select value={weightFilter} onChange={(e) => setWeightFilter(e.target.value)}>
           <option value="">All Types</option>
-          <option value="weight">Weight-managed</option>
-          <option value="qty">Quantity-based</option>
+          <option value="weight">Weight</option>
+          <option value="qty">Qty</option>
         </select>
       </div>
 
