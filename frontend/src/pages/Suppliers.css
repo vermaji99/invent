@@ -1,11 +1,79 @@
 .suppliers-page {
   padding: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.suppliers-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.suppliers-page .page-header h1 {
+  font-size: 1.6rem;
+  color: var(--gold-primary);
+  letter-spacing: 0.4px;
+  font-weight: 700;
+}
+
+.suppliers-page .page-header p {
+  color: var(--text-secondary);
+}
+
+.suppliers-page .btn-primary {
+  min-height: 44px;
+}
+
+.suppliers-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.suppliers-filters .search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  height: 48px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.suppliers-filters .search-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.suppliers-filters .filter-select {
+  padding: 0.75rem;
+  height: 48px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+  outline: none;
+  min-width: 180px;
 }
 
 .suppliers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
 }
 
 @media (max-width: 768px) {
@@ -13,8 +81,23 @@
     padding: 1rem;
   }
   
-  .suppliers-grid {
-    grid-template-columns: 1fr;
+  .suppliers-page .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .suppliers-page .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+  .suppliers-filters {
+    padding: 0.75rem;
+  }
+  .suppliers-filters .search-bar {
+    width: 100%;
+  }
+  .suppliers-filters .filter-select {
+    width: 100%;
   }
 }
 
@@ -22,8 +105,9 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.08);
 }
 
 .supplier-card:hover {
@@ -32,10 +116,26 @@
   box-shadow: 0 8px 24px rgba(212, 175, 55, 0.1);
 }
 
+.supplier-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
 .supplier-card h3 {
   font-size: 1.1rem;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
+}
+
+.supplier-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-primary);
 }
 
 .supplier-phone {
@@ -50,18 +150,22 @@
 }
 
 .supplier-stats {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
   margin: 1rem 0;
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--bg-tertiary);
   border-radius: 8px;
 }
 
 .stat {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  background: rgba(0,0,0,0.08);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
 }
 
 .stat-label {
@@ -79,10 +183,11 @@
 .supplier-actions {
   display: flex;
   gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 .supplier-actions button {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,12 +199,23 @@
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 40px;
 }
 
 .supplier-actions button:hover {
   background: var(--gold-primary);
   color: var(--bg-primary);
   border-color: var(--gold-primary);
+}
+
+@media (max-width: 769px) {
+  .supplier-actions {
+    justify-content: center;
+  }
+  .supplier-actions button {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }
 
 .supplier-specializations {
@@ -157,6 +273,7 @@
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
+  min-height: 44px;
 }
 
 .btn-add-spec:hover {
@@ -200,5 +317,28 @@
 
 .remove-spec:hover {
   background: rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 480px) {
+  .supplier-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 770px) {
+  .suppliers-grid {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+  .supplier-card {
+    padding: 1.35rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .suppliers-grid {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
 }
 

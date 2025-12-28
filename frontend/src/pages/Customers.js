@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiSearch, FiUser, FiDollarSign, FiRefreshCw, FiClock } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiSearch, FiUser, FiDollarSign, FiRefreshCw, FiClock, FiPhone, FiMail } from 'react-icons/fi';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import './Customers.css';
@@ -216,17 +216,53 @@ const Customers = () => {
         <div className="customers-grid">
           {filteredCustomers.map((customer) => (
             <div key={customer._id} className="customer-card">
-              <div className="customer-avatar">
-                <FiUser />
+              <div className="customer-left">
+                <div className="customer-avatar">
+                  <FiUser />
+                </div>
+                <div className="customer-actions">
+                  <button onClick={() => handleViewHistory(customer)} className="icon-btn" title="View History">
+                    <FiClock />
+                  </button>
+                  {customer.totalDue > 0 && (
+                    <button 
+                      onClick={() => {
+                        setSelectedCustomer(customer);
+                        setClearAmount(customer.totalDue.toString());
+                        setShowClearArrearsModal(true);
+                      }}
+                      className="icon-btn icon-gold"
+                      title="Clear Arrears"
+                    >
+                      <FiDollarSign />
+                    </button>
+                  )}
+                  <button onClick={() => handleEdit(customer)} className="icon-btn" title="Edit">
+                    <FiEdit />
+                  </button>
+                  <button onClick={() => handleDelete(customer._id)} className="icon-btn btn-danger" title="Delete">
+                    <FiTrash2 />
+                  </button>
+                </div>
               </div>
               <div className="customer-info">
                 <h3>{customer.name}</h3>
-                <p className="customer-phone">{customer.phone}</p>
-                {customer.email && <p className="customer-email">{customer.email}</p>}
+                <div className="customer-contact">
+                  <div className="contact-row">
+                    <FiPhone />
+                    <span>{customer.phone}</span>
+                  </div>
+                  {customer.email && (
+                    <div className="contact-row">
+                      <FiMail />
+                      <span>{customer.email}</span>
+                    </div>
+                  )}
+                </div>
                 {customer.address?.city && (
-                  <p className="customer-email" style={{ fontSize: '0.85rem' }}>
-                    {customer.address.city}, {customer.address.state}
-                  </p>
+                  <div className="customer-address-line">
+                    <span>{customer.address.city}, {customer.address.state}</span>
+                  </div>
                 )}
                 <div className="customer-stats">
                   <div className="stat">
@@ -245,30 +281,6 @@ const Customers = () => {
                     )}
                   </div>
                 </div>
-              </div>
-              <div className="customer-actions">
-                <button onClick={() => handleViewHistory(customer)} className="btn-icon-text" title="View History">
-                  <FiClock /> History
-                </button>
-                {customer.totalDue > 0 && (
-                  <button 
-                    onClick={() => {
-                      setSelectedCustomer(customer);
-                      setClearAmount(customer.totalDue.toString());
-                      setShowClearArrearsModal(true);
-                    }}
-                    className="btn-clear-arrears"
-                    title="Clear Arrears"
-                  >
-                    <FiDollarSign /> Clear
-                  </button>
-                )}
-                <button onClick={() => handleEdit(customer)} title="Edit">
-                  <FiEdit />
-                </button>
-                <button onClick={() => handleDelete(customer._id)} className="btn-danger" title="Delete">
-                  <FiTrash2 />
-                </button>
               </div>
             </div>
           ))}

@@ -116,79 +116,68 @@ const Invoices = () => {
       {loading ? (
         <div className="loading">Loading invoices...</div>
       ) : (
-        <div className="invoices-table-container">
-          <table className="invoices-table">
-            <thead>
-              <tr>
-                <th>Invoice #</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Total</th>
-                <th>Paid</th>
-                <th>Due</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.length === 0 ? (
-                <tr>
-                  <td colSpan="8" className="no-data">
-                    No invoices found
-                  </td>
-                </tr>
-              ) : (
-                invoices.map((invoice) => (
-                  <tr key={invoice._id}>
-                    <td className="invoice-number">{invoice.invoiceNumber}</td>
-                    <td>{invoice.customer?.name || 'N/A'}</td>
-                    <td>{formatDate(invoice.createdAt)}</td>
-                    <td>{formatCurrency(invoice.total)}</td>
-                    <td>{formatCurrency(invoice.paidAmount)}</td>
-                    <td className={invoice.dueAmount > 0 ? 'due' : ''}>
-                      {formatCurrency(invoice.dueAmount)}
-                    </td>
-                    <td>
-                      <span className={`status-badge ${(invoice.dueAmount <= 0 ? 'Paid' : invoice.status).toLowerCase()}`}>
-                        {invoice.dueAmount <= 0 ? 'Paid' : invoice.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        {invoice.dueAmount > 0 && (
-                          <button 
-                            className="btn-icon btn-payment" 
-                            title="Add Payment"
-                            onClick={() => {
-                              handleViewInvoice(invoice._id);
-                              setShowPaymentModal(true);
-                            }}
-                          >
-                            <FiDollarSign />
-                          </button>
-                        )}
-                        <button 
-                          className="btn-icon" 
-                          title="View Invoice"
-                          onClick={() => handleViewInvoice(invoice._id)}
-                        >
-                          <FiEye />
-                        </button>
-                        <button 
-                          className="btn-icon" 
-                          title="Download/Print Invoice"
-                          onClick={() => handleDownloadInvoice(invoice)}
-                        >
-                          <FiDownload />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+          <div className="invoices-grid">
+            {invoices.length === 0 ? (
+              <div className="no-data">No invoices found</div>
+            ) : (
+              invoices.map((invoice) => (
+                <div className="invoice-card" key={invoice._id}>
+                  <div className="card-header">
+                    <span className="invoice-number">{invoice.invoiceNumber}</span>
+                    <span className={`status-badge ${(invoice.dueAmount <= 0 ? 'Paid' : invoice.status).toLowerCase()}`}>
+                      {invoice.dueAmount <= 0 ? 'Paid' : invoice.status}
+                    </span>
+                  </div>
+                  <div className="card-meta">
+                    <span>{invoice.customer?.name || 'N/A'}</span>
+                    <span>{formatDate(invoice.createdAt)}</span>
+                  </div>
+                  <div className="card-totals">
+                    <div>
+                      <span>Total</span>
+                      <span>{formatCurrency(invoice.total)}</span>
+                    </div>
+                    <div>
+                      <span>Paid</span>
+                      <span>{formatCurrency(invoice.paidAmount)}</span>
+                    </div>
+                    <div className={invoice.dueAmount > 0 ? 'due' : ''}>
+                      <span>Due</span>
+                      <span>{formatCurrency(invoice.dueAmount)}</span>
+                    </div>
+                  </div>
+                  <div className="card-actions">
+                    {invoice.dueAmount > 0 && (
+                      <button
+                        className="btn-icon btn-payment"
+                        title="Add Payment"
+                        onClick={() => {
+                          handleViewInvoice(invoice._id);
+                          setShowPaymentModal(true);
+                        }}
+                      >
+                        <FiDollarSign />
+                      </button>
+                    )}
+                    <button
+                      className="btn-icon"
+                      title="View Invoice"
+                      onClick={() => handleViewInvoice(invoice._id)}
+                    >
+                      <FiEye />
+                    </button>
+                    <button
+                      className="btn-icon"
+                      title="Download/Print Invoice"
+                      onClick={() => handleDownloadInvoice(invoice)}
+                    >
+                      <FiDownload />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
       )}
 
       {/* View Invoice Modal */}

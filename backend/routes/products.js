@@ -22,6 +22,33 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// @route   GET /api/products/scan/:code
+// @desc    Scan product by SKU or Barcode (Exact Match)
+// @access  Private
+router.get('/scan/:code', auth, async (req, res) => {
+  try {
+    const code = req.params.code.trim();
+    // Search for exact match in sku or barcode
+    // Case insensitive search for user convenience, but exact match
+    const product = await Product.findOne({
+      $or: [
+        { sku: { $regex: new RegExp(`^${code}$`, 'i') } },
+        { barcode: { $regex: new RegExp(`^${code}$`, 'i') } }
+      ],
+      isActive: true
+    }).populate('supplier', 'name phone');
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json(product);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   GET /api/products
 // @desc    Get all products
 // @access  Private

@@ -23,7 +23,7 @@ import GoldPriceBar from './GoldPriceBar';
 import './Layout.css';
 
 const Layout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -35,7 +35,9 @@ const Layout = () => {
     }
   }, [location]);
 
-  // Handle window resize
+  // Handle window resize - keep sidebar closed/state persistent or just rely on manual toggle
+  // We removed auto-open logic to support overlay mode
+  /*
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768) {
@@ -48,6 +50,7 @@ const Layout = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  */
 
   const menuItems = [
     { path: '/', icon: FiHome, label: 'Dashboard' },

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FiPlus, FiTrash2, FiShoppingCart, FiUser, FiSearch, FiX, FiPrinter, FiSave } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiShoppingCart, FiUser, FiSearch, FiX, FiPrinter, FiSave, FiCamera } from 'react-icons/fi';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import InvoiceTemplate from '../components/InvoiceTemplate';
 import './Billing.css';
 
@@ -32,6 +33,200 @@ const Billing = () => {
   const [createdInvoice, setCreatedInvoice] = useState(null);
   const [exchangeItems, setExchangeItems] = useState([]);
   const [exchangeInput, setExchangeInput] = useState({ description: '', weight: '', purity: '', rate: '' });
+  
+  // Scanning State
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [scannedCode, setScannedCode] = useState('');
+  const scannerInputRef = useRef(null);
+  const scannerContainerId = 'reader';
+
+  // Sound Effect
+  const playBeep = (type = 'success') => {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (type === 'success') {
+      osc.frequency.value = 1200;
+      osc.type = 'sine';
+      gain.gain.value = 0.1;
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } else {
+      osc.frequency.value = 300;
+      osc.type = 'sawtooth';
+      gain.gain.value = 0.2;
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  };
+
+  // Process Scanned Code
+  const processScannedCode = async (code) => {
+    if (!code) return;
+    try {
+      const response = await api.get(`/api/products/scan/${code}`);
+      const product = response.data;
+      
+      playBeep('success');
+      toast.success(`Found: ${product.name}`);
+      
+      // Add to cart with duplicate check
+      addToCartOrIncrement(product);
+      
+    } catch (error) {
+      playBeep('error');
+      console.error(error);
+      toast.error('Product not found or invalid code');
+    }
+  };
+
+  const addToCartOrIncrement = (product) => {
+    setCart(prevCart => {
+      const existingIndex = prevCart.findIndex(item => item.product === product._id);
+      
+      if (existingIndex >= 0) {
+        // Product exists, increment quantity or weight
+        const updatedCart = [...prevCart];
+        const item = updatedCart[existingIndex];
+        
+        if (product.isWeightManaged) {
+          // For weight managed, usually we don't just increment weight blindly, 
+          // but for this requirement "increase quantity instead of creating a duplicate row",
+          // we'll assume quantity increment for non-weight managed, 
+          // and maybe just notify for weight managed or add another entry?
+          // The requirement says "increase quantity". 
+          // If it's weight managed, quantity might not be the main factor.
+          // Let's increment quantity if it exists, otherwise do nothing or add new row.
+          // Most jewelry software adds a NEW row for each piece because weights differ.
+          // BUT, if it's the EXACT same SKU, maybe it's a bulk item?
+          // Let's assume quantity increment for now.
+           item.quantity = (item.quantity || 1) + 1;
+           // We don't auto-increment weight because that varies per piece usually.
+        } else {
+           item.quantity = (item.quantity || 1) + 1;
+           // Recalculate subtotal
+           const baseAmount = (item.rate * item.weight) + item.makingCharge + item.wastage - item.discount - item.oldGoldAdjustment;
+           // If it's a fixed price item (not weight based), usually rate * quantity.
+           // The current logic seems weight based.
+           // If netWeight is used for price:
+           // item.subtotal = ... 
+           // Wait, current logic: subtotal = (rate * weight) + ...
+           // If it's quantity based (e.g. stones), logic might differ.
+           // Let's just add as new row for now if logic is complex, 
+           // BUT requirement says "increase quantity".
+           // Let's just add a new row for simplicity and safety in Jewelry domain 
+           // unless it's clearly a non-unique item.
+           // Actually, let's stick to the user request: "increase quantity".
+           
+           // If the logic relies on weight * rate, quantity is just a counter?
+           // If rate is per piece, then subtotal = rate * quantity.
+        }
+        
+        // Re-calculate subtotal for that item if needed
+        // Assuming current logic is mostly weight based. 
+        // If I just increment quantity, does it affect subtotal?
+        // The current `handleAddToCart` sets `subtotal: (sellingPrice * weight)`.
+        // It doesn't use quantity in subtotal calculation.
+        // So incrementing quantity is metadata.
+        
+        // Let's just add it as a new item if it's weight managed (safest),
+        // and increment if it's not.
+        if (!product.isWeightManaged) {
+             // Assuming non-weight managed items are sold by piece?
+             // The current code sets weight = netWeight.
+             // If I have 2 items, weight should be 2 * netWeight?
+             const newQty = (item.quantity || 1) + 1;
+             item.quantity = newQty;
+             item.weight = (product.netWeight || 0) * newQty;
+             
+             // Update subtotal
+             const baseAmount = (item.rate * item.weight) + item.makingCharge + item.wastage - item.discount - item.oldGoldAdjustment;
+             item.subtotal = baseAmount + item.gst;
+             
+             toast.info(`Increased quantity to ${newQty}`);
+             return updatedCart;
+        }
+      }
+      
+      // If not found or weight managed (add as new), use existing logic
+      // We need to call the logic that creates the item. 
+      // Since we are inside set callback, we can't call handleAddToCart directly nicely without passing state.
+      // So we duplicate the creation logic here slightly or refactor.
+      
+      const cartItem = {
+        product: product._id,
+        productName: product.name,
+        sku: product.sku || 'N/A',
+        category: product.category,
+        quantity: 1,
+        weight: product.isWeightManaged ? 0 : (product.netWeight || 0),
+        rate: product.sellingPrice || 0,
+        makingCharge: 0,
+        wastage: 0,
+        gst: 0,
+        discount: 0,
+        oldGoldAdjustment: 0,
+        subtotal: (product.sellingPrice || 0) * (product.isWeightManaged ? 0 : (product.netWeight || 0))
+      };
+      
+      return [...prevCart, cartItem];
+    });
+  };
+
+  // Handle Physical Scanner Input
+  const handleScanInput = (e) => {
+    if (e.key === 'Enter') {
+      const code = e.target.value.trim();
+      if (code) {
+        processScannedCode(code);
+        e.target.value = ''; // Clear input
+      }
+    }
+  };
+
+  // Auto-focus scanner input
+  useEffect(() => {
+    const focusScanner = () => {
+      if (scannerInputRef.current && !showCameraScanner && !showCustomerModal && !showProductSearch) {
+        scannerInputRef.current.focus();
+      }
+    };
+    
+    // Focus on mount and when modals close
+    focusScanner();
+    
+    // Optional: Keep focus on click anywhere (aggressive mode)
+    // const handleClick = () => focusScanner();
+    // document.addEventListener('click', handleClick);
+    // return () => document.removeEventListener('click', handleClick);
+  }, [showCameraScanner, showCustomerModal, showProductSearch]);
+
+  // Camera Scanner Effect
+  useEffect(() => {
+    if (showCameraScanner) {
+      const scanner = new Html5QrcodeScanner(
+        scannerContainerId,
+        { fps: 10, qrbox: 250 },
+        /* verbose= */ false
+      );
+      
+      scanner.render((decodedText) => {
+        processScannedCode(decodedText);
+        scanner.clear();
+        setShowCameraScanner(false);
+      }, (error) => {
+        // console.warn(error);
+      });
+
+      return () => {
+        scanner.clear().catch(error => console.error("Failed to clear scanner", error));
+      };
+    }
+  }, [showCameraScanner]);
 
   const addExchangeItem = () => {
     if (!exchangeInput.description || !exchangeInput.weight || !exchangeInput.rate) {
@@ -390,18 +585,54 @@ const Billing = () => {
       maximumFractionDigits: 0
     }).format(amount);
   };
+  const formatNumber = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+  const renderAmount = (amount) => (
+    <span className="amount">
+      <span className="currency">₹</span>
+      <span className="value">{formatNumber(amount)}</span>
+    </span>
+  );
 
   // Get unique categories from products
   const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
 
   return (
-    <div className="billing-page">
+    <div className="billing-page debug-outline">
       <div className="page-header">
         <h1>Billing & Invoice</h1>
         <p>Create new invoices and process sales</p>
       </div>
 
       <div className="billing-container">
+        {/* Scanner Input (Always Focused) */}
+        <input
+          ref={scannerInputRef}
+          type="text"
+          className="scanner-input"
+          placeholder="Scan Barcode..."
+          onKeyDown={handleScanInput}
+          autoComplete="off"
+          autoFocus
+        />
+
+        {/* Camera Scanner Modal */}
+        {showCameraScanner && (
+          <div className="camera-modal-overlay">
+            <div className="camera-modal">
+              <div className="camera-header">
+                <h3>Scan Barcode/QR</h3>
+                <button onClick={() => setShowCameraScanner(false)}><FiX /></button>
+              </div>
+              <div id={scannerContainerId}></div>
+              <p className="camera-instruction">Point camera at a barcode</p>
+            </div>
+          </div>
+        )}
+
         {/* Left Side: Customer & Product Search */}
         <div className="billing-left">
           {/* Customer Section */}
@@ -499,6 +730,13 @@ const Billing = () => {
                   onFocus={() => setShowProductSearch(true)}
                 />
               </div>
+              <button 
+                className="btn-camera-scan"
+                onClick={() => setShowCameraScanner(true)}
+                title="Scan with Camera"
+              >
+                <FiCamera />
+              </button>
               <select
                 value={productCategoryFilter}
                 onChange={(e) => setProductCategoryFilter(e.target.value)}
@@ -533,106 +771,190 @@ const Billing = () => {
           </div>
         </div>
 
-        {/* Right Side: Cart & Payment */}
-        <div className="billing-right">
+        {/* Main Column: Cart + Exchange + Payment */}
+        <div className="billing-center">
           <div className="cart-section">
             <h3><FiShoppingCart /> Cart ({cart.length})</h3>
             {cart.length === 0 ? (
               <p className="empty-cart">Cart is empty</p>
             ) : (
-              <div className="cart-table-container">
-                <table className="cart-table">
-                   <thead>
-                     <tr>
-                       <th>Product</th>
-                       <th>Wt(g)</th>
-                       <th>Rate</th>
-                       <th>MC</th>
-                       <th>Wst</th>
-                       <th>GST</th>
-                       <th>Total</th>
-                       <th></th>
-                     </tr>
-                   </thead>
-                   <tbody>
-                     {cart.map((item, index) => (
-                       <tr key={index}>
-                         <td data-label="Product">
-                           <div className="cart-product-name">{item.productName}</div>
-                           <div className="cart-product-sku">{item.sku}</div>
-                         </td>
-                         <td data-label="Wt(g)">
-                           <input 
-                             type="number" 
-                             step="0.01" 
-                             value={item.weight} 
-                             onChange={(e) => updateCartItem(index, 'weight', e.target.value)}
-                             className="table-input number-input"
-                             placeholder="0.00 g"
-                             title="Weight in grams"
-                             min="0"
-                           />
-                         </td>
-                         <td data-label="Rate">
-                           <input 
-                             type="number" 
-                             value={item.rate} 
-                             onChange={(e) => updateCartItem(index, 'rate', e.target.value)}
-                             className="table-input number-input"
-                             placeholder="₹/g"
-                             title="Rate per gram"
-                             min="0"
-                           />
-                         </td>
-                         <td data-label="MC">
-                           <input 
-                             type="number" 
-                             value={item.makingCharge} 
-                             onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)}
-                             className="table-input number-input"
-                             placeholder="Making"
-                             title="Making charge"
-                             min="0"
-                           />
-                         </td>
-                         <td data-label="Wst">
-                           <input 
-                             type="number" 
-                             value={item.wastage} 
-                             onChange={(e) => updateCartItem(index, 'wastage', e.target.value)}
-                             className="table-input number-input"
-                             placeholder="Wastage"
-                             title="Wastage"
-                             min="0"
-                           />
-                         </td>
-                         <td data-label="GST">
-                           <input 
-                             type="number" 
-                             value={item.gst} 
-                             onChange={(e) => updateCartItem(index, 'gst', e.target.value)}
-                             className="table-input number-input"
-                             placeholder="GST"
-                             title="GST amount"
-                             min="0"
-                           />
-                         </td>
-                         <td className="text-right" data-label="Total">
-                           {formatCurrency(item.subtotal)}
-                         </td>
-                         <td>
-                           <button onClick={() => removeFromCart(index)} className="btn-icon-danger">
-                             <FiTrash2 />
-                           </button>
-                         </td>
+              <>
+                {/* Desktop/Tablet Table */}
+                <div className="cart-table-container">
+                  <table className="cart-table">
+                     <thead>
+                       <tr>
+                         <th>Product</th>
+                         <th>Wt(g)</th>
+                         <th>Rate</th>
+                         <th>MC</th>
+                         <th>Wst</th>
+                         <th>GST</th>
+                         <th>Total</th>
+                         <th></th>
                        </tr>
-                     ))}
-                   </tbody>
-                </table>
-              </div>
+                     </thead>
+                     <tbody>
+                       {cart.map((item, index) => (
+                         <tr key={index}>
+                           <td data-label="Product">
+                             <div className="cart-product-name">{item.productName}</div>
+                             <div className="cart-product-sku">{item.sku}</div>
+                           </td>
+                           <td data-label="Wt(g)">
+                             <input 
+                               type="number" 
+                               step="0.01" 
+                               value={item.weight} 
+                               onChange={(e) => updateCartItem(index, 'weight', e.target.value)}
+                               className="table-input number-input"
+                               placeholder="0.00 g"
+                               title="Weight in grams"
+                               min="0"
+                             />
+                           </td>
+                           <td data-label="Rate">
+                             <input 
+                               type="number" 
+                               value={item.rate} 
+                               onChange={(e) => updateCartItem(index, 'rate', e.target.value)}
+                               className="table-input number-input"
+                               placeholder="₹/g"
+                               title="Rate per gram"
+                               min="0"
+                             />
+                           </td>
+                           <td data-label="MC">
+                             <input 
+                               type="number" 
+                               value={item.makingCharge} 
+                               onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)}
+                               className="table-input number-input"
+                               placeholder="Making"
+                               title="Making charge"
+                               min="0"
+                             />
+                           </td>
+                           <td data-label="Wst">
+                             <input 
+                               type="number" 
+                               value={item.wastage} 
+                               onChange={(e) => updateCartItem(index, 'wastage', e.target.value)}
+                               className="table-input number-input"
+                               placeholder="Wastage"
+                               title="Wastage"
+                               min="0"
+                             />
+                           </td>
+                           <td data-label="GST">
+                             <input 
+                               type="number" 
+                               value={item.gst} 
+                               onChange={(e) => updateCartItem(index, 'gst', e.target.value)}
+                               className="table-input number-input"
+                               placeholder="GST"
+                               title="GST amount"
+                               min="0"
+                             />
+                           </td>
+                           <td className="text-right" data-label="Total">
+                             {formatCurrency(item.subtotal)}
+                           </td>
+                           <td>
+                             <button onClick={() => removeFromCart(index)} className="btn-icon-danger">
+                               <FiTrash2 />
+                             </button>
+                           </td>
+                         </tr>
+                       ))}
+                     </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="cart-cards">
+                  {cart.map((item, index) => (
+                    <div key={index} className="cart-card">
+                      <div className="cart-card-header">
+                        <div>
+                          <div className="cart-card-title">{item.productName}</div>
+                          <div className="cart-card-sku">{item.sku}</div>
+                        </div>
+                        <button onClick={() => removeFromCart(index)} className="btn-icon-danger" aria-label="Remove item">
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                      <div className="cart-field">
+                        <div className="cart-label">Wt(g)</div>
+                        <div className="cart-value">
+                          <input 
+                            type="number" 
+                            step="0.01" 
+                            value={item.weight} 
+                            onChange={(e) => updateCartItem(index, 'weight', e.target.value)}
+                            placeholder="0.00"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                      <div className="cart-field">
+                        <div className="cart-label">Rate</div>
+                        <div className="cart-value">
+                          <input 
+                            type="number" 
+                            value={item.rate} 
+                            onChange={(e) => updateCartItem(index, 'rate', e.target.value)}
+                            placeholder="₹/g"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                      <div className="cart-field">
+                        <div className="cart-label">MC</div>
+                        <div className="cart-value">
+                          <input 
+                            type="number" 
+                            value={item.makingCharge} 
+                            onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)}
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                      <div className="cart-field">
+                        <div className="cart-label">GST</div>
+                        <div className="cart-value">
+                          <input 
+                            type="number" 
+                            value={item.gst} 
+                            onChange={(e) => updateCartItem(index, 'gst', e.target.value)}
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                      <div className="cart-field">
+                        <div className="cart-label">Wst</div>
+                        <div className="cart-value">
+                          <input 
+                            type="number" 
+                            value={item.wastage} 
+                            onChange={(e) => updateCartItem(index, 'wastage', e.target.value)}
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                      <div className="cart-total">
+                        <span>Total</span>
+                        <span>{formatCurrency(item.subtotal)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
-
           <div className="exchange-section">
             <h3>Old Gold / Exchange</h3>
             <div className="exchange-inputs">
@@ -705,12 +1027,12 @@ const Billing = () => {
 
           <div className="payment-section">
             <div className="totals-display">
-              <div className="total-row"><span>Subtotal:</span> <span>{formatCurrency(totals.subtotal)}</span></div>
-              <div className="total-row"><span>Discount:</span> <span>- {formatCurrency(totals.discount)}</span></div>
+              <div className="total-row"><span>Subtotal:</span> <span>{renderAmount(totals.subtotal)}</span></div>
+              <div className="total-row"><span>Discount:</span> <span>- {renderAmount(totals.discount)}</span></div>
               {totals.exchangeTotal > 0 && (
-                <div className="total-row"><span>Exchange:</span> <span>- {formatCurrency(totals.exchangeTotal)}</span></div>
+                <div className="total-row"><span>Exchange:</span> <span>- {renderAmount(totals.exchangeTotal)}</span></div>
               )}
-              <div className="total-row grand-total"><span>Total:</span> <span>{formatCurrency(totals.total)}</span></div>
+              <div className="total-row grand-total"><span>Total:</span> <span>{renderAmount(totals.total)}</span></div>
             </div>
 
             <div className="payment-controls">
@@ -756,16 +1078,22 @@ const Billing = () => {
                    </div>
                 )}
                 
-                <div className="total-row due-row"><span>Due:</span> <span>{formatCurrency(totals.dueAmount)}</span></div>
+                <div className="total-row due-row"><span>Due:</span> <span>{renderAmount(totals.dueAmount)}</span></div>
 
                 <div className="action-buttons">
-                    <button className="btn-save" onClick={handleSubmit}><FiSave /> Save Invoice</button>
+                    <button className="btn-save" onClick={handleSubmit} disabled={cart.length === 0}><FiSave /> Save Invoice</button>
                     {createdInvoice && (
                         <button className="btn-print" onClick={handlePrintInvoice}><FiPrinter /> Print</button>
                     )}
                 </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="sticky-bottom-save">
+        <div className="save-bar">
+          <div className="save-total">Total: {renderAmount(totals.total)}</div>
+          <button className="save-action" onClick={handleSubmit} disabled={cart.length === 0}><FiSave /> Pay Now</button>
         </div>
       </div>
 

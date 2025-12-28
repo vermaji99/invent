@@ -205,7 +205,12 @@ const Suppliers = () => {
           ) : (
             filteredSuppliers.map((supplier) => (
             <div key={supplier._id} className="supplier-card">
-              <h3>{supplier.name}</h3>
+              <div className="supplier-card-header">
+                <h3>{supplier.name}</h3>
+                {supplier.categorySpecializations && supplier.categorySpecializations.length > 0 && (
+                  <span className="supplier-badge">Specialist</span>
+                )}
+              </div>
               <p className="supplier-phone">{supplier.phone}</p>
               {supplier.email && <p className="supplier-email">{supplier.email}</p>}
               {supplier.categorySpecializations && supplier.categorySpecializations.length > 0 && (
