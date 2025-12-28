@@ -484,7 +484,7 @@ const OrderCreate = () => {
                     </div>
                     {customItem.designImage && (
                         <div style={{ marginTop: '10px', border: '1px solid var(--border-color)', padding: '5px', borderRadius: '4px', width: 'fit-content', background: 'var(--bg-tertiary)' }}>
-                            <img src={customItem.designImage.startsWith('/') ? `http://localhost:5000${customItem.designImage}` : customItem.designImage} alt="Design Preview" style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} />
+                            <img src={customItem.designImage.startsWith('/') ? `https://invent-backend-rjbf.onrender.com${customItem.designImage}` : customItem.designImage} alt="Design Preview" style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} />
                         </div>
                     )}
                 </div>

@@ -23,7 +23,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:5000",
+  "proxy": "https://invent-backend-rjbf.onrender.com",
   "devDependencies": {
     "cross-env": "^10.1.0",
     "react-scripts": "5.0.1",

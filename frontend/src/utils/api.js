@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || 'https://invent-backend-rjbf.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -36,4 +36,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-

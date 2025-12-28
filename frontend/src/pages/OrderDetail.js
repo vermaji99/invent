@@ -130,7 +130,7 @@ const OrderDetail = () => {
   const resolveImageUrl = (item) => {
     const candidate = item.image || item.designImage;
     if (!candidate) return null;
-    return String(candidate).startsWith('/') ? `http://localhost:5000${candidate}` : candidate;
+    return String(candidate).startsWith('/') ? `https://invent-backend-rjbf.onrender.com${candidate}` : candidate;
   };
   const totalPaid = order.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
   const advancePaid = order.payments.filter(p => p.type === 'ADVANCE').reduce((sum, p) => sum + Number(p.amount || 0), 0);

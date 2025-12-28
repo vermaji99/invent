@@ -330,7 +330,7 @@ const Products = () => {
               <div className="product-image-container">
                 {product.images && product.images.length > 0 ? (
                   <img 
-                    src={`http://localhost:5000${product.images[0]}`} 
+                    src={`https://invent-backend-rjbf.onrender.com${product.images[0]}`} 
                     alt={product.name} 
                     className="product-thumb"
                     onError={(e) => {e.target.onerror = null; e.target.src = 'placeholder.png'}} 
@@ -409,7 +409,7 @@ const Products = () => {
                   <div className="image-previews">
                     {existingImages.map((img, idx) => (
                       <div key={idx} className="preview-thumb-container">
-                        <img src={`http://localhost:5000${img}`} alt="preview" className="preview-thumb" />
+                        <img src={`https://invent-backend-rjbf.onrender.com${img}`} alt="preview" className="preview-thumb" />
                         <button 
                           type="button" 
                           className="remove-img-btn"
