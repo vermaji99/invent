@@ -1,14 +1,9 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
+require('dotenv').config();
 const path = require('path');
 
-// Load env from backend/.env; if still missing, also try project root .env
-const backendEnvLoaded = dotenv.config();
-if (backendEnvLoaded.error || !process.env.JWT_SECRET) {
-  dotenv.config({ path: path.join(__dirname, '..', '.env') });
-}
+const connectDB = require('./config/db');
 
 const app = express();
 
@@ -19,9 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/jewellery_shop')
-.then(() => console.log('✅ MongoDB Connected Successfully'))
-.catch((err) => console.error('❌ MongoDB Connection Error:', err));
+connectDB();
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
