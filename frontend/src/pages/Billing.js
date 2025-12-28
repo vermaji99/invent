@@ -27,8 +27,8 @@ const Billing = () => {
   });
   const [formData, setFormData] = useState({
     paymentMode: 'Cash',
-    paymentDetails: { cash: 0, upi: 0, card: 0 },
-    discount: 0
+    paymentDetails: { cash: '', upi: '', card: '' },
+    discount: ''
   });
   const [createdInvoice, setCreatedInvoice] = useState(null);
   const [exchangeItems, setExchangeItems] = useState([]);
@@ -163,14 +163,14 @@ const Billing = () => {
         sku: product.sku || 'N/A',
         category: product.category,
         quantity: 1,
-        weight: product.isWeightManaged ? 0 : (product.netWeight || 0),
-        rate: product.sellingPrice || 0,
-        makingCharge: 0,
-        wastage: 0,
-        gst: 0,
+        weight: '',
+        rate: '',
+        makingCharge: '',
+        wastage: '',
+        gst: '',
         discount: 0,
         oldGoldAdjustment: 0,
-        subtotal: (product.sellingPrice || 0) * (product.isWeightManaged ? 0 : (product.netWeight || 0))
+        subtotal: 0
       };
       
       return [...prevCart, cartItem];
@@ -447,19 +447,20 @@ const Billing = () => {
 
   const updateCartItem = (index, field, value) => {
     const updatedCart = [...cart];
-    updatedCart[index][field] = parseFloat(value) || 0;
-    
-    // Recalculate subtotal
+    updatedCart[index][field] = value === '' ? '' : parseFloat(value);
+
     const item = updatedCart[index];
-    // Formula: (Rate * Weight) + Making + Wastage - Discount - OldGold
-    // GST is calculated on top usually, but here user has GST field per item.
-    // Assuming GST is EXTRA.
-    const baseAmount = (item.rate * item.weight) + item.makingCharge + item.wastage - item.discount - item.oldGoldAdjustment;
-    // If GST is amount, add it. If GST is percent, calculate it. 
-    // Usually GST is calculated on total. But here it seems to be an amount field.
-    // Let's assume it's an amount entered manually or 0.
-    item.subtotal = baseAmount + item.gst;
-    
+    const rate = parseFloat(item.rate) || 0;
+    const weight = parseFloat(item.weight) || 0;
+    const making = parseFloat(item.makingCharge) || 0;
+    const wastage = parseFloat(item.wastage) || 0;
+    const discount = parseFloat(item.discount) || 0;
+    const oldGold = parseFloat(item.oldGoldAdjustment) || 0;
+    const gst = parseFloat(item.gst) || 0;
+
+    const baseAmount = (rate * weight) + making + wastage - discount - oldGold;
+    item.subtotal = baseAmount + gst;
+
     setCart(updatedCart);
   };
 
@@ -805,7 +806,7 @@ const Billing = () => {
                              <input 
                                type="number" 
                                step="0.01" 
-                               value={item.weight} 
+                               value={item.weight || ''} 
                                onChange={(e) => updateCartItem(index, 'weight', e.target.value)}
                                className="table-input number-input"
                                placeholder="0.00 g"
@@ -816,7 +817,7 @@ const Billing = () => {
                            <td data-label="Rate">
                              <input 
                                type="number" 
-                               value={item.rate} 
+                               value={item.rate || ''} 
                                onChange={(e) => updateCartItem(index, 'rate', e.target.value)}
                                className="table-input number-input"
                                placeholder="₹/g"
@@ -827,7 +828,7 @@ const Billing = () => {
                            <td data-label="MC">
                              <input 
                                type="number" 
-                               value={item.makingCharge} 
+                               value={item.makingCharge || ''} 
                                onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)}
                                className="table-input number-input"
                                placeholder="Making"
@@ -838,7 +839,7 @@ const Billing = () => {
                            <td data-label="Wst">
                              <input 
                                type="number" 
-                               value={item.wastage} 
+                               value={item.wastage || ''} 
                                onChange={(e) => updateCartItem(index, 'wastage', e.target.value)}
                                className="table-input number-input"
                                placeholder="Wastage"
@@ -849,7 +850,7 @@ const Billing = () => {
                            <td data-label="GST">
                              <input 
                                type="number" 
-                               value={item.gst} 
+                               value={item.gst || ''} 
                                onChange={(e) => updateCartItem(index, 'gst', e.target.value)}
                                className="table-input number-input"
                                placeholder="GST"
@@ -890,7 +891,7 @@ const Billing = () => {
                           <input 
                             type="number" 
                             step="0.01" 
-                            value={item.weight} 
+                            value={item.weight || ''} 
                             onChange={(e) => updateCartItem(index, 'weight', e.target.value)}
                             placeholder="0.00"
                             min="0"
@@ -902,7 +903,7 @@ const Billing = () => {
                         <div className="cart-value">
                           <input 
                             type="number" 
-                            value={item.rate} 
+                            value={item.rate || ''} 
                             onChange={(e) => updateCartItem(index, 'rate', e.target.value)}
                             placeholder="₹/g"
                             min="0"
@@ -914,7 +915,7 @@ const Billing = () => {
                         <div className="cart-value">
                           <input 
                             type="number" 
-                            value={item.makingCharge} 
+                            value={item.makingCharge || ''} 
                             onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)}
                             placeholder="0"
                             min="0"
@@ -926,7 +927,7 @@ const Billing = () => {
                         <div className="cart-value">
                           <input 
                             type="number" 
-                            value={item.gst} 
+                            value={item.gst || ''} 
                             onChange={(e) => updateCartItem(index, 'gst', e.target.value)}
                             placeholder="0"
                             min="0"
@@ -938,7 +939,7 @@ const Billing = () => {
                         <div className="cart-value">
                           <input 
                             type="number" 
-                            value={item.wastage} 
+                            value={item.wastage || ''} 
                             onChange={(e) => updateCartItem(index, 'wastage', e.target.value)}
                             placeholder="0"
                             min="0"
@@ -1038,7 +1039,14 @@ const Billing = () => {
             <div className="payment-controls">
                 <div className="form-group">
                     <label>Discount</label>
-                    <input type="number" value={formData.discount} onChange={(e) => setFormData({...formData, discount: parseFloat(e.target.value) || 0})} />
+                    <input 
+                      type="number" 
+                      value={formData.discount === '' ? '' : formData.discount} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, discount: val === '' ? '' : parseFloat(val) });
+                      }} 
+                    />
                 </div>
                 
                 <div className="form-group">
@@ -1053,24 +1061,71 @@ const Billing = () => {
 
                 {formData.paymentMode === 'Split' ? (
                    <div className="split-payment">
-                       <input type="number" placeholder="Cash" value={formData.paymentDetails.cash} onChange={(e) => setFormData({...formData, paymentDetails: {...formData.paymentDetails, cash: parseFloat(e.target.value) || 0}})} />
-                       <input type="number" placeholder="UPI" value={formData.paymentDetails.upi} onChange={(e) => setFormData({...formData, paymentDetails: {...formData.paymentDetails, upi: parseFloat(e.target.value) || 0}})} />
-                       <input type="number" placeholder="Card" value={formData.paymentDetails.card} onChange={(e) => setFormData({...formData, paymentDetails: {...formData.paymentDetails, card: parseFloat(e.target.value) || 0}})} />
+                       <input 
+                         type="number" 
+                         placeholder="Cash" 
+                         value={formData.paymentDetails.cash === '' ? '' : formData.paymentDetails.cash} 
+                         onChange={(e) => {
+                           const val = e.target.value;
+                           setFormData({
+                             ...formData, 
+                             paymentDetails: { 
+                               ...formData.paymentDetails, 
+                               cash: val === '' ? '' : parseFloat(val) 
+                             }
+                           });
+                         }} 
+                       />
+                       <input 
+                         type="number" 
+                         placeholder="UPI" 
+                         value={formData.paymentDetails.upi === '' ? '' : formData.paymentDetails.upi} 
+                         onChange={(e) => {
+                           const val = e.target.value;
+                           setFormData({
+                             ...formData, 
+                             paymentDetails: { 
+                               ...formData.paymentDetails, 
+                               upi: val === '' ? '' : parseFloat(val) 
+                             }
+                           });
+                         }} 
+                       />
+                       <input 
+                         type="number" 
+                         placeholder="Card" 
+                         value={formData.paymentDetails.card === '' ? '' : formData.paymentDetails.card} 
+                         onChange={(e) => {
+                           const val = e.target.value;
+                           setFormData({
+                             ...formData, 
+                             paymentDetails: { 
+                               ...formData.paymentDetails, 
+                               card: val === '' ? '' : parseFloat(val) 
+                             }
+                           });
+                         }} 
+                       />
                    </div>
                 ) : (
                    <div className="form-group">
                        <label>Paid Amount</label>
                        <input 
                          type="number" 
-                         value={formData.paymentDetails[formData.paymentMode.toLowerCase()] ?? 0} 
+                         value={(() => {
+                           const key = formData.paymentMode.toLowerCase();
+                           const v = formData.paymentDetails[key];
+                           return v === '' ? '' : v ?? '';
+                         })()} 
                          onChange={(e) => {
-                             const val = parseFloat(e.target.value) || 0;
+                             const raw = e.target.value;
+                             const val = raw === '' ? '' : parseFloat(raw);
                              setFormData({
                                  ...formData, 
                                  paymentDetails: { 
-                                     cash: formData.paymentMode === 'Cash' ? val : 0,
-                                     upi: formData.paymentMode === 'UPI' ? val : 0,
-                                     card: formData.paymentMode === 'Card' ? val : 0
+                                     cash: formData.paymentMode === 'Cash' ? val : '',
+                                     upi: formData.paymentMode === 'UPI' ? val : '',
+                                     card: formData.paymentMode === 'Card' ? val : ''
                                  }
                              });
                          }} 
