@@ -1208,7 +1208,9 @@ const Billing = () => {
       )}
 
       {/* Hidden Invoice Template for Printing */}
-      <InvoiceTemplate ref={printRef} invoice={createdInvoice} shopDetails={shopDetails} />
+      <div className="print-only">
+        <InvoiceTemplate ref={printRef} invoice={createdInvoice} shopDetails={shopDetails} />
+      </div>
     </div>
   );
 };
