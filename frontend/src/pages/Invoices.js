@@ -206,7 +206,8 @@ const Invoices = () => {
             <div className="invoice-details">
               <div className="invoice-header-section">
                 <div>
-                  <h1 className="shop-name">JEWELLERY SHOP</h1>
+                  <h1 className="shop-name">VSKK</h1>
+                  <p className="shop-subtitle">Vaibhav Swarn Kala Kendra</p>
                   <p className="invoice-label">INVOICE</p>
                 </div>
                 <div className="invoice-meta">
@@ -354,7 +355,8 @@ const Invoices = () => {
       {selectedInvoice && (
         <div ref={printRef} className="invoice-print-view" style={{ display: 'none' }}>
           <div className="print-invoice-header">
-            <h1>JEWELLERY SHOP</h1>
+            <h1>VSKK</h1>
+            <p className="shop-subtitle">Vaibhav Swarn Kala Kendra</p>
             <p>INVOICE</p>
           </div>
           <div className="print-invoice-info">
@@ -371,20 +373,34 @@ const Invoices = () => {
           <table className="print-invoice-table">
             <thead>
               <tr>
-                <th>Item</th>
+                <th>SN</th>
+                <th>Description</th>
                 <th>HUID</th>
-                <th>Weight</th>
+                <th>HSN/SAC</th>
+                <th>Weight (g)</th>
+                <th>Purity</th>
                 <th>Rate</th>
-                <th>Amount</th>
+                <th>Making</th>
+                <th>Wastage</th>
+                <th>Total</th>
               </tr>
             </thead>
             <tbody>
               {selectedInvoice.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td>{item.product?.name || 'Product'}</td>
+                  <td>{idx + 1}</td>
+                  <td>
+                    {item.product?.name || 'Product'}
+                    <br />
+                    <small>{item.product?.category}</small>
+                  </td>
                   <td>{item.product?.huid || '-'}</td>
-                  <td>{item.weight}g</td>
+                  <td>{item.product?.hsnCode || '7113'}</td>
+                  <td>{item.weight}</td>
+                  <td>{item.product?.purity || '22K'}</td>
                   <td>{formatCurrency(item.rate)}</td>
+                  <td>{formatCurrency(item.makingCharge || 0)}</td>
+                  <td>{formatCurrency(item.wastage || 0)}</td>
                   <td>{formatCurrency(item.subtotal)}</td>
                 </tr>
               ))}

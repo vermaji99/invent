@@ -33,6 +33,12 @@
   font-size: 14px;
 }
 
+.shop-subtitle {
+  margin: 2px 0 6px 0;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
 .invoice-meta {
   text-align: right;
 }

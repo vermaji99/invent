@@ -426,14 +426,14 @@ const Billing = () => {
       sku: product.sku || 'N/A',
       category: product.category,
       quantity: 1,
-      weight: product.isWeightManaged ? 0 : (product.netWeight || 0),
-      rate: product.sellingPrice || 0,
-      makingCharge: 0,
-      wastage: 0,
-      gst: 0,
-      discount: 0,
+      weight:product.isWeightManaged ? 0 : (product.netWeight || 0),
+      rate: '',
+      makingCharge: '',
+      wastage: '',
+      gst: '',
+      discount: '',
       oldGoldAdjustment: 0,
-      subtotal: (product.sellingPrice || 0) * (product.isWeightManaged ? 0 : (product.netWeight || 0))
+      subtotal: 0
     };
     setCart([...cart, cartItem]);
     setProductSearch('');

@@ -168,6 +168,12 @@
   margin: 0;
 }
 
+.shop-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
 .invoice-label {
   font-size: 1.25rem;
   color: var(--text-secondary);

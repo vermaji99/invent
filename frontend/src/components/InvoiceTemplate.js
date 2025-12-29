@@ -9,7 +9,8 @@ const InvoiceTemplate = React.forwardRef(({ invoice, shopDetails }, ref) => {
       {/* Header */}
       <div className="invoice-header">
         <div className="shop-info">
-          <h1 className="shop-name">{shopDetails?.name || 'Jewellery Shop'}</h1>
+          <h1 className="shop-name">{shopDetails?.name || 'VSKK'}</h1>
+          <p className="shop-subtitle">Vaibhav Swarn Kala Kendra</p>
           <p>{shopDetails?.address || 'Shop Address Here'}</p>
           <p>Phone: {shopDetails?.phone || 'Phone Number'} | Email: {shopDetails?.email || 'Email Address'}</p>
           <p>GSTIN: {shopDetails?.gstNumber || shopDetails?.gstin || 'GSTIN Number'}</p>
