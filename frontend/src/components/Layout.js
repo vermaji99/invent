@@ -85,7 +85,10 @@ const Layout = () => {
         >
           <FiMenu />
         </button>
-        <div className="mobile-logo">💎 Jewellery Shop</div>
+        <div className="mobile-logo">
+          <div className="brand-title">VSKK</div>
+          <div className="brand-subtitle">Vaibhav Swarn Kala Kendra</div>
+        </div>
       </div>
 
       <div className="layout-container">
@@ -97,7 +100,10 @@ const Layout = () => {
         )}
         <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
           <div className="sidebar-header">
-            <h2 className="logo">💎 Jewellery Shop</h2>
+            <div className="logo">
+              <div className="brand-title">VSKK</div>
+              <div className="brand-subtitle">Vaibhav Swarn Kala Kendra</div>
+            </div>
             <button
               className="sidebar-toggle"
               onClick={() => setSidebarOpen(!sidebarOpen)}

@@ -40,11 +40,23 @@
 }
 
 .logo {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: var(--gold-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   white-space: nowrap;
   overflow: hidden;
+}
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--gold-primary);
+  letter-spacing: 0.8px;
+}
+.brand-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  letter-spacing: 0.6px;
 }
 
 .sidebar.closed .logo {
@@ -236,9 +248,9 @@
 }
 
 .mobile-logo {
-  font-weight: bold;
-  color: var(--gold-primary);
-  font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
 }
 
 .sidebar-overlay {

@@ -41,8 +41,8 @@ const Login = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>💎 Jewellery Shop</h1>
-          <p>Management System</p>
+          <h1 className="brand-title">VSKK</h1>
+          <p className="brand-subtitle">Vaibhav Swarn Kala Kendra</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
