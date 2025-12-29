@@ -74,15 +74,14 @@ code {
     size: A4;
     margin: 10mm;
   }
-  /* Hide entire UI; show only dedicated print containers */
+  /* Hide entire UI by default */
   body * {
-    visibility: hidden !important;
+    display: none !important;
     box-shadow: none !important;
     background: transparent !important;
   }
   .invoice-print-view,
   .invoice-print-container {
-    visibility: visible !important;
     display: block !important;
     background: #fff !important;
     color: #000 !important;
@@ -90,6 +89,10 @@ code {
     left: 0;
     top: 0;
     width: 100%;
+  }
+  .invoice-print-view *,
+  .invoice-print-container * {
+    display: initial !important;
   }
 }
 
