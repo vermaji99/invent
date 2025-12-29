@@ -33,6 +33,8 @@ const Billing = () => {
   const [createdInvoice, setCreatedInvoice] = useState(null);
   const [exchangeItems, setExchangeItems] = useState([]);
   const [exchangeInput, setExchangeInput] = useState({ description: '', weight: '', purity: '', rate: '' });
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
   
   // Scanning State
   const [showCameraScanner, setShowCameraScanner] = useState(false);
@@ -549,6 +551,8 @@ const Billing = () => {
       const response = await api.post('/api/invoices', invoiceData);
       toast.success('Invoice created successfully!');
       setCreatedInvoice(response.data);
+      setShowConfirmModal(false);
+      setShowPrintModal(true);
       
       // Auto-print? Or just show print button.
       // User said "Add Print Invoice".
@@ -1146,11 +1150,48 @@ const Billing = () => {
         </div>
       </div>
       <div className="sticky-bottom-save">
-        <div className="save-bar">
-          <div className="save-total">Total: {renderAmount(totals.total)}</div>
-          <button className="save-action" onClick={handleSubmit} disabled={cart.length === 0}><FiSave /> Pay Now</button>
-        </div>
+          <div className="save-bar">
+            <div className="save-total">Total: {renderAmount(totals.total)}</div>
+            <button className="save-action" onClick={() => setShowConfirmModal(true)} disabled={cart.length === 0}><FiSave /> Pay Now</button>
+          </div>
       </div>
+
+      {showConfirmModal && (
+        <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Confirm Payment</h3>
+              <button onClick={() => setShowConfirmModal(false)}><FiX /></button>
+            </div>
+            <div className="payment-preview">
+              <p><strong>Customer:</strong> {selectedCustomer?.name}</p>
+              <p><strong>Total:</strong> {renderAmount(totals.total)}</p>
+              <p><strong>Paid:</strong> {renderAmount(totals.paidAmount)}</p>
+              <p><strong>Due:</strong> {renderAmount(totals.dueAmount)}</p>
+              <p><strong>Mode:</strong> {formData.paymentMode}</p>
+            </div>
+            <div className="form-actions">
+              <button type="button" onClick={() => setShowConfirmModal(false)}>Cancel</button>
+              <button type="button" className="btn-primary" onClick={handleSubmit}>Confirm & Create Invoice</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPrintModal && createdInvoice && (
+        <div className="modal-overlay" onClick={() => setShowPrintModal(false)}>
+          <div className="modal-content invoice-view-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Invoice Preview</h3>
+              <div className="modal-header-actions">
+                <button className="btn-icon" onClick={handlePrintInvoice} title="Print"><FiPrinter /></button>
+                <button className="modal-close" onClick={() => setShowPrintModal(false)}><FiX /></button>
+              </div>
+            </div>
+            <InvoiceTemplate ref={printRef} invoice={createdInvoice} shopDetails={shopDetails} />
+          </div>
+        </div>
+      )}
 
       {/* Customer Modal */}
       {showCustomerModal && (
@@ -1207,7 +1248,6 @@ const Billing = () => {
         </div>
       )}
 
-      {/* Hidden Invoice Template for Printing */}
       <div className="print-only">
         <InvoiceTemplate ref={printRef} invoice={createdInvoice} shopDetails={shopDetails} />
       </div>

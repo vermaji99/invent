@@ -74,14 +74,15 @@ code {
     size: A4;
     margin: 10mm;
   }
-  /* Hide entire UI by default */
+  /* Hide entire UI by default using visibility to preserve table semantics */
   body * {
-    display: none !important;
+    visibility: hidden !important;
     box-shadow: none !important;
     background: transparent !important;
   }
   .invoice-print-view,
   .invoice-print-container {
+    visibility: visible !important;
     display: block !important;
     background: #fff !important;
     color: #000 !important;
@@ -92,7 +93,7 @@ code {
   }
   .invoice-print-view *,
   .invoice-print-container * {
-    display: initial !important;
+    visibility: visible !important;
   }
 }
 
