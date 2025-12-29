@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiSearch, FiPrinter } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiSearch, FiPrinter, FiUpload } from 'react-icons/fi';
+import * as XLSX from 'xlsx';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import BarcodePrintModal from '../components/BarcodePrintModal';
@@ -17,6 +18,10 @@ const Products = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
+  const [showExcelModal, setShowExcelModal] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importSummary, setImportSummary] = useState(null);
   const [weightFormData, setWeightFormData] = useState({
     name: '',
     category: 'Gold',
@@ -255,6 +260,12 @@ const Products = () => {
             onClick={() => setShowWeightModal(true)}
           >
             <FiPlus /> Bulk Add by Weight
+          </button>
+          <button 
+            className="btn-primary" 
+            onClick={() => setShowExcelModal(true)}
+          >
+            <FiUpload /> Import via Excel
           </button>
           <button 
             className="btn-primary" 
@@ -557,6 +568,124 @@ const Products = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showExcelModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Import Products via Excel</h2>
+            <div className="form-group">
+              <label>Select Excel File (.xlsx / .xls)</label>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+                disabled={isImporting}
+              />
+            </div>
+            <div className="form-group">
+              <label>Expected Columns</label>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                name, category, sku, huid, grossWeight, netWeight, purity, purchasePrice, sellingPrice, quantity, lowStockAlert
+              </p>
+            </div>
+            {importSummary && (
+              <div className="form-group">
+                <label>Last Import Summary</label>
+                <p style={{ fontSize: '0.9rem' }}>
+                  Imported: {importSummary.success} • Failed: {importSummary.failed}
+                </p>
+                {importSummary.errors?.length > 0 && (
+                  <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 8, padding: '0.5rem' }}>
+                    {importSummary.errors.map((err, idx) => (
+                      <div key={idx} style={{ color: 'var(--danger)', fontSize: '0.85rem)' }}>{err}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="modal-actions">
+              <button type="button" className="btn-secondary" onClick={() => { if (!isImporting) { setShowExcelModal(false); setExcelFile(null); }}}>
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary" 
+                onClick={async () => {
+                  if (!excelFile) {
+                    toast.error('Please select an Excel file');
+                    return;
+                  }
+                  setIsImporting(true);
+                  try {
+                    const buf = await excelFile.arrayBuffer();
+                    const wb = XLSX.read(buf, { type: 'array' });
+                    const wsName = wb.SheetNames[0];
+                    const ws = wb.Sheets[wsName];
+                    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                    if (!Array.isArray(rows) || rows.length === 0) {
+                      toast.error('No rows found in sheet');
+                      setIsImporting(false);
+                      return;
+                    }
+                    const requiredFields = ['name','category','grossWeight','netWeight','purity','purchasePrice','sellingPrice','quantity'];
+                    let success = 0;
+                    const errors = [];
+                    for (let i = 0; i < rows.length; i++) {
+                      const r = rows[i];
+                      const miss = requiredFields.filter(f => String(r[f] ?? '').toString().trim() === '');
+                      if (miss.length > 0) {
+                        errors.push(`Row ${i+2}: Missing ${miss.join(', ')}`);
+                        continue;
+                      }
+                      const categoryVal = String(r.category).trim();
+                      const allowedCats = ['Gold','Silver','Diamond','Platinum','Other'];
+                      if (!allowedCats.includes(categoryVal)) {
+                        errors.push(`Row ${i+2}: Invalid category "${categoryVal}"`);
+                        continue;
+                      }
+                      const data = new FormData();
+                      data.append('name', String(r.name).trim());
+                      data.append('category', categoryVal);
+                      if (String(r.sku || '').trim()) data.append('sku', String(r.sku).trim());
+                      const huidVal = String(r.huid || '').trim();
+                      if (huidVal.length === 6 && /^[A-Za-z0-9]{6}$/.test(huidVal)) {
+                        data.append('huid', huidVal);
+                      }
+                      data.append('grossWeight', String(r.grossWeight).trim());
+                      data.append('netWeight', String(r.netWeight).trim());
+                      data.append('purity', String(r.purity).trim());
+                      data.append('purchasePrice', String(r.purchasePrice).trim());
+                      data.append('sellingPrice', String(r.sellingPrice).trim());
+                      data.append('quantity', String(r.quantity).trim());
+                      const lsa = String(r.lowStockAlert || '').trim();
+                      if (lsa) data.append('lowStockAlert', lsa);
+                      try {
+                        await api.post('/api/products', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+                        success += 1;
+                      } catch (err) {
+                        const msg = err.response?.data?.message || (Array.isArray(err.response?.data?.errors) ? err.response.data.errors.map(e => e.msg).join('; ') : 'Failed');
+                        errors.push(`Row ${i+2}: ${msg}`);
+                      }
+                    }
+                    setImportSummary({ success, failed: errors.length, errors });
+                    if (success > 0) {
+                      toast.success(`Imported ${success} product(s)`);
+                      fetchProducts();
+                    }
+                  } catch (e) {
+                    toast.error('Failed to parse Excel');
+                  } finally {
+                    setIsImporting(false);
+                  }
+                }}
+                disabled={isImporting}
+              >
+                {isImporting ? 'Importing...' : 'Import'}
+              </button>
+            </div>
           </div>
         </div>
       )}
