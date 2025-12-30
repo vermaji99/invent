@@ -429,7 +429,7 @@ const Billing = () => {
       category: product.category,
       quantity: 1,
       weight:product.isWeightManaged ? 0 : (product.netWeight || 0),
-      rate: '',
+      rate: product.sellingPrice || '',
       makingCharge: '',
       wastage: '',
       gst: '',
@@ -767,7 +767,7 @@ const Billing = () => {
                           {product.sku} | {product.category} | {product.isWeightManaged ? `${product.availableWeight}g avail` : `${product.netWeight}g`}
                         </p>
                       </div>
-                      <div className="product-price">{formatCurrency(product.sellingPrice)}</div>
+                      <div className="product-price">{formatCurrency(product.sellingPrice)} /g</div>
                     </div>
                   ))
                 )}

@@ -22,6 +22,8 @@ const Products = () => {
   const [excelFile, setExcelFile] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importSummary, setImportSummary] = useState(null);
+  const [importProgress, setImportProgress] = useState({ processed: 0, total: 0 });
+  const [cancelImport, setCancelImport] = useState(false);
   const [weightFormData, setWeightFormData] = useState({
     name: '',
     category: 'Gold',
@@ -385,8 +387,8 @@ const Products = () => {
                   <span className={`meta-value ${product.quantity <= product.lowStockAlert ? 'low-stock' : ''}`}>{product.isWeightManaged ? 'N/A' : product.quantity}</span>
                 </div>
                 <div className="meta-item">
-                  <span className="meta-label">Price</span>
-                  <span className="meta-value price">{formatCurrency(product.sellingPrice)}</span>
+                  <span className="meta-label">Rate/g</span>
+                  <span className="meta-value price">{formatCurrency(product.sellingPrice)} /g</span>
                 </div>
               </div>
               <div className="product-actions compact-actions">
@@ -519,7 +521,7 @@ const Products = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Low Stock Alert</label>
+                <label>Low Stock Alert</label>
                   <input
                     type="number"
                     value={formData.lowStockAlert}
@@ -530,7 +532,7 @@ const Products = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Purchase Price</label>
+                  <label>Purchase Price (₹/g)</label>
                   <input
                     type="number"
                     value={formData.purchasePrice}
@@ -539,7 +541,7 @@ const Products = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Selling Price</label>
+                  <label>Selling Price (₹/g)</label>
                   <input
                     type="number"
                     value={formData.sellingPrice}
@@ -606,8 +608,23 @@ const Products = () => {
                 )}
               </div>
             )}
+            {isImporting && (
+              <div className="form-group">
+                <label>Progress</label>
+                <p style={{ fontSize: '0.9rem' }}>
+                  {importProgress.processed} / {importProgress.total}
+                </p>
+              </div>
+            )}
             <div className="modal-actions">
-              <button type="button" className="btn-secondary" onClick={() => { if (!isImporting) { setShowExcelModal(false); setExcelFile(null); }}}>
+              <button type="button" className="btn-secondary" onClick={() => { 
+                if (isImporting) {
+                  setCancelImport(true);
+                } else {
+                  setShowExcelModal(false); 
+                  setExcelFile(null);
+                }
+              }}>
                 Cancel
               </button>
               <button 
@@ -619,6 +636,7 @@ const Products = () => {
                     return;
                   }
                   setIsImporting(true);
+                  setCancelImport(false);
                   try {
                     const buf = await excelFile.arrayBuffer();
                     const wb = XLSX.read(buf, { type: 'array' });
@@ -633,18 +651,16 @@ const Products = () => {
                     const requiredFields = ['name','category','grossWeight','netWeight','purity','purchasePrice','sellingPrice','quantity'];
                     let success = 0;
                     const errors = [];
-                    for (let i = 0; i < rows.length; i++) {
-                      const r = rows[i];
+                    setImportProgress({ processed: 0, total: rows.length });
+                    const allowedCats = ['Gold','Silver','Diamond','Platinum','Other'];
+                    const buildPayload = (r, rowIndex) => {
                       const miss = requiredFields.filter(f => String(r[f] ?? '').toString().trim() === '');
                       if (miss.length > 0) {
-                        errors.push(`Row ${i+2}: Missing ${miss.join(', ')}`);
-                        continue;
+                        return { error: `Row ${rowIndex}: Missing ${miss.join(', ')}` };
                       }
                       const categoryVal = String(r.category).trim();
-                      const allowedCats = ['Gold','Silver','Diamond','Platinum','Other'];
                       if (!allowedCats.includes(categoryVal)) {
-                        errors.push(`Row ${i+2}: Invalid category "${categoryVal}"`);
-                        continue;
+                        return { error: `Row ${rowIndex}: Invalid category "${categoryVal}"` };
                       }
                       const data = new FormData();
                       data.append('name', String(r.name).trim());
@@ -662,28 +678,54 @@ const Products = () => {
                       data.append('quantity', String(r.quantity).trim());
                       const lsa = String(r.lowStockAlert || '').trim();
                       if (lsa) data.append('lowStockAlert', lsa);
+                      return { data };
+                    };
+                    const processRow = async (r, idx) => {
+                      if (cancelImport) return;
+                      const rowIndex = idx + 2;
+                      const payload = buildPayload(r, rowIndex);
+                      if (payload.error) {
+                        errors.push(payload.error);
+                        setImportProgress(p => ({ ...p, processed: p.processed + 1 }));
+                        return;
+                      }
                       try {
-                        await api.post('/api/products', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+                        await api.post('/api/products', payload.data, { headers: { 'Content-Type': 'multipart/form-data' } });
                         success += 1;
                       } catch (err) {
                         const msg = err.response?.data?.message || (Array.isArray(err.response?.data?.errors) ? err.response.data.errors.map(e => e.msg).join('; ') : 'Failed');
-                        errors.push(`Row ${i+2}: ${msg}`);
+                        errors.push(`Row ${rowIndex}: ${msg}`);
+                      } finally {
+                        setImportProgress(p => ({ ...p, processed: p.processed + 1 }));
                       }
-                    }
+                    };
+                    const concurrency = 5;
+                    let pointer = 0;
+                    const workers = Array.from({ length: concurrency }).map(async () => {
+                      while (pointer < rows.length && !cancelImport) {
+                        const i = pointer++;
+                        await processRow(rows[i], i);
+                      }
+                    });
+                    await Promise.all(workers);
                     setImportSummary({ success, failed: errors.length, errors });
                     if (success > 0) {
                       toast.success(`Imported ${success} product(s)`);
                       fetchProducts();
                     }
+                    if (cancelImport) {
+                      toast.info('Import cancelled');
+                    }
                   } catch (e) {
                     toast.error('Failed to parse Excel');
                   } finally {
                     setIsImporting(false);
+                    setCancelImport(false);
                   }
                 }}
                 disabled={isImporting}
               >
-                {isImporting ? 'Importing...' : 'Import'}
+                {isImporting ? `Importing... (${importProgress.processed}/${importProgress.total})` : 'Import'}
               </button>
             </div>
           </div>
@@ -756,7 +798,7 @@ const Products = () => {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Purchase Price</label>
+                  <label>Purchase Price (₹/g)</label>
                   <input
                     type="number"
                     value={weightFormData.purchasePrice}
@@ -764,7 +806,7 @@ const Products = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Selling Price</label>
+                  <label>Selling Price (₹/g)</label>
                   <input
                     type="number"
                     value={weightFormData.sellingPrice}
