@@ -151,11 +151,6 @@ textarea:invalid {
   animation: softPulse 800ms ease-in-out;
 }
 
-/* Respect reduced motion preferences globally */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
-  }
-}
+/* Reduced motion handling is scoped per component/page to avoid globally disabling
+   all animations. Dashboard.css and other pages include targeted rules. */
 
