@@ -246,6 +246,20 @@ const Products = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    const ok = window.confirm(`Are you sure you want to delete ${selectedIds.length} selected product(s)?`);
+    if (!ok) return;
+    try {
+      await Promise.all(selectedIds.map(id => api.delete(`/api/products/${id}`)));
+      toast.success(`Deleted ${selectedIds.length} product(s)`);
+      setSelectedIds([]);
+      fetchProducts();
+    } catch (error) {
+      toast.error('Failed to delete selected products');
+    }
+  };
+
   return (
     <div className="products-page">
       <div className="page-header">
@@ -276,6 +290,15 @@ const Products = () => {
             style={{ opacity: selectedIds.length === 0 ? 0.6 : 1 }}
           >
             <FiPrinter /> Print Barcodes
+          </button>
+          <button
+            className="btn-primary"
+            onClick={handleBulkDelete}
+            disabled={selectedIds.length === 0}
+            style={{ opacity: selectedIds.length === 0 ? 0.6 : 1 }}
+            title="Delete selected products"
+          >
+            <FiTrash2 /> Delete Selected
           </button>
         </div>
       </div>
