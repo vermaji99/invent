@@ -7,6 +7,7 @@ import BarcodePrintModal from '../components/BarcodePrintModal';
 import './Products.css';
 
 const Products = () => {
+  const PLACEHOLDER_DATA_URI = 'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"225\"><rect width=\"100%\" height=\"100%\" fill=\"%232f2f2f\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" fill=\"%23999\" font-size=\"20\">No Image</text></svg>';
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -369,10 +370,22 @@ const Products = () => {
                     src={`${api.defaults.baseURL}${product.images[0]}`} 
                     alt={product.name} 
                     className="product-thumb"
-                    onError={(e) => {e.target.onerror = null; e.target.src = 'placeholder.png'}} 
+                    onError={(e) => { e.target.onerror = null; e.target.src = product.thumbnailBase64 || PLACEHOLDER_DATA_URI; }} 
                   />
                 ) : (
-                   <div className="no-image-placeholder">No Image</div>
+                   product.thumbnailBase64 ? (
+                     <img 
+                       src={product.thumbnailBase64} 
+                       alt={product.name} 
+                       className="product-thumb"
+                     />
+                   ) : (
+                     <img 
+                       src={PLACEHOLDER_DATA_URI} 
+                       alt="No Image" 
+                       className="product-thumb"
+                     />
+                   )
                 )}
               </div>
               <div className="product-header">

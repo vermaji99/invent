@@ -68,6 +68,9 @@ const productSchema = new mongoose.Schema({
   images: [{
     type: String
   }],
+  thumbnailBase64: {
+    type: String
+  },
   huid: {
     type: String,
     trim: true

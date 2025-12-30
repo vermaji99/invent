@@ -264,6 +264,14 @@ router.post('/', [
       createdBy: req.user.id
     };
 
+    if (req.files && req.files.length > 0) {
+      try {
+        const file = req.files[0];
+        const buf = fs.readFileSync(file.path);
+        productData.thumbnailBase64 = `data:${file.mimetype};base64,${buf.toString('base64')}`;
+      } catch (e) {}
+    }
+
     if (productData.huid === '') {
       delete productData.huid;
     }
@@ -377,6 +385,14 @@ router.put('/:id', [
 
     if (req.files.length > 0 || req.body.existingImages) {
       product.images = [...existingImages, ...newImageUrls];
+    }
+
+    if (req.files && req.files.length > 0) {
+      try {
+        const file = req.files[0];
+        const buf = fs.readFileSync(file.path);
+        product.thumbnailBase64 = `data:${file.mimetype};base64,${buf.toString('base64')}`;
+      } catch (e) {}
     }
 
     await product.save();
