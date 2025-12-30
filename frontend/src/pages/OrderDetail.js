@@ -21,6 +21,7 @@ const OrderDetail = () => {
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [paymentNotes, setPaymentNotes] = useState('');
   const [isPaying, setIsPaying] = useState(false);
+  const [isDelivering, setIsDelivering] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -71,6 +72,8 @@ const OrderDetail = () => {
   };
 
   const handleDeliver = async () => {
+    if (isDelivering) return;
+    setIsDelivering(true);
     try {
       // If balance > 0 and user wants to pay now
       const payload = {};
@@ -92,6 +95,8 @@ const OrderDetail = () => {
       }
     } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to deliver order');
+    } finally {
+      setIsDelivering(false);
     }
   };
   const handleGenerateInvoice = async () => {
@@ -515,7 +520,7 @@ const OrderDetail = () => {
 
                 <div className="modal-footer">
                     <button className="btn btn-secondary" onClick={() => setShowDeliverModal(false)}>Cancel</button>
-                    <button className="btn btn-success" onClick={handleDeliver}>Confirm Delivery</button>
+                    <button className="btn btn-success" onClick={handleDeliver} disabled={isDelivering}>{isDelivering ? 'Processing…' : 'Confirm Delivery'}</button>
                 </div>
             </div>
         </div>

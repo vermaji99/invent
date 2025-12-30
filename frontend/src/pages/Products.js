@@ -25,6 +25,8 @@ const Products = () => {
   const [importSummary, setImportSummary] = useState(null);
   const [importProgress, setImportProgress] = useState({ processed: 0, total: 0 });
   const [cancelImport, setCancelImport] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isWeightSubmitting, setIsWeightSubmitting] = useState(false);
   const [weightFormData, setWeightFormData] = useState({
     name: '',
     category: 'Gold',
@@ -79,6 +81,8 @@ const Products = () => {
 
   const handleWeightSubmit = async (e) => {
     e.preventDefault();
+    if (isWeightSubmitting) return;
+    setIsWeightSubmitting(true);
     try {
       const payload = {
         name: weightFormData.name,
@@ -105,11 +109,15 @@ const Products = () => {
     } catch (error) {
       const msg = error.response?.data?.message || 'Failed to add weight-based product';
       toast.error(msg);
+    } finally {
+      setIsWeightSubmitting(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const data = new FormData();
       Object.keys(formData).forEach(key => {
@@ -163,6 +171,8 @@ const Products = () => {
       } else {
         toast.error(error.response?.data?.message || 'Operation failed');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -601,8 +611,8 @@ const Products = () => {
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
-                  {editingProduct ? 'Update Product' : 'Create Product'}
+                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                  {editingProduct ? (isSubmitting ? 'Updating…' : 'Update Product') : (isSubmitting ? 'Creating…' : 'Create Product')}
                 </button>
               </div>
             </form>
@@ -854,8 +864,8 @@ const Products = () => {
                 <button type="button" className="btn-secondary" onClick={() => setShowWeightModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
-                  Save
+                <button type="submit" className="btn-primary" disabled={isWeightSubmitting}>
+                  {isWeightSubmitting ? 'Saving…' : 'Save'}
                 </button>
               </div>
             </form>

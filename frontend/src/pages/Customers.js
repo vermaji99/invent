@@ -17,6 +17,8 @@ const Customers = () => {
   const [clearAmount, setClearAmount] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [showArrearsOnly, setShowArrearsOnly] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -65,6 +67,8 @@ const Customers = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       if (editingCustomer) {
         await api.put(`/api/customers/${editingCustomer._id}`, formData);
@@ -92,6 +96,8 @@ const Customers = () => {
       } else {
         toast.error(error.response?.data?.message || 'Operation failed');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -120,6 +126,8 @@ const Customers = () => {
   };
 
   const handleClearArrears = async () => {
+    if (isClearing) return;
+    setIsClearing(true);
     if (!selectedCustomer) return;
     
     const amount = parseFloat(clearAmount);
@@ -147,6 +155,8 @@ const Customers = () => {
       fetchCustomers();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to clear arrears');
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -366,8 +376,8 @@ const Customers = () => {
                 <button type="button" onClick={() => { setShowModal(false); setEditingCustomer(null); resetForm(); }}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
-                  {editingCustomer ? 'Update' : 'Create'}
+                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                  {editingCustomer ? (isSubmitting ? 'Updating…' : 'Update') : (isSubmitting ? 'Creating…' : 'Create')}
                 </button>
               </div>
             </form>
@@ -405,14 +415,14 @@ const Customers = () => {
                 <option value="Bank Transfer">Bank Transfer</option>
               </select>
             </div>
-            <div className="form-actions">
-              <button type="button" onClick={() => { setShowClearArrearsModal(false); setSelectedCustomer(null); }}>
-                Cancel
+              <div className="form-actions">
+                <button type="button" onClick={() => { setShowClearArrearsModal(false); setSelectedCustomer(null); }}>
+                  Cancel
+                </button>
+              <button type="button" className="btn-primary" onClick={handleClearArrears} disabled={isClearing}>
+                {isClearing ? 'Processing…' : 'Confirm Payment'}
               </button>
-              <button type="button" className="btn-primary" onClick={handleClearArrears}>
-                Confirm Payment
-              </button>
-            </div>
+              </div>
           </div>
         </div>
       )}

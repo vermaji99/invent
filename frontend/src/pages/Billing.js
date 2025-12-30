@@ -35,6 +35,8 @@ const Billing = () => {
   const [exchangeInput, setExchangeInput] = useState({ description: '', weight: '', purity: '', rate: '' });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   
   // Scanning State
   const [showCameraScanner, setShowCameraScanner] = useState(false);
@@ -355,6 +357,8 @@ const Billing = () => {
 
   const handleCreateCustomer = async (e) => {
     e.preventDefault();
+    if (isCreatingCustomer) return;
+    setIsCreatingCustomer(true);
     try {
       if (!newCustomerForm.name || !newCustomerForm.phone) {
         toast.error('Name and Phone are required');
@@ -406,6 +410,8 @@ const Billing = () => {
       } else {
         toast.error(error.response?.data?.message || 'Failed to create customer');
       }
+    } finally {
+      setIsCreatingCustomer(false);
     }
   };
 
@@ -498,6 +504,7 @@ const Billing = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmittingInvoice) return;
     if (!selectedCustomer) {
       toast.error('Please select a customer');
       return;
@@ -515,6 +522,7 @@ const Billing = () => {
     }
 
     try {
+      setIsSubmittingInvoice(true);
       const invoiceData = {
         customer: selectedCustomer._id,
         items: cart.map(item => ({
@@ -570,6 +578,8 @@ const Billing = () => {
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || 'Failed to create invoice');
+    } finally {
+      setIsSubmittingInvoice(false);
     }
   };
 
@@ -1140,7 +1150,7 @@ const Billing = () => {
                 <div className="total-row due-row"><span>Due:</span> <span>{renderAmount(totals.dueAmount)}</span></div>
 
                 <div className="action-buttons">
-                    <button className="btn-save" onClick={handleSubmit} disabled={cart.length === 0}><FiSave /> Save Invoice</button>
+                    <button className="btn-save" onClick={handleSubmit} disabled={cart.length === 0 || isSubmittingInvoice}><FiSave /> {isSubmittingInvoice ? 'Saving…' : 'Save Invoice'}</button>
                     {createdInvoice && (
                         <button className="btn-print" onClick={handlePrintInvoice}><FiPrinter /> Print</button>
                     )}
@@ -1172,7 +1182,7 @@ const Billing = () => {
             </div>
             <div className="form-actions">
               <button type="button" onClick={() => setShowConfirmModal(false)}>Cancel</button>
-              <button type="button" className="btn-primary" onClick={handleSubmit}>Confirm & Create Invoice</button>
+              <button type="button" className="btn-primary" onClick={handleSubmit} disabled={isSubmittingInvoice}>{isSubmittingInvoice ? 'Processing…' : 'Confirm & Create Invoice'}</button>
             </div>
           </div>
         </div>
@@ -1242,7 +1252,7 @@ const Billing = () => {
                   })}
                 />
               </div>
-              <button type="submit" className="btn-submit">Create Customer</button>
+              <button type="submit" className="btn-submit" disabled={isCreatingCustomer}>{isCreatingCustomer ? 'Creating…' : 'Create Customer'}</button>
             </form>
           </div>
         </div>

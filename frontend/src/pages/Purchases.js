@@ -15,6 +15,8 @@ const Purchases = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentPurchase, setPaymentPurchase] = useState(null);
   const [paymentForm, setPaymentForm] = useState({ amount: 0, mode: 'Cash' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecordingPayment, setIsRecordingPayment] = useState(false);
   const [formData, setFormData] = useState({
     supplier: '',
     purchaseDate: new Date().toISOString().split('T')[0],
@@ -111,7 +113,7 @@ const Purchases = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    if (isSubmitting) return;
     if (!formData.supplier) {
       toast.error('Please select a supplier');
       return;
@@ -123,6 +125,7 @@ const Purchases = () => {
     }
 
     try {
+      setIsSubmitting(true);
       const purchaseData = {
         supplier: formData.supplier,
         items: items,
@@ -156,6 +159,8 @@ const Purchases = () => {
       } else {
         toast.error(error.response?.data?.message || 'Operation failed');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -653,8 +658,8 @@ const Purchases = () => {
                 <button type="button" onClick={() => { setShowModal(false); setEditingPurchase(null); resetForm(); }}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
-                  {editingPurchase ? 'Update' : 'Create'} Purchase
+                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving…' : `${editingPurchase ? 'Update' : 'Create'} Purchase`}
                 </button>
               </div>
             </form>
@@ -720,6 +725,8 @@ const Purchases = () => {
                 type="button"
                 className="btn-primary"
                 onClick={async () => {
+                  if (isRecordingPayment) return;
+                  setIsRecordingPayment(true);
                   try {
                     const pay = Math.max(0, Number(paymentForm.amount || 0));
                     const maxDue = Number(paymentPurchase.dueAmount || 0);
@@ -742,10 +749,13 @@ const Purchases = () => {
                     fetchPurchases();
                   } catch (error) {
                     toast.error(error.response?.data?.message || 'Failed to clear due');
+                  } finally {
+                    setIsRecordingPayment(false);
                   }
                 }}
+                disabled={isRecordingPayment}
               >
-                Confirm Payment
+                {isRecordingPayment ? 'Processing…' : 'Confirm Payment'}
               </button>
             </div>
           </div>

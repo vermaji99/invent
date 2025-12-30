@@ -14,6 +14,8 @@ const Suppliers = () => {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [paymentNotes, setPaymentNotes] = useState('');
   const [editingSupplier, setEditingSupplier] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -51,6 +53,8 @@ const Suppliers = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       if (editingSupplier) {
         await api.put(`/api/suppliers/${editingSupplier._id}`, formData);
@@ -65,10 +69,14 @@ const Suppliers = () => {
       fetchSuppliers();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Operation failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handlePayment = async () => {
+    if (isPaying) return;
+    setIsPaying(true);
     if (!selectedSupplier) return;
     
     const amount = parseFloat(paymentAmount);
@@ -99,6 +107,8 @@ const Suppliers = () => {
       fetchSuppliers();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to record payment');
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -340,8 +350,8 @@ const Suppliers = () => {
                 <button type="button" onClick={() => { setShowModal(false); setEditingSupplier(null); resetForm(); }}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
-                  {editingSupplier ? 'Update' : 'Create'}
+                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                  {editingSupplier ? (isSubmitting ? 'Updating…' : 'Update') : (isSubmitting ? 'Creating…' : 'Create')}
                 </button>
               </div>
             </form>

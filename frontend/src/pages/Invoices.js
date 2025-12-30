@@ -13,6 +13,7 @@ const Invoices = () => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
   const printRef = useRef();
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
@@ -54,6 +55,7 @@ const Invoices = () => {
   };
 
   const handleAddPayment = async () => {
+    if (isAddingPayment) return;
     if (!selectedInvoice) return;
 
     const amount = parseFloat(paymentAmount);
@@ -68,6 +70,7 @@ const Invoices = () => {
     }
 
     try {
+      setIsAddingPayment(true);
       const response = await api.put(`/api/invoices/${selectedInvoice._id}/payment`, {
         amount: amount,
         paymentMode: paymentMode
@@ -87,6 +90,8 @@ const Invoices = () => {
       setPaymentMode('Cash');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to add payment');
+    } finally {
+      setIsAddingPayment(false);
     }
   };
 
@@ -498,7 +503,7 @@ const Invoices = () => {
                   className="btn-primary" 
                   onClick={handleAddPayment}
                 >
-                  <FiDollarSign /> Add Payment
+                  <FiDollarSign /> {isAddingPayment ? 'Processing…' : 'Add Payment'}
                 </button>
               </div>
             </div>

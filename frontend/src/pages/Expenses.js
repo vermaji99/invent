@@ -10,6 +10,7 @@ const Expenses = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     category: '',
@@ -50,6 +51,8 @@ const Expenses = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await api.post('/api/expenses', formData);
       toast.success('Expense added successfully');
@@ -65,6 +68,8 @@ const Expenses = () => {
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || 'Failed to add expense');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -271,8 +276,8 @@ const Expenses = () => {
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
-                  Save Expense
+                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving…' : 'Save Expense'}
                 </button>
               </div>
             </form>
