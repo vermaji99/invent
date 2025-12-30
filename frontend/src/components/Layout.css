@@ -111,8 +111,9 @@
   padding: 1rem 1.5rem;
   color: var(--text-secondary);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: color 160ms ease, background 160ms ease;
   border-left: 3px solid transparent;
+  position: relative;
 }
 
 .nav-item:hover {
@@ -124,6 +125,24 @@
   background: var(--bg-tertiary);
   color: var(--gold-primary);
   border-left-color: var(--gold-primary);
+}
+
+/* Premium active underline */
+.nav-item::after {
+  content: '';
+  position: absolute;
+  left: 1.5rem;
+  bottom: 0.6rem;
+  height: 2px;
+  width: 0%;
+  background: var(--gold-primary);
+  transform-origin: left center;
+  transition: width 180ms ease;
+  opacity: 0.8;
+}
+.nav-item.active::after,
+.nav-item:hover::after {
+  width: calc(100% - 3rem);
 }
 
 .nav-item svg {

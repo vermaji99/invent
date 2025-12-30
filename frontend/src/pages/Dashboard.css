@@ -29,31 +29,49 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
-  transition: all 0.3s ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: dashFadeUp 400ms ease-out forwards;
 }
 
 .stat-card:hover {
   border-color: var(--gold-primary);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.1);
+  transform: scale(1.02);
+  box-shadow: 0 10px 24px rgba(212, 175, 55, 0.12);
 }
 
+@keyframes dashFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered appearance for a premium feel */
+.stat-card:nth-child(1) { animation-delay: 40ms; }
+.stat-card:nth-child(2) { animation-delay: 80ms; }
+.stat-card:nth-child(3) { animation-delay: 120ms; }
+.stat-card:nth-child(4) { animation-delay: 160ms; }
+.stat-card:nth-child(5) { animation-delay: 200ms; }
+.stat-card:nth-child(6) { animation-delay: 240ms; }
 .profit-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.25rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: dashFadeUp 400ms ease-out forwards 120ms;
 }
 
 .profit-card:hover {
   border-color: var(--gold-primary);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.1);
+  transform: scale(1.02);
+  box-shadow: 0 10px 24px rgba(212, 175, 55, 0.12);
 }
 
 .profit-card-header {
@@ -155,6 +173,7 @@
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(2px);
+  animation: overlayFade 220ms ease-out;
 }
 
 .ledger-modal {
@@ -168,6 +187,9 @@
   max-height: 85vh;
   display: flex;
   flex-direction: column;
+  transform: scale(0.98);
+  opacity: 0;
+  animation: modalScale 260ms ease-out forwards;
 }
 
 .ledger-modal-header {
@@ -216,6 +238,12 @@
   border-bottom: 1px solid var(--border-color);
   font-size: 0.9rem;
 }
+.ledger-table tbody tr {
+  transition: background-color 160ms ease;
+}
+.ledger-table tbody tr:hover {
+  background: rgba(255,255,255,0.04);
+}
 
 .ledger-details-table {
   width: 100%;
@@ -257,6 +285,9 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: dashFadeUp 380ms ease-out forwards 140ms;
 }
 
 .chart-card h3 {
@@ -341,6 +372,23 @@
   }
 }
 
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .stat-card,
+  .profit-card,
+  .chart-card,
+  .ledger-modal,
+  .modal-content,
+  .ledger-modal-overlay {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .ledger-table tbody tr {
+    transition: none !important;
+  }
+}
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -367,6 +415,9 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  transform: scale(0.98);
+  opacity: 0;
+  animation: modalScale 260ms ease-out forwards;
 }
 
 .profit-modal {
@@ -428,6 +479,15 @@
 .modal-body {
   overflow-y: auto;
   max-height: calc(85vh - 70px);
+}
+
+@keyframes overlayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .section-divider {

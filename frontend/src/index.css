@@ -107,3 +107,55 @@ code {
   }
 }
 
+/* Buttons micro-interactions */
+.btn-primary,
+.btn-add-exchange,
+.logout-btn {
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.btn-primary:active,
+.btn-add-exchange:active,
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
+/* Inputs focus glow (subtle, enterprise-grade) */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+/* Soft shake on HTML5 invalid inputs */
+input:invalid,
+select:invalid,
+textarea:invalid {
+  animation: softShake 160ms ease;
+}
+
+@keyframes softShake {
+  0% { transform: translateX(0); }
+  33% { transform: translateX(1px); }
+  66% { transform: translateX(-1px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes softPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.995); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.Toastify__toast--success {
+  animation: softPulse 800ms ease-in-out;
+}
+
+/* Respect reduced motion preferences globally */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+

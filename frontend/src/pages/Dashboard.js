@@ -25,6 +25,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import api from '../utils/api';
+import CountUp from '../components/CountUp';
 import { toast } from 'react-toastify';
 import './Dashboard.css';
 
@@ -504,7 +505,7 @@ const Dashboard = () => {
         <div className="stat-card" onClick={() => fetchSalesDetails('today')}>
            <div className="stat-card-body">
               <h3>Today's Sales</h3>
-              <p className="stat-value">{formatCurrency(stats.todaySales)}</p>
+              <p className="stat-value"><CountUp value={stats.todaySales || 0} duration={700} format={formatCurrency} /></p>
               <p className="stat-change">{stats.todaySalesCount} orders</p>
            </div>
         </div>
@@ -524,19 +525,19 @@ const Dashboard = () => {
         >
           <div className="profit-card-header">Today's Net Profit</div>
           <div className="profit-card-body">
-            <div className="profit-main">{formatCurrency(stats.todayNetProfit || 0)}</div>
+            <div className="profit-main"><CountUp value={stats.todayNetProfit || 0} duration={700} format={formatCurrency} /></div>
             <div className="profit-kpi-grid">
               <div className="profit-kpi">
                 <div>Revenue</div>
-                <div className="num">{formatCurrency(stats.todayRevenue || 0)}</div>
+                <div className="num"><CountUp value={stats.todayRevenue || 0} duration={700} format={formatCurrency} /></div>
               </div>
               <div className="profit-kpi">
                 <div>COGS</div>
-                <div className="num">{formatCurrency(stats.todayCogs || 0)}</div>
+                <div className="num"><CountUp value={stats.todayCogs || 0} duration={700} format={formatCurrency} /></div>
               </div>
               <div className="profit-kpi">
                 <div>Expenses</div>
-                <div className="num">{formatCurrency(stats.todayExpenses || 0)}</div>
+                <div className="num"><CountUp value={stats.todayExpenses || 0} duration={700} format={formatCurrency} /></div>
               </div>
             </div>
           </div>
@@ -544,7 +545,7 @@ const Dashboard = () => {
         <div className="stat-card" onClick={() => fetchSalesDetails('month')}>
            <div className="stat-card-body">
               <h3>Monthly Sales</h3>
-              <p className="stat-value">{formatCurrency(stats.monthlySales)}</p>
+              <p className="stat-value"><CountUp value={stats.monthlySales || 0} duration={800} format={formatCurrency} /></p>
               <p className="stat-change">{stats.monthlySalesCount} orders</p>
            </div>
         </div>
@@ -565,19 +566,19 @@ const Dashboard = () => {
         >
           <div className="profit-card-header">Monthly Net Profit</div>
           <div className="profit-card-body">
-            <div className="profit-main">{formatCurrency(stats.monthlyNetProfit || 0)}</div>
+            <div className="profit-main"><CountUp value={stats.monthlyNetProfit || 0} duration={800} format={formatCurrency} /></div>
             <div className="profit-kpi-grid">
               <div className="profit-kpi">
                 <div>Revenue</div>
-                <div className="num">{formatCurrency(stats.monthlyRevenue || 0)}</div>
+                <div className="num"><CountUp value={stats.monthlyRevenue || 0} duration={800} format={formatCurrency} /></div>
               </div>
               <div className="profit-kpi">
                 <div>COGS</div>
-                <div className="num">{formatCurrency(stats.monthlyCogs || 0)}</div>
+                <div className="num"><CountUp value={stats.monthlyCogs || 0} duration={800} format={formatCurrency} /></div>
               </div>
               <div className="profit-kpi">
                 <div>Expenses</div>
-                <div className="num">{formatCurrency(stats.monthlyExpenses || 0)}</div>
+                <div className="num"><CountUp value={stats.monthlyExpenses || 0} duration={800} format={formatCurrency} /></div>
               </div>
             </div>
           </div>
@@ -585,42 +586,42 @@ const Dashboard = () => {
         <div className="stat-card" onClick={fetchStockDetails}>
            <div className="stat-card-body">
               <h3>Total Stock Value</h3>
-              <p className="stat-value">{formatCurrency(stats.totalStockValue)}</p>
+              <p className="stat-value"><CountUp value={stats.totalStockValue} duration={800} format={formatCurrency} /></p>
               <p className="stat-change">{stats.stockValue.length} categories</p>
            </div>
         </div>
         <div className="stat-card" onClick={() => fetchWeightDetails('Gold')}>
            <div className="stat-card-body">
               <h3>Total Gold Stock Weight</h3>
-              <p className="stat-value">{(stats.weights?.gold || 0).toFixed(2)} g</p>
+              <p className="stat-value"><CountUp value={(stats.weights?.gold || 0)} duration={700} format={(v) => `${v.toFixed(2)} g`} /></p>
               <p className="stat-change">Net weight × Quantity</p>
            </div>
         </div>
         <div className="stat-card" onClick={() => fetchWeightDetails('Silver')}>
            <div className="stat-card-body">
               <h3>Total Silver Stock Weight</h3>
-              <p className="stat-value">{(stats.weights?.silver || 0).toFixed(2)} g</p>
+              <p className="stat-value"><CountUp value={(stats.weights?.silver || 0)} duration={700} format={(v) => `${v.toFixed(2)} g`} /></p>
               <p className="stat-change">Net weight × Quantity</p>
            </div>
         </div>
         <div className="stat-card" onClick={() => fetchOldMetalDetails('Gold')}>
            <div className="stat-card-body">
               <h3>Old Gold Weight</h3>
-              <p className="stat-value">{(stats.oldMetalWeights?.gold || 0).toFixed(2)} g</p>
+              <p className="stat-value"><CountUp value={(stats.oldMetalWeights?.gold || 0)} duration={600} format={(v) => `${v.toFixed(2)} g`} /></p>
               <p className="stat-change">Pending/Adjusted records</p>
            </div>
         </div>
         <div className="stat-card" onClick={() => fetchOldMetalDetails('Silver')}>
            <div className="stat-card-body">
               <h3>Old Silver Weight</h3>
-              <p className="stat-value">{(stats.oldMetalWeights?.silver || 0).toFixed(2)} g</p>
+              <p className="stat-value"><CountUp value={(stats.oldMetalWeights?.silver || 0)} duration={600} format={(v) => `${v.toFixed(2)} g`} /></p>
               <p className="stat-change">Pending/Adjusted records</p>
            </div>
         </div>
         <div className="stat-card" onClick={fetchPendingDues}>
            <div className="stat-card-body">
               <h3>Pending Dues</h3>
-              <p className="stat-value text-red">{formatCurrency(stats.pendingDues)}</p>
+              <p className="stat-value text-red"><CountUp value={stats.pendingDues} duration={800} format={formatCurrency} /></p>
               <p className="stat-change">Outstanding</p>
            </div>
         </div>
