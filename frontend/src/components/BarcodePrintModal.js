@@ -178,8 +178,7 @@ const BarcodePrintModal = ({ isOpen, onClose, products }) => {
           <div class="label-${settings.size}">
             ${settings.showName ? `<div class="product-name">${product.name}</div>` : ''}
             ${details.length > 0 ? `<div class="product-details">${details.join(' | ')}</div>` : ''}
-            ${barcodeSrc ? `<img src="${barcodeSrc}" style="max-width:90%; max-height: 50px;" />` : '<div style="color:red">No Barcode</div>'}
-            <div style="font-size: 0.8em; letter-spacing: 1px;">${product.sku}</div>
+            ${barcodeSrc ? `<img src="${barcodeSrc}" style="max-width:90%; max-height: 50px;" />` : `<div style="color:red">No Barcode</div><div style="font-size: 0.8em; letter-spacing: 1px;">${product.sku}</div>`}
           </div>
         `;
       }
