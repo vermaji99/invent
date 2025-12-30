@@ -49,13 +49,19 @@ router.post('/', [
     const { weight, purity, rate, purityTested, testNotes, paymentMode, category } = req.body;
     const totalValue = weight * rate;
 
+    const purityStr = String(purity || '').toLowerCase();
+    const inferredCategory = /925/.test(purityStr) || /silver/.test(purityStr)
+      ? 'Silver'
+      : (/\b\d{2}\s*k\b/.test(purityStr) || /\bk\b/.test(purityStr) ? 'Gold' : (category || 'Gold'));
+    const finalCategory = inferredCategory || category || 'Gold';
+
     const oldGold = new OldGold({
       customer: req.body.customer,
       weight,
       purity,
       rate,
       totalValue,
-      category: category || 'Gold',
+      category: finalCategory,
       purityTested: purityTested || false,
       testNotes,
       createdBy: req.user.id
@@ -69,7 +75,7 @@ router.post('/', [
       category: 'OLD_GOLD',
       amount: totalValue,
       paymentMode: paymentMode || 'Cash',
-      description: `Old Gold Buy (${weight}g @ ${rate})`,
+      description: `Old ${finalCategory} Buy (${weight}g @ ${rate})`,
       reference: { model: 'OldGold', id: oldGold._id },
       date: oldGold.createdAt,
       performedBy: req.user.id

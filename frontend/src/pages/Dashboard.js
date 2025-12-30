@@ -228,20 +228,21 @@ const Dashboard = () => {
       const res = await api.get('/api/old-gold');
       const rowsAll = (res.data || []).map(og => ({
         customer: og.customer?.name || '',
-        category: og.category,
         weight: og.weight || 0,
         purity: og.purity || '',
         rate: og.rate || 0,
         totalValue: og.totalValue || 0,
         status: og.status || '',
         adjustedInvoice: og.adjustedAgainst?.invoice?.invoiceNumber || '',
-        date: og.createdAt
+        date: og.createdAt,
+        category: og.category || ''
       }));
       const rows = rowsAll.filter(r => {
-        if (r.category) return r.category === type;
-        const p = String(r.purity || '').toUpperCase();
-        if (type === 'Gold') return /K\b/.test(p);
-        return /925/.test(p);
+        const p = String(r.purity || '').toLowerCase();
+        const isGold = /\b\d{2}\s*k\b/.test(p) || /\bk\b/.test(p);
+        const isSilver = /925/.test(p) || /silver/.test(p);
+        const derived = isGold ? 'Gold' : isSilver ? 'Silver' : (r.category || '');
+        return derived === type;
       });
       openDetails(`Old ${type} Weight — Details`, [
         { key: 'customer', label: 'Customer' },

@@ -477,17 +477,17 @@ router.get('/stats', auth, async (req, res) => {
     let oldSilverWeight = 0;
     
     oldMetals.forEach(og => {
-      if (og.category === 'Gold') {
+      const p = (og.purity || '').toLowerCase();
+      const isGold = /\b\d{2}\s*k\b/.test(p) || /\bk\b/.test(p);
+      const isSilver = /925/.test(p) || /silver/.test(p);
+      if (isGold) {
+        oldGoldWeight += og.weight || 0;
+      } else if (isSilver) {
+        oldSilverWeight += og.weight || 0;
+      } else if (og.category === 'Gold') {
         oldGoldWeight += og.weight || 0;
       } else if (og.category === 'Silver') {
         oldSilverWeight += og.weight || 0;
-      } else {
-        // Fallback for legacy data
-        const p = (og.purity || '').toLowerCase();
-        const isGold = /k\b/.test(p) || /\d{2}k/.test(p);
-        const isSilver = /925/.test(p) || /silver/.test(p);
-        if (isGold) oldGoldWeight += og.weight || 0;
-        else if (isSilver) oldSilverWeight += og.weight || 0;
       }
     });
 

@@ -227,9 +227,13 @@ router.post('/', [
     // Create Old Gold records
     if (exchange && exchange.items) {
       for (const item of exchange.items) {
+        const p = String(item.purity || '').toLowerCase();
+        const inferredCategory = /925/.test(p) || /silver/.test(p)
+          ? 'Silver'
+          : (/\b\d{2}\s*k\b/.test(p) || /\bk\b/.test(p) ? 'Gold' : (item.category || 'Gold'));
         await new OldGold({
           customer,
-          category: item.category || 'Gold',
+          category: inferredCategory,
           weight: item.weight,
           purity: item.purity,
           rate: item.rate,

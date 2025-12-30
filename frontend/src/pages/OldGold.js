@@ -14,10 +14,8 @@ const OldGold = () => {
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [customerSearch, setCustomerSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All');
   const [formData, setFormData] = useState({
     customer: '',
-    category: 'Gold',
     weight: '',
     purity: '22K',
     rate: '',
@@ -199,55 +197,28 @@ const OldGold = () => {
 
   const totalValue = calculateTotalValue();
 
-  const filteredRecords = oldGoldRecords.filter(record => {
-    if (categoryFilter === 'All') return true;
-    return (record.category || 'Gold') === categoryFilter;
-  });
-
   return (
     <div className="oldgold-page">
       <div className="page-header">
         <div>
-          <h1>Old Metal / Exchange</h1>
-          <p>Manage old gold, silver, and other metal transactions</p>
+          <h1>Old Gold Exchange</h1>
+          <p>Manage old gold transactions and exchanges</p>
         </div>
-        <div className="header-actions">
-          <select 
-            value={categoryFilter} 
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="category-filter"
-            style={{
-              padding: '0.55rem 1rem',
-              borderRadius: '10px',
-              border: '1px solid rgba(212, 175, 55, 0.35)',
-              background: 'rgba(30, 30, 30, 0.8)',
-              color: 'var(--gold-primary)',
-              marginRight: '1rem',
-              cursor: 'pointer'
-            }}
-          >
-            <option value="All">All Categories</option>
-            <option value="Gold">Gold</option>
-            <option value="Silver">Silver</option>
-            <option value="Platinum">Platinum</option>
-            <option value="Other">Other</option>
-          </select>
-          <button className="btn-primary" onClick={() => { setShowModal(true); resetForm(); fetchGoldPrice(); }}>
-            <FiPlus /> New Record
-          </button>
-        </div>
+        <button className="btn-primary" onClick={() => { setShowModal(true); resetForm(); fetchGoldPrice(); }}>
+          <FiPlus /> New Record
+        </button>
       </div>
 
       {loading ? (
         <div className="loading">Loading records...</div>
       ) : (
         <div className="oldgold-list">
-          {filteredRecords.length === 0 ? (
+          {oldGoldRecords.length === 0 ? (
             <div className="empty-state">
-              <p>No records found.</p>
+              <p>No old gold records found. Create your first record.</p>
             </div>
           ) : (
-            filteredRecords.map((record) => (
+            oldGoldRecords.map((record) => (
               <div key={record._id} className="oldgold-card">
                 <div className="oldgold-header">
                   <div>
@@ -260,10 +231,6 @@ const OldGold = () => {
                   </div>
                 </div>
                 <div className="oldgold-details">
-                  <div className="detail">
-                    <span>Category:</span>
-                    <span>{record.category || 'Gold'}</span>
-                  </div>
                   <div className="detail">
                     <span>Weight:</span>
                     <span>{record.weight}g</span>
@@ -370,19 +337,6 @@ const OldGold = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Category *</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    required
-                  >
-                    <option value="Gold">Gold</option>
-                    <option value="Silver">Silver</option>
-                    <option value="Platinum">Platinum</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div className="form-group">
                   <label>Weight (g) *</label>
                   <input
                     type="number"
@@ -393,17 +347,18 @@ const OldGold = () => {
                     placeholder="Weight in grams"
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>Purity *</label>
-                <input 
-                  type="text" 
-                  value={formData.purity}
-                  onChange={(e) => handlePurityChange(e.target.value)}
-                  placeholder="e.g. 22K, 925, 18K"
-                  required
-                />
+                <div className="form-group">
+                  <label>Purity *</label>
+                  <select
+                    value={formData.purity}
+                    onChange={(e) => handlePurityChange(e.target.value)}
+                    required
+                  >
+                    <option value="24K">24K</option>
+                    <option value="22K">22K</option>
+                    <option value="18K">18K</option>
+                  </select>
+                </div>
               </div>
 
               <div className="form-group">
