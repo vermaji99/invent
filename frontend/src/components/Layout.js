@@ -74,6 +74,13 @@ const Layout = () => {
     return location.pathname.startsWith(path);
   };
 
+  useEffect(() => {
+    document.body.classList.add('motion-override');
+    return () => {
+      document.body.classList.remove('motion-override');
+    };
+  }, []);
+
   return (
     <div className="layout">
       <GoldPriceBar />

@@ -389,6 +389,27 @@
     transition: none !important;
   }
 }
+
+/* Animation override to ensure visibility when needed */
+.motion-override .stat-card {
+  animation: dashFadeUp 400ms ease-out forwards !important;
+}
+.motion-override .profit-card {
+  animation: dashFadeUp 400ms ease-out forwards 120ms !important;
+}
+.motion-override .chart-card {
+  animation: dashFadeUp 380ms ease-out forwards 140ms !important;
+}
+.motion-override .ledger-modal,
+.motion-override .modal-content {
+  animation: modalScale 260ms ease-out forwards !important;
+}
+.motion-override .ledger-modal-overlay {
+  animation: overlayFade 220ms ease-out !important;
+}
+.motion-override .ledger-table tbody tr {
+  transition: background-color 160ms ease !important;
+}
 .modal-overlay {
   position: fixed;
   top: 0;
