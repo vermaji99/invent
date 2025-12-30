@@ -249,7 +249,7 @@ const Billing = () => {
     const amount = weight * rate * (purity / 100);
     
     setExchangeItems([...exchangeItems, { ...exchangeInput, weight, rate, purity, amount }]);
-    setExchangeInput({ description: '', weight: '', purity: '', rate: '' });
+    setExchangeInput({ description: '', category: exchangeInput.category || 'Gold', weight: '', purity: '', rate: '' });
   };
   
   const removeExchangeItem = (index) => {
@@ -979,6 +979,16 @@ const Billing = () => {
           <div className="exchange-section">
             <h3>Old Gold / Exchange</h3>
             <div className="exchange-inputs">
+              <select
+                value={exchangeInput.category}
+                onChange={(e) => setExchangeInput({ ...exchangeInput, category: e.target.value })}
+                className="ex-category"
+              >
+                <option value="Gold">Gold</option>
+                <option value="Silver">Silver</option>
+                <option value="Platinum">Platinum</option>
+                <option value="Other">Other</option>
+              </select>
               <input 
                 type="text" 
                 placeholder="Description" 
@@ -1017,6 +1027,7 @@ const Billing = () => {
                 <table>
                   <thead>
                     <tr>
+                      <th>Category</th>
                       <th>Description</th>
                       <th>Wt</th>
                       <th>Purity</th>
@@ -1028,6 +1039,7 @@ const Billing = () => {
                   <tbody>
                     {exchangeItems.map((item, index) => (
                       <tr key={index}>
+                        <td>{item.category}</td>
                         <td>{item.description}</td>
                         <td>{item.weight}</td>
                         <td>{item.purity}%</td>
