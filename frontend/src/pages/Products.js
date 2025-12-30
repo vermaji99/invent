@@ -366,7 +366,7 @@ const Products = () => {
               <div className="product-image-container">
                 {product.images && product.images.length > 0 ? (
                   <img 
-                    src={`https://invent-backend-rjbf.onrender.com${product.images[0]}`} 
+                    src={`${api.defaults.baseURL}${product.images[0]}`} 
                     alt={product.name} 
                     className="product-thumb"
                     onError={(e) => {e.target.onerror = null; e.target.src = 'placeholder.png'}} 
