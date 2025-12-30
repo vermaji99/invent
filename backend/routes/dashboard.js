@@ -316,11 +316,45 @@ router.get('/stats', auth, async (req, res) => {
       date: t.date || t.createdAt
     }));
     const stockValue = await Product.aggregate([
-      { $match: { isActive: true, quantity: { $gt: 0 } } },
+      { $match: { isActive: true, $or: [ { quantity: { $gt: 0 } }, { availableWeight: { $gt: 0 } } ] } },
       {
         $group: {
           _id: '$category',
-          totalValue: { $sum: { $multiply: ['$purchasePrice', '$quantity'] } },
+          totalValue: {
+            $sum: {
+              $cond: [
+                { $eq: ['$isWeightManaged', true] },
+                {
+                  $multiply: [
+                    { $ifNull: ['$purchasePrice', 0] },
+                    {
+                      $cond: [
+                        { $gt: [{ $ifNull: ['$availableWeight', 0] }, 0] },
+                        { $ifNull: ['$availableWeight', 0] },
+                        {
+                          $multiply: [
+                            { $ifNull: ['$netWeight', 0] },
+                            { $ifNull: ['$quantity', 0] }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  $multiply: [
+                    { $ifNull: ['$purchasePrice', 0] },
+                    {
+                      $multiply: [
+                        { $ifNull: ['$netWeight', 0] },
+                        { $ifNull: ['$quantity', 0] }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
           totalQuantity: { $sum: '$quantity' }
         }
       }

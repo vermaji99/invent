@@ -167,20 +167,31 @@ const Dashboard = () => {
     try {
       setLoadingDetails(true);
       const res = await api.get('/api/products');
-      const rows = (res.data || []).map(p => ({
-        name: p.name,
-        category: p.category,
-        quantity: p.quantity || 0,
-        netWeight: p.netWeight || 0,
-        purchasePrice: p.purchasePrice || 0,
-        totalValue: (p.purchasePrice || 0) * (p.quantity || 0)
-      }));
+      const rows = (res.data || []).map(p => {
+        const qty = Number(p.quantity || 0);
+        const netWt = Number(p.netWeight || 0);
+        const availWt = Number(p.availableWeight || 0);
+        const ratePerGram = Number(p.purchasePrice || 0);
+        const isWM = !!p.isWeightManaged;
+        const weightForVal = isWM
+          ? (availWt > 0 ? availWt : (netWt * qty))
+          : (netWt * qty);
+        const totalVal = ratePerGram * weightForVal;
+        return {
+          name: p.name,
+          category: p.category,
+          quantity: qty,
+          netWeight: netWt,
+          purchasePrice: ratePerGram,
+          totalValue: totalVal
+        };
+      });
       openDetails('Total Stock Value — Details', [
         { key: 'name', label: 'Product' },
         { key: 'category', label: 'Category' },
         { key: 'quantity', label: 'Qty' },
         { key: 'netWeight', label: 'Net Wt (g)' },
-        { key: 'purchasePrice', label: 'Purchase Price', fmt: fmtINR },
+        { key: 'purchasePrice', label: 'Purchase Price (₹/g)', fmt: fmtINR },
         { key: 'totalValue', label: 'Total Value', fmt: fmtINR }
       ], rows);
     } catch (e) {
