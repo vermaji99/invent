@@ -38,8 +38,6 @@ const CountUp = ({ value = 0, duration = 800, format = (v) => v.toFixed(2) }) =>
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-    // Run once on mount for premium feel; no re-animation on updates
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <span>{format(display)}</span>;
