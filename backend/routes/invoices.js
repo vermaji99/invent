@@ -229,6 +229,7 @@ router.post('/', [
       for (const item of exchange.items) {
         await new OldGold({
           customer,
+          category: item.category || 'Gold',
           weight: item.weight,
           purity: item.purity,
           rate: item.rate,

@@ -10,6 +10,12 @@ const oldGoldSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  category: {
+    type: String,
+    enum: ['Gold', 'Silver', 'Platinum', 'Other'],
+    default: 'Gold',
+    required: true
+  },
   purity: {
     type: String,
     required: true // e.g., "22K", "18K"

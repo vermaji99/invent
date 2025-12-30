@@ -471,21 +471,23 @@ router.get('/stats', auth, async (req, res) => {
       platinum: platinumAgg[0]?.totalNetWeight || 0,
       other: otherAgg[0]?.totalNetWeight || 0
     };
-    // Old metal weights split (Gold vs Silver) based on purity text
-    const oldMetals = await OldGold.find({}, { weight: 1, purity: 1 });
+    // Old metal weights split (Gold vs Silver) based on category
+    const oldMetals = await OldGold.find({}, { weight: 1, category: 1, purity: 1 });
     let oldGoldWeight = 0;
     let oldSilverWeight = 0;
+    
     oldMetals.forEach(og => {
-      const p = (og.purity || '').toLowerCase();
-      const isGold = /k\b/.test(p) || /\d{2}k/.test(p);
-      const isSilver = /925/.test(p) || /silver/.test(p);
-      if (isGold && !isSilver) {
+      if (og.category === 'Gold') {
         oldGoldWeight += og.weight || 0;
-      } else if (isSilver && !isGold) {
+      } else if (og.category === 'Silver') {
         oldSilverWeight += og.weight || 0;
       } else {
-        if (/k\b/.test(p)) oldGoldWeight += og.weight || 0;
-        else if (/925/.test(p)) oldSilverWeight += og.weight || 0;
+        // Fallback for legacy data
+        const p = (og.purity || '').toLowerCase();
+        const isGold = /k\b/.test(p) || /\d{2}k/.test(p);
+        const isSilver = /925/.test(p) || /silver/.test(p);
+        if (isGold) oldGoldWeight += og.weight || 0;
+        else if (isSilver) oldSilverWeight += og.weight || 0;
       }
     });
 

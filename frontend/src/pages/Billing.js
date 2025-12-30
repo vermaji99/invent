@@ -32,7 +32,13 @@ const Billing = () => {
   });
   const [createdInvoice, setCreatedInvoice] = useState(null);
   const [exchangeItems, setExchangeItems] = useState([]);
-  const [exchangeInput, setExchangeInput] = useState({ description: '', weight: '', purity: '', rate: '' });
+  const [exchangeInput, setExchangeInput] = useState({
+    description: '',
+    category: 'Gold',
+    weight: '',
+    purity: '',
+    rate: ''
+  });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
@@ -233,17 +239,26 @@ const Billing = () => {
   }, [showCameraScanner]);
 
   const addExchangeItem = () => {
-    if (!exchangeInput.description || !exchangeInput.weight || !exchangeInput.rate) {
-      toast.error('Please fill description, weight and rate');
+    if (!exchangeInput.weight || !exchangeInput.rate) {
+      toast.error('Please enter weight and rate');
       return;
     }
     const weight = parseFloat(exchangeInput.weight);
     const rate = parseFloat(exchangeInput.rate);
     const purity = parseFloat(exchangeInput.purity) || 100;
     const amount = weight * rate * (purity / 100);
+
+    const item = {
+      description: exchangeInput.description || 'Old Gold',
+      category: exchangeInput.category,
+      weight,
+      purity,
+      rate,
+      amount
+    };
     
-    setExchangeItems([...exchangeItems, { ...exchangeInput, weight, rate, purity, amount }]);
-    setExchangeInput({ description: '', weight: '', purity: '', rate: '' });
+    setExchangeItems([...exchangeItems, item]);
+    setExchangeInput({ description: '', category: 'Gold', weight: '', purity: '', rate: '' });
   };
   
   const removeExchangeItem = (index) => {
@@ -980,6 +995,24 @@ const Billing = () => {
                 onChange={(e) => setExchangeInput({...exchangeInput, description: e.target.value})}
                 className="ex-desc"
               />
+              <select
+                value={exchangeInput.category}
+                onChange={(e) => setExchangeInput({...exchangeInput, category: e.target.value})}
+                className="ex-category"
+                style={{
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid rgba(212, 175, 55, 0.25)',
+                  color: 'var(--text-primary)',
+                  borderRadius: '8px',
+                  padding: '0.5rem 0.75rem',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <option value="Gold">Gold</option>
+                <option value="Silver">Silver</option>
+                <option value="Platinum">Platinum</option>
+                <option value="Other">Other</option>
+              </select>
               <input 
                 type="number" 
                 placeholder="Wt (g)" 
@@ -1012,6 +1045,7 @@ const Billing = () => {
                   <thead>
                     <tr>
                       <th>Description</th>
+                      <th>Category</th>
                       <th>Wt</th>
                       <th>Purity</th>
                       <th>Rate</th>
@@ -1023,6 +1057,7 @@ const Billing = () => {
                     {exchangeItems.map((item, index) => (
                       <tr key={index}>
                         <td>{item.description}</td>
+                        <td>{item.category || 'Gold'}</td>
                         <td>{item.weight}</td>
                         <td>{item.purity}%</td>
                         <td>{item.rate}</td>

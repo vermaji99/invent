@@ -228,6 +228,7 @@ const Dashboard = () => {
       const res = await api.get('/api/old-gold');
       const rowsAll = (res.data || []).map(og => ({
         customer: og.customer?.name || '',
+        category: og.category,
         weight: og.weight || 0,
         purity: og.purity || '',
         rate: og.rate || 0,
@@ -237,6 +238,7 @@ const Dashboard = () => {
         date: og.createdAt
       }));
       const rows = rowsAll.filter(r => {
+        if (r.category) return r.category === type;
         const p = String(r.purity || '').toUpperCase();
         if (type === 'Gold') return /K\b/.test(p);
         return /925/.test(p);

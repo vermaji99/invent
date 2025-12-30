@@ -79,6 +79,7 @@ const invoiceSchema = new mongoose.Schema({
   exchange: {
     items: [{
       description: String,
+      category: { type: String, default: 'Gold' },
       weight: Number,
       purity: Number,
       rate: Number,

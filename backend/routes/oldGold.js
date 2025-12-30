@@ -46,7 +46,7 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { weight, purity, rate, purityTested, testNotes, paymentMode } = req.body;
+    const { weight, purity, rate, purityTested, testNotes, paymentMode, category } = req.body;
     const totalValue = weight * rate;
 
     const oldGold = new OldGold({
@@ -55,6 +55,7 @@ router.post('/', [
       purity,
       rate,
       totalValue,
+      category: category || 'Gold',
       purityTested: purityTested || false,
       testNotes,
       createdBy: req.user.id
