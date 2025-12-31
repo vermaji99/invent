@@ -34,7 +34,10 @@ router.post('/request', [
       await OtpToken.create({ userId: user._id, code, purpose, channel, expiresAt });
     }
     const html = wrapHtml('Admin OTP', table(['Email', 'OTP', 'Expires'], [[email, code, expiresAt.toLocaleString()]]));
-    Promise.resolve(sendEmail({ subject: 'Admin OTP', html, to: [email] })).catch(() => {});
+    const sendResult = await sendEmail({ subject: 'Admin OTP', html, to: [email] });
+    if (!sendResult.ok) {
+        return res.status(500).json({ message: 'Failed to send email', error: sendResult.error });
+    }
     res.json({ message: 'OTP generated. Check your email for the code.' });
   } catch (e) {
     res.status(500).json({ message: 'Server error' });
@@ -56,16 +59,26 @@ router.post('/verify', [
     const otp = await OtpToken.findOne({ userId: user._id, code, used: false }).sort({ createdAt: -1 });
     if (!otp) return res.status(400).json({ message: 'Invalid OTP' });
     if (otp.expiresAt < new Date()) return res.status(400).json({ message: 'OTP expired' });
-    otp.used = true;
-    await otp.save();
+    
     const token = crypto.randomBytes(32).toString('hex');
     const ttlMinutes = Number(process.env.OTP_TTL_MIN || 10);
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
-    await ResetLinkToken.create({ userId: user._id, token, expiresAt });
+    
+    const resetTokenDoc = await ResetLinkToken.create({ userId: user._id, token, expiresAt });
+    
     const frontend = process.env.FRONTEND_URL || '';
     const resetUrl = frontend ? `${frontend}/reset-password?token=${token}` : `${req.protocol}://${req.get('host')}/api/admin/otp/reset-with-link?token=${token}`;
     const html = wrapHtml('Reset Password Link', `<p>Click the link below to reset your password. This link expires in ${ttlMinutes} minutes.</p><p><a href="${resetUrl}" target="_blank">${resetUrl}</a></p>`);
-    await sendEmail({ subject: 'Reset Password Link', html, to: [email] });
+    
+    const sendResult = await sendEmail({ subject: 'Reset Password Link', html, to: [email] });
+    if (!sendResult.ok) {
+      await ResetLinkToken.deleteOne({ _id: resetTokenDoc._id });
+      return res.status(500).json({ message: 'Failed to send reset link email', error: sendResult.error });
+    }
+
+    otp.used = true;
+    await otp.save();
+    
     res.json({ message: 'OTP verified. Reset link sent to your email.' });
   } catch (e) {
     res.status(500).json({ message: 'Server error' });

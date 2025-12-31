@@ -12,8 +12,13 @@ const requireTLS = process.env.EMAIL_REQUIRE_TLS === 'true';
 const enableLogger = process.env.EMAIL_DEBUG === 'true';
 const authMethod = process.env.EMAIL_AUTH_METHOD || undefined;
 const configuredHost = (process.env.EMAIL_HOST || '').trim().toLowerCase();
-const useService = !configuredHost || configuredHost === 'localhost' || configuredHost === '127.0.0.1';
-const provider = (process.env.EMAIL_PROVIDER || 'resend').toLowerCase();
+let provider = (process.env.EMAIL_PROVIDER || '').toLowerCase();
+if (!provider) {
+  if (process.env.RESEND_API_KEY) provider = 'resend';
+  else if (configuredHost) provider = 'smtp';
+  else provider = 'resend';
+}
+
 const resendKeyGlobal = process.env.RESEND_API_KEY || '';
 const resendClient = resendKeyGlobal ? new Resend(resendKeyGlobal) : null;
 
@@ -32,7 +37,7 @@ if (provider === 'brevo') {
     logger: enableLogger,
     debug: enableLogger
   });
-} else if (configuredHost && provider !== 'resend') {
+} else if (provider !== 'resend') {
   transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT || 587),
@@ -105,6 +110,7 @@ async function sendEmail({ subject, html, to }) {
       });
       if (r.error) throw new Error(String(r.error?.message || 'RESEND_SEND_FAILED'));
     } else {
+      if (!transporter) throw new Error('No email transport configured (Check EMAIL_PROVIDER, RESEND_API_KEY, or EMAIL_HOST)');
       await transporter.sendMail({
         from: fromAddress,
         to: recipients.join(','),
