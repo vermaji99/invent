@@ -14,15 +14,34 @@ let transporter;
 if (useService) {
   transporter = nodemailer.createTransport({
     service: (process.env.EMAIL_SERVICE || 'gmail').toLowerCase(),
-    auth: { user: authUser, pass: authPass }
+    auth: { user: authUser, pass: authPass },
+    tls: { minVersion: 'TLSv1.2' },
+    requireTLS,
+    logger: enableLogger,
+    debug: enableLogger,
+    authMethod
   });
 } else {
   transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT || 587),
     secure: process.env.EMAIL_SECURE === 'true',
-    auth: { user: authUser, pass: authPass, method: authMethod },
+    auth: { user: authUser, pass: authPass },
+    authMethod,
     tls: { minVersion: 'TLSv1.2', rejectUnauthorized: false },
+    requireTLS,
+    logger: enableLogger,
+    debug: enableLogger
+  });
+}
+
+function buildFallbackTransport() {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: { user: authUser, pass: authPass },
+    tls: { minVersion: 'TLSv1.2' },
     requireTLS,
     logger: enableLogger,
     debug: enableLogger
@@ -72,7 +91,35 @@ async function sendEmail({ subject, html, to }) {
       status: 'FAILURE',
       error: String(e.message || e)
     });
-    return { ok: false, error: 'SEND_FAILED' };
+    // Retry once with fallback transport
+    try {
+      const fb = buildFallbackTransport();
+      await fb.verify().catch(() => {});
+      await fb.sendMail({
+        from: emailFrom,
+        to: recipients.join(','),
+        subject,
+        html
+      });
+      await NotificationEvent.create({
+        type: subject + '_FALLBACK',
+        targetModel: 'SYSTEM',
+        targetId: 'N/A',
+        recipients,
+        status: 'SUCCESS'
+      });
+      return { ok: true };
+    } catch (e2) {
+      await NotificationEvent.create({
+        type: subject + '_FALLBACK',
+        targetModel: 'SYSTEM',
+        targetId: 'N/A',
+        recipients,
+        status: 'FAILURE',
+        error: String(e2.message || e2)
+      });
+      return { ok: false, error: 'SEND_FAILED' };
+    }
   }
 }
 
