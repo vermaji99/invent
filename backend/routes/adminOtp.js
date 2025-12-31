@@ -8,6 +8,14 @@ const { sendAdminOTP, sendEmail, wrapHtml, table } = require('../services/emailS
 const ResetLinkToken = require('../models/ResetLinkToken');
 const crypto = require('crypto');
 
+router.get('/request', async (req, res) => {
+  try {
+    res.json({ ok: false, message: 'This endpoint only accepts POST requests' });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: 'Server error' });
+  }
+});
+
 router.post('/request', [
   body('email').isEmail(),
   body('purpose').isIn(['RESET', 'ACTION']),
