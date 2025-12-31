@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FiMail, FiLock } from 'react-icons/fi';
 import './Login.css';
 
 const Login = () => {
@@ -46,7 +45,6 @@ const Login = () => {
         </div>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <FiMail className="input-icon" />
             <input
               type="email"
               name="email"
@@ -57,7 +55,6 @@ const Login = () => {
             />
           </div>
           <div className="form-group">
-            <FiLock className="input-icon" />
             <input
               type="password"
               name="password"
