@@ -9,7 +9,8 @@ const emailFromName = (process.env.EMAIL_FROM_NAME || 'VSKK').trim();
 const requireTLS = process.env.EMAIL_REQUIRE_TLS === 'true';
 const enableLogger = process.env.EMAIL_DEBUG === 'true';
 const authMethod = process.env.EMAIL_AUTH_METHOD || undefined;
-const useService = !process.env.EMAIL_HOST;
+const configuredHost = (process.env.EMAIL_HOST || '').trim().toLowerCase();
+const useService = !configuredHost || configuredHost === 'localhost' || configuredHost === '127.0.0.1';
 
 let transporter;
 if (useService) {
