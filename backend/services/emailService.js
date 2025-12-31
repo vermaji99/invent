@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 const NotificationEvent = require('../models/NotificationEvent');
 const User = require('../models/User');
 
@@ -86,13 +87,27 @@ async function sendEmail({ subject, html, to }) {
   const fromAddress = normalizedService === 'gmail'
     ? `${emailFromName} <${authUser}>`
     : `${emailFromName} <${emailFrom}>`;
+  const resendKey = process.env.RESEND_API_KEY || '';
+  const useResend = !!resendKey;
   try {
-    await transporter.sendMail({
-      from: fromAddress,
-      to: recipients.join(','),
-      subject,
-      html
-    });
+    if (useResend) {
+      await axios.post('https://api.resend.com/emails', {
+        from: fromAddress,
+        to: recipients,
+        subject,
+        html
+      }, {
+        headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        timeout: 30000
+      });
+    } else {
+      await transporter.sendMail({
+        from: fromAddress,
+        to: recipients.join(','),
+        subject,
+        html
+      });
+    }
     await NotificationEvent.create({
       type: subject,
       targetModel: 'SYSTEM',
@@ -110,6 +125,9 @@ async function sendEmail({ subject, html, to }) {
       status: 'FAILURE',
       error: String(e.message || e)
     });
+    if (useResend) {
+      return { ok: false, error: 'SEND_FAILED' };
+    }
     // Retry with SMTP fallbacks
     try {
       const fb587 = buildFallbackTransport587();
