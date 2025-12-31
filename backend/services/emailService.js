@@ -67,9 +67,11 @@ function wrapHtml(title, bodyHtml) {
 async function sendEmail({ subject, html, to }) {
   const recipients = to && to.length ? to : await getAdminRecipients();
   if (!recipients.length) return { ok: false, error: 'NO_ADMIN_RECIPIENTS' };
+  const normalizedService = (process.env.EMAIL_SERVICE || '').toLowerCase();
+  const fromAddress = normalizedService === 'gmail' ? authUser : emailFrom;
   try {
     await transporter.sendMail({
-      from: emailFrom,
+      from: fromAddress,
       to: recipients.join(','),
       subject,
       html

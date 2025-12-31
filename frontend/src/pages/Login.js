@@ -159,6 +159,30 @@ const Login = () => {
                   <button type="button" className="btn-secondary" onClick={() => setShowForgot(false)}>Close</button>
                   <button
                     type="button"
+                    className="btn-secondary"
+                    disabled={otpBusy || !otpEmail}
+                    onClick={async () => {
+                      if (!otpEmail) return;
+                      setOtpBusy(true);
+                      try {
+                        await api.post('/api/admin/otp/request', { email: otpEmail, purpose: 'RESET' });
+                        toast.success('OTP resent. Check your inbox or spam folder.');
+                      } catch (e) {
+                        if (e.response?.status === 429) {
+                          toast.error('Too many requests. Please wait 2 minutes.');
+                        } else {
+                          const msg = e.response?.data?.message || 'Failed to resend OTP';
+                          toast.error(msg);
+                        }
+                      } finally {
+                        setOtpBusy(false);
+                      }
+                    }}
+                  >
+                    {otpBusy ? 'Resending…' : 'Resend OTP'}
+                  </button>
+                  <button
+                    type="button"
                     className="btn-primary"
                     disabled={otpBusy || !otpEmail || otpCode.length !== 6 || newPassword.length < 6}
                     onClick={async () => {
