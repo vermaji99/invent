@@ -5,6 +5,7 @@ const User = require('../models/User');
 const authUser = (process.env.EMAIL_USER || process.env.ADMIN_EMAIL || '').trim();
 const authPass = (process.env.EMAIL_PASS || process.env.APP_PASSWORD || '').replace(/\s+/g, '');
 const emailFrom = (process.env.EMAIL_FROM || authUser || '').trim();
+const emailFromName = (process.env.EMAIL_FROM_NAME || 'VSKK').trim();
 const requireTLS = process.env.EMAIL_REQUIRE_TLS === 'true';
 const enableLogger = process.env.EMAIL_DEBUG === 'true';
 const authMethod = process.env.EMAIL_AUTH_METHOD || undefined;
@@ -81,7 +82,9 @@ async function sendEmail({ subject, html, to }) {
   const recipients = to && to.length ? to : await getAdminRecipients();
   if (!recipients.length) return { ok: false, error: 'NO_ADMIN_RECIPIENTS' };
   const normalizedService = (process.env.EMAIL_SERVICE || '').toLowerCase();
-  const fromAddress = normalizedService === 'gmail' ? authUser : emailFrom;
+  const fromAddress = normalizedService === 'gmail'
+    ? `${emailFromName} <${authUser}>`
+    : `${emailFromName} <${emailFrom}>`;
   try {
     await transporter.sendMail({
       from: fromAddress,
