@@ -52,16 +52,6 @@ app.listen(PORT, () => {
 });
 
 const { initScheduler } = require('./services/scheduler');
-const { initEmailService, verifyTransport, sendTestMail } = require('./services/emailService');
 
 // Initialize services
 initScheduler();
-initEmailService(); // Explicitly initialize email service
-
-// Verify email transport (non-blocking)
-verifyTransport().then(ok => {
-  if (ok && process.env.EMAIL_TEST_ENABLE === 'true') {
-    sendTestMail();
-  }
-});
-
