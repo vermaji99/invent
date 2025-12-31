@@ -1,41 +1,60 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const NotificationEvent = require('../models/NotificationEvent');
 const User = require('../models/User');
 
 // --- Configuration ---
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@example.com';
 
 // --- Initialization ---
-let resend = null;
+let transporter = null;
+let isInitialized = false;
 
 function initEmailService() {
-  // STRICT RULE: Force RESEND
-  if (EMAIL_PROVIDER !== 'RESEND') {
-    const error = `CRITICAL: EMAIL_PROVIDER must be set to "RESEND". Found: "${EMAIL_PROVIDER}"`;
-    console.error(error);
-    throw new Error(error);
-  }
+  if (isInitialized) return;
 
-  if (!RESEND_API_KEY) {
-    const error = 'CRITICAL: RESEND_API_KEY is missing in environment variables.';
-    console.error(error);
-    throw new Error(error);
+  const provider = (process.env.EMAIL_PROVIDER || 'BREVO').toUpperCase();
+
+  // Strict: We are using Brevo SMTP.
+  // Defaults to Brevo settings if not provided in ENV, but PASS is required.
+  const config = {
+    host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+    port: Number(process.env.SMTP_PORT) || 587,
+    user: process.env.SMTP_USER || 'apikey',
+    pass: process.env.SMTP_PASS
+  };
+
+  if (!config.pass) {
+    console.warn('[EmailService] WARNING: SMTP_PASS is missing. Email sending will fail.');
+    // We don't throw here to allow server to start, but sending will fail.
   }
 
   try {
-    resend = new Resend(RESEND_API_KEY);
-    console.log('[EmailService] Resend Client Initialized Successfully (HTTP Mode)');
+    transporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.port === 465, // true for 465, false for other ports
+      auth: {
+        user: config.user,
+        pass: config.pass
+      },
+      // Render Free Tier Compatibility
+      tls: {
+        rejectUnauthorized: false
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000
+    });
+
+    isInitialized = true;
+    console.log(`[EmailService] SMTP Transporter Initialized (${config.host}:${config.port})`);
   } catch (error) {
-    console.error('[EmailService] Failed to initialize Resend client:', error.message);
-    throw error;
+    console.error('[EmailService] Failed to initialize transporter:', error.message);
   }
 }
 
 /**
- * Log email events to DB (Asynchronous)
+ * Log email events to DB
  */
 async function logEvent(type, status, recipients, error = '', data = null) {
   try {
@@ -69,24 +88,16 @@ async function getAdminRecipients() {
 }
 
 /**
- * Send Email via Resend API (BLOCKING / RELIABLE)
- * 
- * STRICT REQUIREMENT:
- * This function waits for the Resend API to confirm delivery (or acceptance).
- * It returns the actual result to the caller.
- * No fake success responses.
+ * Send Email via SMTP
  */
 async function sendEmail({ subject, html, to }) {
-  // 1. Safety Checks
-  if (!resend) {
-    try {
-      initEmailService();
-    } catch (e) {
-      return { ok: false, error: e.message };
+  if (!isInitialized || !transporter) {
+    initEmailService();
+    if (!transporter) {
+      return { ok: false, error: 'Email service not initialized (Check SMTP_PASS)' };
     }
   }
 
-  // 2. Resolve Recipients
   let recipients = [];
   try {
     recipients = to && to.length ? to : await getAdminRecipients();
@@ -98,35 +109,25 @@ async function sendEmail({ subject, html, to }) {
     return { ok: false, error: 'No recipients found' };
   }
 
-  // 3. Blocking Send
+  const mailOptions = {
+    from: EMAIL_FROM,
+    to: recipients.join(','),
+    subject: subject,
+    html: html
+  };
+
   try {
-    const payload = {
-      from: EMAIL_FROM,
-      to: recipients,
-      subject: subject,
-      html: html
-    };
-
     console.log(`[EmailService] Sending "${subject}" to ${recipients.join(', ')}...`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[EmailService] Success! Message ID: ${info.messageId}`);
     
-    // Await the API call
-    const response = await resend.emails.send(payload);
+    await logEvent('EMAIL_SEND', 'SUCCESS', recipients, '', info);
+    return { ok: true, id: info.messageId };
 
-    if (response.error) {
-      console.error('[EmailService] Resend API Error:', response.error);
-      await logEvent('EMAIL_SEND', 'FAILURE', recipients, JSON.stringify(response.error));
-      return { ok: false, error: response.error.message || 'Resend API Error' };
-    }
-
-    console.log(`[EmailService] Success! ID: ${response.data?.id}`);
-    await logEvent('EMAIL_SEND', 'SUCCESS', recipients, '', response.data);
-    
-    return { ok: true, id: response.data?.id };
-
-  } catch (err) {
-    console.error('[EmailService] Network/Unexpected Error:', err.message);
-    await logEvent('EMAIL_SEND', 'FAILURE', recipients, err.message);
-    return { ok: false, error: err.message };
+  } catch (error) {
+    console.error('[EmailService] SMTP Error:', error.message);
+    await logEvent('EMAIL_SEND', 'FAILURE', recipients, error.message);
+    return { ok: false, error: error.message };
   }
 }
 
@@ -141,7 +142,7 @@ function wrapHtml(title, bodyHtml) {
         ${bodyHtml}
       </div>
       <div style="font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
-        Sent via VSKK System (Resend HTTP)
+        Sent via VSKK System (Brevo SMTP)
       </div>
     </div>
   `;
@@ -157,16 +158,18 @@ function table(headers, rows) {
 }
 
 /**
- * Verify Transport (Resend Check)
+ * Verify Transport
  */
 async function verifyTransport() {
+  if (!isInitialized) initEmailService();
+  if (!transporter) return false;
+
   try {
-    if (!resend) initEmailService();
-    // Resend doesn't have a "verify" method like SMTP, but we can assume if init passed, we are good.
-    // We could try sending a dummy email, but that consumes quota.
+    await transporter.verify();
+    console.log('[EmailService] Transport Verified: Ready to send');
     return true;
-  } catch (e) {
-    console.error('[EmailService] Verification Failed:', e.message);
+  } catch (error) {
+    console.error('[EmailService] Transport Verification Failed:', error.message);
     return false;
   }
 }
@@ -174,19 +177,14 @@ async function verifyTransport() {
 async function sendTestMail() {
     console.log('[EmailService] Sending test email...');
     await sendEmail({
-        subject: 'Test Email (Resend Strict)',
-        html: '<p>This is a test email from the STRICT Resend service.</p>',
+        subject: 'Test Email (Brevo SMTP)',
+        html: '<p>This is a test email from the Brevo SMTP service.</p>',
         to: [ADMIN_EMAIL]
     });
 }
 
-// Auto-initialize on module load if possible, or wait for explicit call
-try {
-  initEmailService();
-} catch (e) {
-  // Allow server to start even if config is bad, but logs will show error
-  console.warn('[EmailService] Startup initialization warning:', e.message);
-}
+// Auto-init
+initEmailService();
 
 module.exports = {
   sendEmail,
