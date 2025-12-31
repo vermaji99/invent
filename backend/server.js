@@ -52,4 +52,6 @@ app.listen(PORT, () => {
 });
 
 const { initScheduler } = require('./services/scheduler');
+const { verifyTransport } = require('./services/emailService');
 initScheduler();
+verifyTransport();

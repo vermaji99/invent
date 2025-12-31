@@ -2,16 +2,25 @@ const nodemailer = require('nodemailer');
 const NotificationEvent = require('../models/NotificationEvent');
 const User = require('../models/User');
 
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE,
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT || 0) || undefined,
-  secure: process.env.EMAIL_SECURE === 'true' ? true : undefined,
-  auth: {
-    user: process.env.ADMIN_EMAIL,
-    pass: process.env.APP_PASSWORD
-  }
-});
+const authUser = process.env.EMAIL_USER || process.env.ADMIN_EMAIL;
+const authPass = process.env.EMAIL_PASS || process.env.APP_PASSWORD;
+const useService = !!process.env.EMAIL_SERVICE && !process.env.EMAIL_HOST;
+
+let transporter;
+if (useService) {
+  transporter = nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE,
+    auth: { user: authUser, pass: authPass }
+  });
+} else {
+  transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: Number(process.env.EMAIL_PORT || 587),
+    secure: process.env.EMAIL_SECURE === 'true',
+    auth: { user: authUser, pass: authPass },
+    tls: { minVersion: 'TLSv1.2' }
+  });
+}
 
 async function getAdminRecipients() {
   const admins = await User.find({ role: 'admin', isActive: true }, { email: 1 });
@@ -34,7 +43,7 @@ async function sendEmail({ subject, html, to }) {
   if (!recipients.length) return { ok: false, error: 'NO_ADMIN_RECIPIENTS' };
   try {
     await transporter.sendMail({
-      from: process.env.ADMIN_EMAIL,
+      from: process.env.EMAIL_FROM || authUser,
       to: recipients.join(','),
       subject,
       html
@@ -60,6 +69,30 @@ async function sendEmail({ subject, html, to }) {
   }
 }
 
+async function verifyTransport() {
+  try {
+    await transporter.verify();
+    await NotificationEvent.create({
+      type: 'EMAIL_TRANSPORT_VERIFY',
+      targetModel: 'SYSTEM',
+      targetId: 'N/A',
+      recipients: [process.env.ADMIN_EMAIL].filter(Boolean),
+      status: 'SUCCESS'
+    });
+    return true;
+  } catch (e) {
+    await NotificationEvent.create({
+      type: 'EMAIL_TRANSPORT_VERIFY',
+      targetModel: 'SYSTEM',
+      targetId: 'N/A',
+      recipients: [process.env.ADMIN_EMAIL].filter(Boolean),
+      status: 'FAILURE',
+      error: String(e.message || e)
+    });
+    return false;
+  }
+}
+
 function table(headers, rows) {
   const th = headers.map(h => `<th style="border:1px solid #ccc;padding:8px;background:#f6f8fa">${h}</th>`).join('');
   const tr = rows.map(r => `<tr>${r.map(c => `<td style="border:1px solid #ccc;padding:8px">${c}</td>`).join('')}</tr>`).join('');
@@ -70,6 +103,6 @@ module.exports = {
   sendEmail,
   wrapHtml,
   table,
-  getAdminRecipients
+  getAdminRecipients,
+  verifyTransport
 };
-
