@@ -9,7 +9,7 @@ const emailFromName = (process.env.EMAIL_FROM_NAME || 'VSKK').trim();
 const requireTLS = process.env.EMAIL_REQUIRE_TLS === 'true';
 const enableLogger = process.env.EMAIL_DEBUG === 'true';
 const authMethod = process.env.EMAIL_AUTH_METHOD || undefined;
-const useService = !!process.env.EMAIL_SERVICE && !process.env.EMAIL_HOST;
+const useService = !process.env.EMAIL_HOST;
 
 let transporter;
 if (useService) {
