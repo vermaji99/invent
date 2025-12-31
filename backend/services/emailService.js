@@ -223,10 +223,60 @@ function table(headers, rows) {
   return `<table style="border-collapse:collapse;width:100%"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`;
 }
 
+async function sendTestMail() {
+  const to = [process.env.ADMIN_EMAIL].filter(Boolean);
+  if (!to.length) return false;
+  const subject = 'Render Email Test';
+  const text = 'If you received this, email is WORKING on Render.';
+  const resendKey = process.env.RESEND_API_KEY || resendKeyGlobal;
+  const useResend = provider === 'resend' && !!resendKey && !!resendClient;
+  const resendFrom = `${emailFromName} <${(process.env.EMAIL_FROM || 'onboarding@resend.dev').trim()}>`;
+  const fromAddress = `${emailFromName} <${emailFrom || authUser}>`;
+  try {
+    if (useResend) {
+      const r = await resendClient.emails.send({
+        from: resendFrom,
+        to,
+        subject,
+        text
+      });
+      if (r.error) throw new Error(String(r.error?.message || 'RESEND_SEND_FAILED'));
+    } else if (transporter) {
+      await transporter.sendMail({
+        from: fromAddress,
+        to: to.join(','),
+        subject,
+        text
+      });
+    } else {
+      throw new Error('NO_TRANSPORT');
+    }
+    await NotificationEvent.create({
+      type: 'EMAIL_TEST',
+      targetModel: 'SYSTEM',
+      targetId: 'N/A',
+      recipients: to,
+      status: 'SUCCESS'
+    });
+    return true;
+  } catch (e) {
+    await NotificationEvent.create({
+      type: 'EMAIL_TEST',
+      targetModel: 'SYSTEM',
+      targetId: 'N/A',
+      recipients: to,
+      status: 'FAILURE',
+      error: String(e.message || e)
+    });
+    return false;
+  }
+}
+
 module.exports = {
   sendEmail,
   wrapHtml,
   table,
   getAdminRecipients,
-  verifyTransport
+  verifyTransport,
+  sendTestMail
 };

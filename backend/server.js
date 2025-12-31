@@ -52,6 +52,9 @@ app.listen(PORT, () => {
 });
 
 const { initScheduler } = require('./services/scheduler');
-const { verifyTransport } = require('./services/emailService');
+const { verifyTransport, sendTestMail } = require('./services/emailService');
 initScheduler();
 verifyTransport();
+if (process.env.EMAIL_TEST_ENABLE === 'true') {
+  sendTestMail();
+}
