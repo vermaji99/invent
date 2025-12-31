@@ -9,20 +9,38 @@ let resendClient = null;
 let isInitialized = false;
 let initializationError = null;
 
-// Helper to get configuration
-const getConfig = () => ({
-  provider: (process.env.EMAIL_PROVIDER || '').toUpperCase().trim(),
-  smtp: {
-    host: (process.env.SMTP_HOST || 'smtp-relay.brevo.com').trim(),
-    port: Number(process.env.SMTP_PORT || 587),
-    user: (process.env.SMTP_USER || '').trim(),
-    pass: (process.env.SMTP_PASS || '').trim(),
-  },
-  resendKey: (process.env.RESEND_API_KEY || '').trim(),
-  fromEmail: (process.env.EMAIL_FROM || process.env.ADMIN_EMAIL || 'noreply@example.com').trim(),
-  fromName: (process.env.EMAIL_FROM_NAME || 'VSKK').trim(),
-  adminEmail: (process.env.ADMIN_EMAIL || '').trim(),
-});
+// Helper to get configuration with STRICT defaults
+const getConfig = () => {
+  let provider = (process.env.EMAIL_PROVIDER || '').trim().toUpperCase();
+  
+  // 1. DEFAULT PROVIDER SAFETY
+  // If undefined, null, or empty string, default to BREVO
+  if (!provider) {
+    console.log('[EmailService] EMAIL_PROVIDER is missing or empty. Defaulting to "BREVO".');
+    provider = 'BREVO';
+  }
+
+  // 2. STRICT NORMALIZATION
+  // Accept only 'BREVO' or 'RESEND'. Any other value -> Warning & fallback to BREVO
+  if (provider !== 'BREVO' && provider !== 'RESEND') {
+    console.warn(`[EmailService] Unknown provider "${provider}". Defaulting to "BREVO".`);
+    provider = 'BREVO';
+  }
+
+  return {
+    provider,
+    smtp: {
+      host: 'smtp-relay.brevo.com', // Force Brevo host
+      port: 587,                    // Force Brevo port
+      user: (process.env.SMTP_USER || 'apikey').trim(), // Default to 'apikey'
+      pass: (process.env.SMTP_PASS || '').trim(),
+    },
+    resendKey: (process.env.RESEND_API_KEY || '').trim(),
+    fromEmail: (process.env.EMAIL_FROM || process.env.ADMIN_EMAIL || 'noreply@example.com').trim(),
+    fromName: (process.env.EMAIL_FROM_NAME || 'VSKK').trim(),
+    adminEmail: (process.env.ADMIN_EMAIL || '').trim(),
+  };
+};
 
 /**
  * Initialize the email service safely.
