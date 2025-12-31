@@ -14,6 +14,7 @@ const Products = () => {
   const [category, setCategory] = useState('');
   const [huidFilter, setHuidFilter] = useState('');
   const [weightFilter, setWeightFilter] = useState('');
+  const [lowOnly, setLowOnly] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -57,7 +58,7 @@ const Products = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [category, search, huidFilter, weightFilter]);
+  }, [category, search, huidFilter, weightFilter, lowOnly]);
 
   const fetchProducts = async () => {
     try {
@@ -70,6 +71,7 @@ const Products = () => {
       if (weightFilter) {
         params.weightManaged = weightFilter === 'weight' ? 'true' : (weightFilter === 'qty' ? 'false' : '');
       }
+      if (lowOnly) params.lowStock = 'true';
       const response = await api.get('/api/products', { params });
       setProducts(response.data);
     } catch (error) {
@@ -343,6 +345,14 @@ const Products = () => {
           <option value="weight">Weight</option>
           <option value="qty">Qty</option>
         </select>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input
+            type="checkbox"
+            checked={lowOnly}
+            onChange={(e) => setLowOnly(e.target.checked)}
+          />
+          Low Stock Only
+        </label>
       </div>
 
       <div className="selection-bar">
@@ -407,6 +417,9 @@ const Products = () => {
                   <span className={`huid-badge ${product.huid ? 'enabled' : 'disabled'}`}>
                     {product.huid ? 'HUID Enabled' : 'Non-HUID Stock'}
                   </span>
+                  {!product.isWeightManaged && Number(product.quantity) <= Number(product.lowStockAlert || 0) && (
+                    <span className="low-badge">LOW STOCK</span>
+                  )}
                 </div>
               </div>
               <div className="product-meta">

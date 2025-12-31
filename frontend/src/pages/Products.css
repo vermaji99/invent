@@ -223,6 +223,17 @@
   color: var(--danger);
 }
 
+.low-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(255, 183, 77, 0.18);
+  color: var(--warning);
+  border: 1px solid rgba(255, 183, 77, 0.4);
+  letter-spacing: 0.3px;
+}
+
 .category-badge.gold {
   background: rgba(212, 175, 55, 0.2);
   color: var(--gold-primary);
