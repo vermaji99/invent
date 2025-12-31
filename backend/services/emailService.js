@@ -17,18 +17,22 @@ const provider = (process.env.EMAIL_PROVIDER || 'resend').toLowerCase();
 const resendKeyGlobal = process.env.RESEND_API_KEY || '';
 const resendClient = resendKeyGlobal ? new Resend(resendKeyGlobal) : null;
 
-let transporter;
-if (useService) {
+let transporter = null;
+if (provider === 'brevo') {
   transporter = nodemailer.createTransport({
-    service: (process.env.EMAIL_SERVICE || 'gmail').toLowerCase(),
-    auth: { user: authUser, pass: authPass },
-    tls: { minVersion: 'TLSv1.2' },
-    requireTLS,
+    host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: false,
+    auth: {
+      user: (process.env.SMTP_USER || authUser).trim(),
+      pass: (process.env.SMTP_PASS || authPass).trim()
+    },
+    tls: { minVersion: 'TLSv1.2', rejectUnauthorized: false },
+    requireTLS: true,
     logger: enableLogger,
-    debug: enableLogger,
-    authMethod
+    debug: enableLogger
   });
-} else {
+} else if (configuredHost && provider !== 'resend') {
   transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT || 587),
@@ -87,10 +91,7 @@ function wrapHtml(title, bodyHtml) {
 async function sendEmail({ subject, html, to }) {
   const recipients = to && to.length ? to : await getAdminRecipients();
   if (!recipients.length) return { ok: false, error: 'NO_ADMIN_RECIPIENTS' };
-  const normalizedService = (process.env.EMAIL_SERVICE || '').toLowerCase();
-  const fromAddress = normalizedService === 'gmail'
-    ? `${emailFromName} <${authUser}>`
-    : `${emailFromName} <${emailFrom}>`;
+  const fromAddress = `${emailFromName} <${emailFrom || authUser}>`;
   const resendKey = process.env.RESEND_API_KEY || resendKeyGlobal;
   const useResend = provider === 'resend' && !!resendKey && !!resendClient;
   const resendFrom = `${emailFromName} <${(process.env.EMAIL_FROM || 'onboarding@resend.dev').trim()}>`;
