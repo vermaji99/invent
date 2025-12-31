@@ -2,9 +2,9 @@ const nodemailer = require('nodemailer');
 const NotificationEvent = require('../models/NotificationEvent');
 const User = require('../models/User');
 
-const authUser = process.env.EMAIL_USER || process.env.ADMIN_EMAIL;
-const authPass = process.env.EMAIL_PASS || process.env.APP_PASSWORD;
-const emailFrom = process.env.EMAIL_FROM || authUser;
+const authUser = (process.env.EMAIL_USER || process.env.ADMIN_EMAIL || '').trim();
+const authPass = (process.env.EMAIL_PASS || process.env.APP_PASSWORD || '').replace(/\s+/g, '');
+const emailFrom = (process.env.EMAIL_FROM || authUser || '').trim();
 const requireTLS = process.env.EMAIL_REQUIRE_TLS === 'true';
 const enableLogger = process.env.EMAIL_DEBUG === 'true';
 const authMethod = process.env.EMAIL_AUTH_METHOD || undefined;
@@ -13,7 +13,7 @@ const useService = !!process.env.EMAIL_SERVICE && !process.env.EMAIL_HOST;
 let transporter;
 if (useService) {
   transporter = nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE,
+    service: (process.env.EMAIL_SERVICE || 'gmail').toLowerCase(),
     auth: { user: authUser, pass: authPass }
   });
 } else {
