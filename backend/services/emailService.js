@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const axios = require('axios');
+const { Resend } = require('resend');
 const NotificationEvent = require('../models/NotificationEvent');
 const User = require('../models/User');
 
@@ -12,6 +13,9 @@ const enableLogger = process.env.EMAIL_DEBUG === 'true';
 const authMethod = process.env.EMAIL_AUTH_METHOD || undefined;
 const configuredHost = (process.env.EMAIL_HOST || '').trim().toLowerCase();
 const useService = !configuredHost || configuredHost === 'localhost' || configuredHost === '127.0.0.1';
+const provider = (process.env.EMAIL_PROVIDER || 'resend').toLowerCase();
+const resendKeyGlobal = process.env.RESEND_API_KEY || '';
+const resendClient = resendKeyGlobal ? new Resend(resendKeyGlobal) : null;
 
 let transporter;
 if (useService) {
@@ -87,20 +91,18 @@ async function sendEmail({ subject, html, to }) {
   const fromAddress = normalizedService === 'gmail'
     ? `${emailFromName} <${authUser}>`
     : `${emailFromName} <${emailFrom}>`;
-  const resendKey = process.env.RESEND_API_KEY || '';
-  const useResend = !!resendKey;
+  const resendKey = process.env.RESEND_API_KEY || resendKeyGlobal;
+  const useResend = provider === 'resend' && !!resendKey && !!resendClient;
   const resendFrom = `${emailFromName} <${(process.env.EMAIL_FROM || 'onboarding@resend.dev').trim()}>`;
   try {
     if (useResend) {
-      await axios.post('https://api.resend.com/emails', {
+      const r = await resendClient.emails.send({
         from: resendFrom,
         to: recipients,
         subject,
         html
-      }, {
-        headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        timeout: 30000
       });
+      if (r.error) throw new Error(String(r.error?.message || 'RESEND_SEND_FAILED'));
     } else {
       await transporter.sendMail({
         from: fromAddress,
@@ -181,6 +183,16 @@ async function sendEmail({ subject, html, to }) {
 }
 
 async function verifyTransport() {
+  if (provider === 'resend' && resendClient) {
+    await NotificationEvent.create({
+      type: 'EMAIL_TRANSPORT_VERIFY',
+      targetModel: 'SYSTEM',
+      targetId: 'N/A',
+      recipients: [process.env.ADMIN_EMAIL].filter(Boolean),
+      status: 'SUCCESS'
+    });
+    return true;
+  }
   try {
     await transporter.verify();
     await NotificationEvent.create({

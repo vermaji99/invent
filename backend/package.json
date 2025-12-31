@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "resend": "^3.2.0",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
     "bwip-js": "^4.8.0",
