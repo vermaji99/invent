@@ -22,13 +22,17 @@ router.post('/request', [
     const user = await User.findOne({ email: email.toLowerCase().trim(), role: 'admin', isActive: true });
     if (!user) return res.status(404).json({ message: 'Admin not found' });
     const recent = await OtpToken.findOne({ userId: user._id, purpose, used: false }).sort({ createdAt: -1 });
+    let code;
+    let expiresAt;
     if (recent && recent.createdAt > new Date(Date.now() - 2 * 60 * 1000)) {
-      return res.status(429).json({ message: 'Too many requests' });
+      code = recent.code;
+      expiresAt = recent.expiresAt;
+    } else {
+      code = Math.floor(100000 + Math.random() * 900000).toString();
+      const ttlMinutes = Number(process.env.OTP_TTL_MIN || 10);
+      expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
+      await OtpToken.create({ userId: user._id, code, purpose, channel, expiresAt });
     }
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const ttlMinutes = Number(process.env.OTP_TTL_MIN || 10);
-    const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
-    await OtpToken.create({ userId: user._id, code, purpose, channel, expiresAt });
     const html = wrapHtml('Admin OTP', table(['Email', 'OTP', 'Expires'], [[email, code, expiresAt.toLocaleString()]]));
     Promise.resolve(sendEmail({ subject: 'Admin OTP', html, to: [email] })).catch(() => {});
     res.json({ message: 'OTP generated. Check your email for the code.' });
