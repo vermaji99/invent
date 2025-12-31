@@ -114,6 +114,9 @@ const Login = () => {
                       } catch (e) {
                         if (e.response?.status === 429) {
                           toast.error('Too many requests. Please wait 2 minutes before trying again.');
+                        } else if (e.response?.data?.error) {
+                          // Show specific backend error if available
+                          toast.error(`Email Error: ${e.response.data.error}`);
                         } else if (e.response?.status === 500) {
                           toast.error('Server error while sending OTP. Verify email settings and try again.');
                         } else {

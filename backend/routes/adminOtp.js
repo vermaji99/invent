@@ -36,7 +36,8 @@ router.post('/request', [
     const html = wrapHtml('Admin OTP', table(['Email', 'OTP', 'Expires'], [[email, code, expiresAt.toLocaleString()]]));
     const sendResult = await sendEmail({ subject: 'Admin OTP', html, to: [email] });
     if (!sendResult.ok) {
-        return res.status(500).json({ message: 'Failed to send email', error: sendResult.error });
+        // Use 503 Service Unavailable so frontend displays the specific error message
+        return res.status(503).json({ message: 'Email service failed', error: sendResult.error });
     }
     res.json({ message: 'OTP generated. Check your email for the code.' });
   } catch (e) {
