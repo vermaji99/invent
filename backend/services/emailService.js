@@ -64,15 +64,12 @@ function initEmailService() {
       }
       
       transporter = nodemailer.createTransport({
-        host: config.smtp.host,
-        port: config.smtp.port,
-        secure: false, // 587 is STARTTLS
+        host: "smtp-relay.brevo.com",
+        port: 587,
+        secure: false, // Explicitly disable SSL-only mode (STARTTLS)
         auth: {
-          user: config.smtp.user,
+          user: "apikey",
           pass: config.smtp.pass
-        },
-        tls: {
-          rejectUnauthorized: false // Compatible with Render free tier / shared IPs
         },
         connectionTimeout: 10000, // 10s timeout
         greetingTimeout: 10000,
