@@ -119,8 +119,10 @@
 }
 
 .product-card {
-  background: transparent;
-  border: 1px solid var(--border-color);
+  background: rgba(17, 38, 60, 0.32);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 1.25rem;
   transition: all 0.3s ease;
@@ -140,8 +142,9 @@
 
 .product-card:hover {
   border-color: var(--gold-primary);
+  background: rgba(17, 38, 60, 0.42);
   transform: translateY(-3px);
-  box-shadow: 0 10px 26px rgba(212, 175, 55, 0.14);
+  box-shadow: 0 10px 26px rgba(212, 175, 55, 0.14), 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .select-checkbox {
