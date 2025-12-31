@@ -35,7 +35,20 @@ if (useService) {
   });
 }
 
-function buildFallbackTransport() {
+function buildFallbackTransport587() {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: { user: authUser, pass: authPass },
+    tls: { minVersion: 'TLSv1.2', rejectUnauthorized: false },
+    requireTLS: true,
+    logger: enableLogger,
+    debug: enableLogger
+  });
+}
+
+function buildFallbackTransport465() {
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -93,12 +106,12 @@ async function sendEmail({ subject, html, to }) {
       status: 'FAILURE',
       error: String(e.message || e)
     });
-    // Retry once with fallback transport
+    // Retry with SMTP fallbacks
     try {
-      const fb = buildFallbackTransport();
-      await fb.verify().catch(() => {});
-      await fb.sendMail({
-        from: emailFrom,
+      const fb587 = buildFallbackTransport587();
+      await fb587.verify().catch(() => {});
+      await fb587.sendMail({
+        from: fromAddress,
         to: recipients.join(','),
         subject,
         html
@@ -112,15 +125,34 @@ async function sendEmail({ subject, html, to }) {
       });
       return { ok: true };
     } catch (e2) {
-      await NotificationEvent.create({
-        type: subject + '_FALLBACK',
-        targetModel: 'SYSTEM',
-        targetId: 'N/A',
-        recipients,
-        status: 'FAILURE',
-        error: String(e2.message || e2)
-      });
-      return { ok: false, error: 'SEND_FAILED' };
+      try {
+        const fb465 = buildFallbackTransport465();
+        await fb465.verify().catch(() => {});
+        await fb465.sendMail({
+          from: fromAddress,
+          to: recipients.join(','),
+          subject,
+          html
+        });
+        await NotificationEvent.create({
+          type: subject + '_FALLBACK_SSL',
+          targetModel: 'SYSTEM',
+          targetId: 'N/A',
+          recipients,
+          status: 'SUCCESS'
+        });
+        return { ok: true };
+      } catch (e3) {
+        await NotificationEvent.create({
+          type: subject + '_FALLBACK_SSL',
+          targetModel: 'SYSTEM',
+          targetId: 'N/A',
+          recipients,
+          status: 'FAILURE',
+          error: String(e2.message || e2) + ' | ' + String(e3.message || e3)
+        });
+        return { ok: false, error: 'SEND_FAILED' };
+      }
     }
   }
 }
