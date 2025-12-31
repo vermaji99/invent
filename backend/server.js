@@ -37,6 +37,7 @@ app.use('/api/upload', require('./routes/upload'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/supplier-payments', require('./routes/supplierPayments'));
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/admin/otp', require('./routes/adminOtp'));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -49,3 +50,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log('Routes loaded: /api/orders, /api/upload, /api/gold-price and more...');
 });
+
+const { initScheduler } = require('./services/scheduler');
+initScheduler();
