@@ -6,18 +6,32 @@ const User = require('../models/User');
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER;
 
 // --- Initialization ---
 let resend = null;
-if (RESEND_API_KEY) {
+
+function initEmailService() {
+  // STRICT RULE: Force RESEND
+  if (EMAIL_PROVIDER !== 'RESEND') {
+    const error = `CRITICAL: EMAIL_PROVIDER must be set to "RESEND". Found: "${EMAIL_PROVIDER}"`;
+    console.error(error);
+    throw new Error(error);
+  }
+
+  if (!RESEND_API_KEY) {
+    const error = 'CRITICAL: RESEND_API_KEY is missing in environment variables.';
+    console.error(error);
+    throw new Error(error);
+  }
+
   try {
     resend = new Resend(RESEND_API_KEY);
-    console.log('[EmailService] Resend Client Initialized (HTTP Mode)');
+    console.log('[EmailService] Resend Client Initialized Successfully (HTTP Mode)');
   } catch (error) {
-    console.error('[EmailService] Failed to initialize Resend:', error.message);
+    console.error('[EmailService] Failed to initialize Resend client:', error.message);
+    throw error;
   }
-} else {
-  console.warn('[EmailService] WARNING: RESEND_API_KEY is missing. Email sending will be disabled.');
 }
 
 /**
@@ -55,61 +69,65 @@ async function getAdminRecipients() {
 }
 
 /**
- * Send Email via Resend API (Non-blocking / Fire-and-Forget)
+ * Send Email via Resend API (BLOCKING / RELIABLE)
  * 
- * DESIGN DECISION:
- * To prevent HTTP 503 Service Unavailable errors on Render Free Tier,
- * this function returns { ok: true } IMMEDIATELY.
- * The actual email sending happens in the background.
- * Failures are logged to the console and database, but do not block the API response.
+ * STRICT REQUIREMENT:
+ * This function waits for the Resend API to confirm delivery (or acceptance).
+ * It returns the actual result to the caller.
+ * No fake success responses.
  */
 async function sendEmail({ subject, html, to }) {
   // 1. Safety Checks
   if (!resend) {
-    console.error('[EmailService] Failed: Resend not initialized');
-    return { ok: true }; // Return success to prevent 503
+    try {
+      initEmailService();
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
   }
 
-  // 2. Resolve Recipients (Wait for this as it's DB query, usually fast)
+  // 2. Resolve Recipients
   let recipients = [];
   try {
     recipients = to && to.length ? to : await getAdminRecipients();
   } catch (e) {
-    console.error('[EmailService] Recipient resolution failed:', e);
-    return { ok: true };
+    return { ok: false, error: 'Recipient resolution failed: ' + e.message };
   }
 
   if (!recipients.length) {
-    console.warn('[EmailService] No recipients found');
-    return { ok: true };
+    return { ok: false, error: 'No recipients found' };
   }
 
-  // 3. Fire-and-Forget Background Send
-  const payload = {
-    from: EMAIL_FROM,
-    to: recipients,
-    subject: subject,
-    html: html
-  };
+  // 3. Blocking Send
+  try {
+    const payload = {
+      from: EMAIL_FROM,
+      to: recipients,
+      subject: subject,
+      html: html
+    };
 
-  // Do NOT await this. Let it run in background.
-  resend.emails.send(payload)
-    .then(async (response) => {
-      if (response.error) {
-        console.error('[EmailService] Resend API Error:', response.error);
-        await logEvent('EMAIL_SEND', 'FAILURE', recipients, JSON.stringify(response.error));
-      } else {
-        console.log(`[EmailService] Sent "${subject}" to ${recipients.length} recipients. ID: ${response.data?.id}`);
-        await logEvent('EMAIL_SEND', 'SUCCESS', recipients, '', response.data);
-      }
-    })
-    .catch(async (err) => {
-      console.error('[EmailService] Network/Unexpected Error:', err.message);
-      await logEvent('EMAIL_SEND', 'FAILURE', recipients, err.message);
-    });
+    console.log(`[EmailService] Sending "${subject}" to ${recipients.join(', ')}...`);
+    
+    // Await the API call
+    const response = await resend.emails.send(payload);
 
-  // 4. Return Optimistic Success
-  return { ok: true };
+    if (response.error) {
+      console.error('[EmailService] Resend API Error:', response.error);
+      await logEvent('EMAIL_SEND', 'FAILURE', recipients, JSON.stringify(response.error));
+      return { ok: false, error: response.error.message || 'Resend API Error' };
+    }
+
+    console.log(`[EmailService] Success! ID: ${response.data?.id}`);
+    await logEvent('EMAIL_SEND', 'SUCCESS', recipients, '', response.data);
+    
+    return { ok: true, id: response.data?.id };
+
+  } catch (err) {
+    console.error('[EmailService] Network/Unexpected Error:', err.message);
+    await logEvent('EMAIL_SEND', 'FAILURE', recipients, err.message);
+    return { ok: false, error: err.message };
+  }
 }
 
 /**
@@ -123,7 +141,7 @@ function wrapHtml(title, bodyHtml) {
         ${bodyHtml}
       </div>
       <div style="font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
-        Sent via VSKK System (Resend)
+        Sent via VSKK System (Resend HTTP)
       </div>
     </div>
   `;
@@ -139,25 +157,35 @@ function table(headers, rows) {
 }
 
 /**
- * Dummy Verify for Server Startup
+ * Verify Transport (Resend Check)
  */
 async function verifyTransport() {
-  if (resend) {
-    console.log('[EmailService] Resend API Client Ready');
+  try {
+    if (!resend) initEmailService();
+    // Resend doesn't have a "verify" method like SMTP, but we can assume if init passed, we are good.
+    // We could try sending a dummy email, but that consumes quota.
     return true;
+  } catch (e) {
+    console.error('[EmailService] Verification Failed:', e.message);
+    return false;
   }
-  return false;
 }
 
-// No-op for compatibility
-function initEmailService() {}
-
 async function sendTestMail() {
+    console.log('[EmailService] Sending test email...');
     await sendEmail({
-        subject: 'Test Email (Resend)',
-        html: '<p>This is a test email from the new HTTP-based email service.</p>',
+        subject: 'Test Email (Resend Strict)',
+        html: '<p>This is a test email from the STRICT Resend service.</p>',
         to: [ADMIN_EMAIL]
     });
+}
+
+// Auto-initialize on module load if possible, or wait for explicit call
+try {
+  initEmailService();
+} catch (e) {
+  // Allow server to start even if config is bad, but logs will show error
+  console.warn('[EmailService] Startup initialization warning:', e.message);
 }
 
 module.exports = {
