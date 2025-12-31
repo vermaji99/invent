@@ -109,11 +109,17 @@ const Login = () => {
                       setOtpBusy(true);
                       try {
                         await api.post('/api/admin/otp/request', { email: otpEmail, purpose: 'RESET' });
-                        toast.success('OTP sent to your email');
+                        toast.success('OTP sent to your email. Check for a reset link after verification.');
                         setOtpStep('reset');
                       } catch (e) {
-                        const msg = e.response?.data?.message || 'Failed to send OTP';
-                        toast.error(msg);
+                        if (e.response?.status === 429) {
+                          toast.error('Too many requests. Please wait 2 minutes before trying again.');
+                        } else if (e.response?.status === 500) {
+                          toast.error('Server error while sending OTP. Verify email settings and try again.');
+                        } else {
+                          const msg = e.response?.data?.message || 'Failed to send OTP';
+                          toast.error(msg);
+                        }
                       } finally {
                         setOtpBusy(false);
                       }
