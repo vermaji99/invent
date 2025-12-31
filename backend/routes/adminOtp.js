@@ -4,7 +4,7 @@ const { auth } = require('../middleware/auth');
 const User = require('../models/User');
 const OtpToken = require('../models/OtpToken');
 const { body, validationResult } = require('express-validator');
-const { sendEmail, wrapHtml, table } = require('../services/emailService');
+const { sendEmail, wrapHtml, table, verifyTransport } = require('../services/emailService');
 const ResetLinkToken = require('../models/ResetLinkToken');
 const crypto = require('crypto');
 
@@ -121,6 +121,20 @@ router.post('/reset-with-link', [
     doc.used = true;
     await doc.save();
     res.json({ message: 'Password updated via link' });
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/email-status', async (req, res) => {
+  try {
+    const ok = await verifyTransport();
+    const events = await require('../models/NotificationEvent')
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean();
+    res.json({ transportVerified: ok, recentEvents: events });
   } catch (e) {
     res.status(500).json({ message: 'Server error' });
   }
