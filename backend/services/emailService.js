@@ -4,6 +4,10 @@ const User = require('../models/User');
 
 const authUser = process.env.EMAIL_USER || process.env.ADMIN_EMAIL;
 const authPass = process.env.EMAIL_PASS || process.env.APP_PASSWORD;
+const emailFrom = process.env.EMAIL_FROM || authUser;
+const requireTLS = process.env.EMAIL_REQUIRE_TLS === 'true';
+const enableLogger = process.env.EMAIL_DEBUG === 'true';
+const authMethod = process.env.EMAIL_AUTH_METHOD || undefined;
 const useService = !!process.env.EMAIL_SERVICE && !process.env.EMAIL_HOST;
 
 let transporter;
@@ -17,8 +21,11 @@ if (useService) {
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT || 587),
     secure: process.env.EMAIL_SECURE === 'true',
-    auth: { user: authUser, pass: authPass },
-    tls: { minVersion: 'TLSv1.2' }
+    auth: { user: authUser, pass: authPass, method: authMethod },
+    tls: { minVersion: 'TLSv1.2', rejectUnauthorized: false },
+    requireTLS,
+    logger: enableLogger,
+    debug: enableLogger
   });
 }
 
@@ -43,7 +50,7 @@ async function sendEmail({ subject, html, to }) {
   if (!recipients.length) return { ok: false, error: 'NO_ADMIN_RECIPIENTS' };
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM || authUser,
+      from: emailFrom,
       to: recipients.join(','),
       subject,
       html
