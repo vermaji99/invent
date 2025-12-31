@@ -30,9 +30,8 @@ router.post('/request', [
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
     await OtpToken.create({ userId: user._id, code, purpose, channel, expiresAt });
     const html = wrapHtml('Admin OTP', table(['Email', 'OTP', 'Expires'], [[email, code, expiresAt.toLocaleString()]]));
-    const r = await sendEmail({ subject: 'Admin OTP', html, to: [email] });
-    if (!r.ok) return res.status(500).json({ message: 'Failed to send OTP' });
-    res.json({ message: 'OTP sent' });
+    Promise.resolve(sendEmail({ subject: 'Admin OTP', html, to: [email] })).catch(() => {});
+    res.json({ message: 'OTP generated. Check your email for the code.' });
   } catch (e) {
     res.status(500).json({ message: 'Server error' });
   }
