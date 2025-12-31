@@ -89,10 +89,11 @@ async function sendEmail({ subject, html, to }) {
     : `${emailFromName} <${emailFrom}>`;
   const resendKey = process.env.RESEND_API_KEY || '';
   const useResend = !!resendKey;
+  const resendFrom = `${emailFromName} <${(process.env.EMAIL_FROM || 'onboarding@resend.dev').trim()}>`;
   try {
     if (useResend) {
       await axios.post('https://api.resend.com/emails', {
-        from: fromAddress,
+        from: resendFrom,
         to: recipients,
         subject,
         html
