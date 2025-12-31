@@ -131,11 +131,11 @@ html, body {
 }
 
 .exchange-section {
-  background: linear-gradient(180deg, rgba(50,50,50,0.96), rgba(36,36,36,0.94));
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.25rem;
-  box-shadow: 0 12px 28px rgba(212, 175, 55, 0.14);
+  box-shadow: 0 12px 28px rgba(10, 31, 68, 0.08);
 }
 
 .exchange-section h3 {
@@ -154,33 +154,33 @@ html, body {
 }
 
 .exchange-inputs input {
-  background: var(--bg-tertiary);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
 }
 
 .exchange-inputs select {
-  background: var(--bg-tertiary);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
 }
 
 .btn-add-exchange {
-  padding: 0.55rem 1rem;
-  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
-  color: var(--bg-primary);
-  border: none;
+  padding: 0.6rem 1rem;
+  background: var(--primary);
+  color: #ffffff;
+  border: 1px solid var(--primary);
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 8px 20px rgba(10, 31, 68, 0.15);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -189,13 +189,14 @@ html, body {
 .btn-add-exchange:hover {
   filter: brightness(1.05);
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 24px rgba(201, 162, 39, 0.25);
 }
 
 .exchange-list {
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   overflow: hidden;
+  background: var(--bg-secondary);
 }
 
 .exchange-list table {
@@ -216,11 +217,11 @@ html, body {
 .exchange-list thead th {
   position: sticky;
   top: 0;
-  background: rgba(50,50,50,0.98);
-  color: var(--text-secondary);
+  background: var(--primary);
+  color: #ffffff;
   text-align: left;
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--border-color);
   font-weight: 700;
 }
 
@@ -233,7 +234,7 @@ html, body {
   transition: background-color 160ms ease;
 }
 .exchange-list tbody tr:hover {
-  background: rgba(255,255,255,0.04);
+  background: #FAFBFF;
 }
 
 .btn-icon-danger {
@@ -262,11 +263,11 @@ html, body {
 }
 
 .section {
-  background: linear-gradient(180deg, rgba(50,50,50,0.96), rgba(36,36,36,0.94));
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 12px 28px rgba(212, 175, 55, 0.14);
+  box-shadow: 0 12px 28px rgba(10, 31, 68, 0.08);
 }
 
 .section h3 {

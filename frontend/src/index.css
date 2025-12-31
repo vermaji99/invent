@@ -5,20 +5,21 @@
 }
 
 :root {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #2d2d2d;
-  --bg-tertiary: #3a3a3a;
-  --gold-primary: #D4AF37;
-  --gold-secondary: #F4D03F;
-  --gold-dark: #B8860B;
-  --text-primary: #ffffff;
-  --text-secondary: #b0b0b0;
-  --text-muted: #808080;
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --info: #3b82f6;
-  --border-color: #404040;
+  --primary: #0A1F44;
+  --gold-primary: #C9A227;
+  --gold-secondary: #D4B253;
+  --gold-dark: #B28A1D;
+  --bg-primary: #F4F6FA;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #FFFFFF;
+  --text-primary: #1F2933;
+  --text-secondary: #6B7280;
+  --text-muted: #6B7280;
+  --success: #1E7F5C;
+  --danger: #B91C1C;
+  --warning: #D97706;
+  --info: #0A1F44;
+  --border-color: #E5E7EB;
 }
 
 body {
@@ -48,12 +49,12 @@ code {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gold-primary);
+  background: var(--primary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gold-dark);
+  background: var(--gold-primary);
 }
 
 /* Utility Classes */
@@ -118,14 +119,36 @@ code {
 .logout-btn:active {
   transform: scale(0.98);
 }
+/* Premium button palette */
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+}
+.btn-primary:hover {
+  box-shadow: 0 8px 20px rgba(201, 162, 39, 0.25);
+}
+.btn-secondary {
+  background: #ffffff;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+}
+.btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+}
 
 /* Inputs focus glow (subtle, enterprise-grade) */
 input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--gold-primary);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(10, 31, 68, 0.15);
 }
 
 /* Soft shake on HTML5 invalid inputs */

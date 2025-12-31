@@ -104,37 +104,37 @@
   }
 }
 .customer-card {
-  background: linear-gradient(180deg, rgba(50,50,50,0.96), rgba(36,36,36,0.94));
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 1.25rem 1.5rem;
   display: flex;
   gap: 1rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  box-shadow: 0 12px 28px rgba(212, 175, 55, 0.12);
+  box-shadow: 0 12px 28px rgba(10, 31, 68, 0.08);
   overflow: hidden;
   align-items: flex-start;
 }
 
 .customer-card:hover {
-  border-color: rgba(212, 175, 55, 0.55);
+  border-color: var(--gold-primary);
   transform: translateY(-2px);
-  box-shadow: 0 16px 34px rgba(212, 175, 55, 0.16);
+  box-shadow: 0 16px 34px rgba(201, 162, 39, 0.2);
 }
 
 .customer-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
-  color: var(--bg-primary);
+  background: var(--primary);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
   flex-shrink: 0;
-  border: 2px solid rgba(212, 175, 55, 0.6);
-  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.25);
+  border: 2px solid var(--gold-primary);
+  box-shadow: 0 6px 16px rgba(10, 31, 68, 0.15);
 }
 
 .customer-info {
@@ -231,14 +231,14 @@
   justify-content: center;
   gap: 0;
   padding: 0;
-  background: var(--bg-tertiary);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   color: var(--text-primary);
   font-size: 1rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 16px rgba(10, 31, 68, 0.08);
   width: 40px;
   height: 40px;
 }
@@ -248,10 +248,10 @@
 }
 
 .icon-btn.icon-gold {
-  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
-  border-color: rgba(212, 175, 55, 0.35);
-  color: var(--bg-primary);
-  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(10, 31, 68, 0.15);
 }
 
 .customer-actions button:hover {
@@ -308,9 +308,9 @@
 }
 
 .history-table th {
-  color: var(--gold-primary);
+  color: #ffffff;
   font-weight: 700;
-  background: rgba(50,50,50,0.98);
+  background: var(--primary);
 }
 
 .status-badge {
@@ -322,18 +322,18 @@
 }
 
 .status-badge.paid {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: rgba(30, 127, 92, 0.12);
+  color: var(--success);
 }
 
 .status-badge.unpaid {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: rgba(185, 28, 28, 0.12);
+  color: var(--danger);
 }
 
 .status-badge.partial {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--warning);
 }
 
 .modal-header {

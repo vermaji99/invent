@@ -18,13 +18,13 @@
 }
 
 .invoices-table thead {
-  background: var(--bg-tertiary);
+  background: var(--primary);
 }
 
 .invoices-table th {
   padding: 1rem;
   text-align: left;
-  color: var(--text-primary);
+  color: #ffffff;
   font-weight: 600;
   border-bottom: 2px solid var(--border-color);
   position: sticky;
@@ -39,7 +39,10 @@
 }
 
 .invoices-table tbody tr:hover {
-  background: rgba(255,255,255,0.03);
+  background: #FAFBFF;
+}
+.invoices-table tbody tr:nth-child(even) {
+  background: #FAFAFD;
 }
 
 .status-badge {
@@ -95,12 +98,12 @@
 }
 
 .invoices-table-container {
-  background: linear-gradient(180deg, rgba(50,50,50,0.96), rgba(36,36,36,0.94));
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   overflow: hidden;
   overflow-x: auto;
-  box-shadow: 0 12px 28px rgba(212, 175, 55, 0.12);
+  box-shadow: 0 12px 28px rgba(10, 31, 68, 0.08);
 }
 
 @media (max-width: 768px) {
@@ -137,10 +140,10 @@
   width: 95%;
   max-height: 90vh;
   overflow-y: auto;
-  background: linear-gradient(180deg, rgba(50,50,50,0.96), rgba(36,36,36,0.94));
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(212, 175, 55, 0.12);
+  box-shadow: 0 12px 28px rgba(10, 31, 68, 0.08);
 }
 
 .modal-header-actions {
