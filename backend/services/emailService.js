@@ -3,46 +3,80 @@ const SibApiV3Sdk = require("@sendinblue/client");
 const EMAIL_FROM = process.env.EMAIL_FROM;
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+let apiInstance = null;
+let initialized = false;
 
-apiInstance.setApiKey(
-  SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY
-);
-
-console.log("[EmailService] Brevo API initialized");
-
-async function sendAdminOTP(email, otp) {
+function initEmailService() {
+  if (initialized) return;
   try {
-    const subject = "Admin OTP Verification";
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; color: #111; max-width: 600px; margin: 0 auto;">
-        <h2 style="color:#0A1F44; border-bottom: 2px solid #eee; padding-bottom: 10px;">Admin OTP Verification</h2>
-        <p>Use the following OTP to verify your login:</p>
-        <p style="font-size:22px;font-weight:bold;letter-spacing:2px">${otp}</p>
-        <p>This OTP expires in 10 minutes.</p>
-        <div style="font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
-          Sent via VSKK System (Brevo API)
-        </div>
-      </div>
-    `;
+    if (!BREVO_API_KEY) {
+      console.error("[EmailService] BREVO_API_KEY missing");
+      throw new Error("BREVO_API_KEY missing");
+    }
+    if (!EMAIL_FROM) {
+      console.error("[EmailService] EMAIL_FROM missing");
+      throw new Error("EMAIL_FROM missing");
+    }
+    apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+    apiInstance.setApiKey(
+      SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+      process.env.BREVO_API_KEY
+    );
+    initialized = true;
+    console.log("[EmailService] Brevo initialized");
+  } catch (e) {
+    console.error("[EmailService] Init failed:", e);
+  }
+}
 
+async function sendEmail({ subject, html, to }) {
+  if (!initialized || !apiInstance) {
+    try {
+      initEmailService();
+    } catch (e) {
+      return { ok: false, error: e?.message || "Initialization error" };
+    }
+    if (!apiInstance) {
+      return { ok: false, error: "Email service not initialized" };
+    }
+  }
+  try {
     const payload = {
       sender: { email: EMAIL_FROM },
-      to: [{ email }],
+      to: to.map(email => ({ email })),
       subject,
-      htmlContent
+      htmlContent: html
     };
-
     const response = await apiInstance.sendTransacEmail(payload);
-    console.log("[EmailService] Email sent:", response);
     return { ok: true, id: response?.messageId || response?.message || "OK" };
   } catch (e) {
     console.error("[EmailService] Send failed:", e);
+    if (e?.response?.body) console.error("[EmailService] API body:", e.response.body);
     return { ok: false, error: e?.message || "Unknown error" };
   }
 }
 
+async function sendAdminOTP(email, otp) {
+  console.log(`Sending OTP to ${email}`);
+  const subject = "Admin OTP Verification";
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; color: #111; max-width: 600px; margin: 0 auto;">
+      <h2 style="color:#0A1F44; border-bottom: 2px solid #eee; padding-bottom: 10px;">Admin OTP Verification</h2>
+      <p>Use the following OTP to verify your login:</p>
+      <p style="font-size:22px;font-weight:bold;letter-spacing:2px">${otp}</p>
+      <p>This OTP expires in 10 minutes.</p>
+      <div style="font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
+        Sent via VSKK System (Brevo API)
+      </div>
+    </div>
+  `;
+  const result = await sendEmail({ subject, html: htmlContent, to: [email] });
+  if (result.ok) console.log("OTP email sent successfully");
+  return result;
+}
+
 module.exports = {
+  initEmailService,
+  sendEmail,
   sendAdminOTP
 };

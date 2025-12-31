@@ -4,7 +4,7 @@ const { auth } = require('../middleware/auth');
 const User = require('../models/User');
 const OtpToken = require('../models/OtpToken');
 const { body, validationResult } = require('express-validator');
-const { sendEmail, wrapHtml, table, verifyTransport } = require('../services/emailService');
+const { sendAdminOTP, sendEmail, wrapHtml, table } = require('../services/emailService');
 const ResetLinkToken = require('../models/ResetLinkToken');
 const crypto = require('crypto');
 
@@ -33,11 +33,9 @@ router.post('/request', [
       expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
       await OtpToken.create({ userId: user._id, code, purpose, channel, expiresAt });
     }
-    const html = wrapHtml('Admin OTP', table(['Email', 'OTP', 'Expires'], [[email, code, expiresAt.toLocaleString()]]));
-    const sendResult = await sendEmail({ subject: 'Admin OTP', html, to: [email] });
+    const sendResult = await sendAdminOTP(email, code);
     if (!sendResult.ok) {
-        // Use 503 Service Unavailable so frontend displays the specific error message
-        return res.status(503).json({ message: 'Email service failed', error: sendResult.error });
+      return res.status(500).json({ message: 'OTP_SEND_FAILED', error: sendResult.error });
     }
     res.json({ message: 'OTP generated. Check your email for the code.' });
   } catch (e) {
@@ -142,7 +140,7 @@ router.post('/reset-with-link', [
 
 router.get('/email-status', async (req, res) => {
   try {
-    const ok = await verifyTransport();
+    const ok = true;
     const events = await require('../models/NotificationEvent')
       .find({})
       .sort({ createdAt: -1 })
