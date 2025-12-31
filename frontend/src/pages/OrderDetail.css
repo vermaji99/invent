@@ -45,8 +45,8 @@
 .btn-primary { background-color: var(--gold-primary); color: var(--bg-primary); }
 .btn-primary:hover { background-color: var(--gold-dark); }
 
-.btn-success { background-color: var(--success); color: white; }
-.btn-danger { background-color: var(--danger); color: white; }
+.btn-success { background-color: var(--success); color: var(--text-primary); }
+.btn-danger { background-color: var(--danger); color: var(--text-primary); }
 .btn-secondary { background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
 
 .detail-grid {

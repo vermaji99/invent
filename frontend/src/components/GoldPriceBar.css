@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   height: 60px;
-  background: #FFFFFF;
+  background: var(--bg-secondary);
   border-bottom: 2px solid var(--primary);
   z-index: 1000;
   display: flex;
@@ -92,8 +92,8 @@
 
 
 .refresh-btn:hover {
-  background: var(--primary);
-  color: #ffffff;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .gold-price-loading {

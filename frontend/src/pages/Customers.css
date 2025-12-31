@@ -127,7 +127,7 @@
   height: 60px;
   border-radius: 50%;
   background: var(--primary);
-  color: #ffffff;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,7 +231,7 @@
   justify-content: center;
   gap: 0;
   padding: 0;
-  background: #FFFFFF;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   color: var(--text-primary);
@@ -250,7 +250,7 @@
 .icon-btn.icon-gold {
   background: var(--primary);
   border-color: var(--primary);
-  color: #ffffff;
+  color: var(--text-primary);
   box-shadow: 0 8px 20px rgba(10, 31, 68, 0.15);
 }
 
@@ -262,7 +262,7 @@
 
 .btn-danger:hover {
   background: #ef4444 !important;
-  color: white !important;
+  color: var(--text-primary) !important;
   border-color: #ef4444 !important;
 }
 
@@ -308,9 +308,9 @@
 }
 
 .history-table th {
-  color: #ffffff;
+  color: var(--gold-primary);
   font-weight: 700;
-  background: var(--primary);
+  background: var(--bg-primary);
 }
 
 .status-badge {

@@ -15,8 +15,8 @@
 .invoice-print-container {
   font-family: Arial, Helvetica, sans-serif;
   padding: 20px;
-  background: white;
-  color: black;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   max-width: 800px;
   margin: 0 auto;
 }
@@ -159,11 +159,11 @@
 
 .invoice-print-container .totals-section,
 .invoice-print-container .terms-section {
-  background: #fff;
-  border: none;
-  border-radius: 0;
-  color: #000;
-  padding: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 10px;
 }
 
 .invoice-print-container .total-row {

@@ -154,7 +154,7 @@ html, body {
 }
 
 .exchange-inputs input {
-  background: #FFFFFF;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   border-radius: 10px;
@@ -163,7 +163,7 @@ html, body {
 }
 
 .exchange-inputs select {
-  background: #FFFFFF;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   border-radius: 10px;
@@ -174,7 +174,7 @@ html, body {
 .btn-add-exchange {
   padding: 0.6rem 1rem;
   background: var(--primary);
-  color: #ffffff;
+  color: var(--text-primary);
   border: 1px solid var(--primary);
   border-radius: 10px;
   font-weight: 600;
@@ -217,8 +217,8 @@ html, body {
 .exchange-list thead th {
   position: sticky;
   top: 0;
-  background: var(--primary);
-  color: #ffffff;
+  background: var(--bg-primary);
+  color: var(--gold-primary);
   text-align: left;
   padding: 0.75rem 0.85rem;
   border-bottom: 1px solid var(--border-color);
@@ -234,7 +234,7 @@ html, body {
   transition: background-color 160ms ease;
 }
 .exchange-list tbody tr:hover {
-  background: #FAFBFF;
+  background: rgba(201, 162, 39, 0.06);
 }
 
 .btn-icon-danger {
@@ -570,7 +570,7 @@ html, body {
 }
 
 .cart-table th {
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   /* background: linear-gradient(180deg, #333 0%, #222 100%); */
   color: var(--gold-primary);
   font-weight: 600;
@@ -598,7 +598,7 @@ html, body {
 }
 
 .cart-table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.03); /* Subtle hover effect */
+  background: rgba(201, 162, 39, 0.06); /* Subtle gold-tint hover */
 }
 
 /* Product Info in Cart */
