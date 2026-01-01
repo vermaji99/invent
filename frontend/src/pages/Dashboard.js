@@ -261,6 +261,36 @@ const Dashboard = () => {
       setLoadingDetails(false);
     }
   };
+  const fetchLowStockDetails = async () => {
+    try {
+      setLoadingDetails(true);
+      const res = await api.get('/api/products', { params: { lowStock: 'true' } });
+      const rows = (res.data || []).map(p => ({
+        name: p.name,
+        category: p.category,
+        sku: p.sku,
+        quantity: p.quantity,
+        lowStockAlert: p.lowStockAlert,
+        netWeight: p.netWeight,
+        purchasePrice: p.purchasePrice,
+        sellingPrice: p.sellingPrice
+      }));
+      openDetails('Low Stock Products — Details', [
+        { key: 'name', label: 'Product' },
+        { key: 'category', label: 'Category' },
+        { key: 'sku', label: 'SKU' },
+        { key: 'quantity', label: 'Qty' },
+        { key: 'lowStockAlert', label: 'Alert Limit' },
+        { key: 'netWeight', label: 'Net Wt (g)' },
+        { key: 'purchasePrice', label: 'Buy Price', fmt: fmtINR },
+        { key: 'sellingPrice', label: 'Sell Price', fmt: fmtINR }
+      ], rows);
+    } catch (e) {
+      toast.error('Failed to load low stock details');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
   const fetchPendingDues = async () => {
     try {
       setLoadingDetails(true);
@@ -623,6 +653,13 @@ const Dashboard = () => {
               <h3>Pending Dues</h3>
               <p className="stat-value text-red"><CountUp value={stats.pendingDues} duration={800} format={formatCurrency} /></p>
               <p className="stat-change">Outstanding</p>
+           </div>
+        </div>
+        <div className="stat-card" onClick={fetchLowStockDetails}>
+           <div className="stat-card-body">
+              <h3>Low Stock Alerts</h3>
+              <p className="stat-value" style={{ color: '#ef4444' }}>{stats.lowStock?.length || 0}</p>
+              <p className="stat-change">Products below limit</p>
            </div>
         </div>
       </div>

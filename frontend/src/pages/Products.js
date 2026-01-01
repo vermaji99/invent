@@ -417,9 +417,6 @@ const Products = () => {
                   <span className={`huid-badge ${product.huid ? 'enabled' : 'disabled'}`}>
                     {product.huid ? 'HUID Enabled' : 'Non-HUID Stock'}
                   </span>
-                  {!product.isWeightManaged && Number(product.quantity) <= Number(product.lowStockAlert || 0) && (
-                    <span className="low-badge">LOW STOCK</span>
-                  )}
                 </div>
               </div>
               <div className="product-meta">
