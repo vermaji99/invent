@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const Pledge = require('../models/Pledge');
 const { computeInterestSnapshot } = require('../services/pledgeInterestService');
+const Transaction = require('../models/Transaction');
 
 function generateReceiptNumber() {
   const now = new Date();
@@ -30,6 +31,17 @@ async function createPledge(req, res) {
       totalPayable: snapshot.totalPayable,
       notes: payload.notes || ''
     });
+    try {
+      await Transaction.create({
+        type: 'DEBIT',
+        category: 'EXPENSE',
+        amount: Number(payload.loan?.amountGiven || 0),
+        paymentMode: 'Cash',
+        description: `Pledge Outflow ${receiptNumber}`,
+        date: new Date(),
+        performedBy: req.user.id
+      });
+    } catch (e) {}
     res.status(201).json(pledge);
   } catch (e) {
     console.error(e);
@@ -96,6 +108,19 @@ async function updateStatus(req, res) {
     pledge.totalInterest = s.totalInterest;
     pledge.totalPayable = s.totalPayable;
     await pledge.save();
+    if (status === 'Redeemed') {
+      try {
+        await Transaction.create({
+          type: 'CREDIT',
+          category: 'CUSTOMER_PAYMENT',
+          amount: Number(pledge.totalPayable || pledge.loan?.amountGiven || 0),
+          paymentMode: 'Cash',
+          description: `Pledge Redemption ${pledge.receiptNumber}`,
+          date: new Date(),
+          performedBy: req.user.id
+        });
+      } catch (e) {}
+    }
     res.json(pledge);
   } catch (e) {
     console.error(e);
