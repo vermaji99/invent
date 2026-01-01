@@ -22,6 +22,8 @@ const OrderDetail = () => {
   const [paymentNotes, setPaymentNotes] = useState('');
   const [isPaying, setIsPaying] = useState(false);
   const [isDelivering, setIsDelivering] = useState(false);
+  const [isSavingItem, setIsSavingItem] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null); // 'READY', 'CANCEL', 'GENERATE_INVOICE'
 
   useEffect(() => {
     fetchOrder();
@@ -100,7 +102,9 @@ const OrderDetail = () => {
     }
   };
   const handleGenerateInvoice = async () => {
+    if (actionLoading) return;
     try {
+      setActionLoading('GENERATE_INVOICE');
       const response = await api.post(`/api/orders/${id}/deliver`, {});
       toast.success('Invoice generated from order');
       if (response.data?.invoice?._id) {
@@ -110,16 +114,22 @@ const OrderDetail = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to generate invoice');
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleStatusUpdate = async (newStatus) => {
+      if (actionLoading) return;
       try {
+          setActionLoading(newStatus);
           await api.patch(`/api/orders/${id}/status`, { status: newStatus });
           toast.success(`Status updated to ${newStatus}`);
           fetchOrder();
       } catch (error) {
           toast.error('Failed to update status');
+      } finally {
+          setActionLoading(null);
       }
   };
 
@@ -224,13 +234,15 @@ const OrderDetail = () => {
                  <FiPackage /> View Invoice
              </button>
            ) : (
-             <button className="btn btn-primary" onClick={handleGenerateInvoice}>
-                 <FiPackage /> Generate Invoice
+             <button className="btn btn-primary" onClick={handleGenerateInvoice} disabled={actionLoading === 'GENERATE_INVOICE'}>
+                 {actionLoading === 'GENERATE_INVOICE' ? <><FiRefreshCw className="spin" /> Generating...</> : <><FiPackage /> Generate Invoice</>}
              </button>
            )}
            {order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'CANCELLED' && (
              <>
-                <button className="btn btn-secondary" onClick={() => handleStatusUpdate('READY')}>Mark Ready</button>
+                <button className="btn btn-secondary" onClick={() => handleStatusUpdate('READY')} disabled={actionLoading === 'READY'}>
+                    {actionLoading === 'READY' ? <><FiRefreshCw className="spin" /> Updating...</> : 'Mark Ready'}
+                </button>
                 {order.remainingAmount > 0 && (
                     <button className="btn btn-primary" onClick={() => {
                         setPaymentAmount(order.remainingAmount);

@@ -546,8 +546,8 @@ const OrderCreate = () => {
                         placeholder="Detailed requirements..."
                     />
                 </div>
-                <button className="btn-primary" style={{ width: '100%', marginTop: '10px' }} onClick={addCustomItemToCart}>
-                    Add Custom Item
+                <button className="btn-primary" style={{ width: '100%', marginTop: '10px' }} onClick={addCustomItemToCart} disabled={isAddingCustom}>
+                    {isAddingCustom ? <><FiRefreshCw className="spin" /> Adding...</> : 'Add Custom Item'}
                 </button>
             </div>
           )}
@@ -782,7 +782,7 @@ const OrderCreate = () => {
               )}
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => { setShowEditModal(false); setEditingItem(null); }}>Cancel</button>
-                <button className="btn btn-primary" onClick={applyEditItem}>Save</button>
+                <button className="btn btn-primary" onClick={applyEditItem} disabled={isSavingEdit}>{isSavingEdit ? 'Saving...' : 'Save'}</button>
               </div>
             </div>
           </div>
@@ -825,7 +825,7 @@ const OrderCreate = () => {
               disabled={loading || cart.length === 0 || !selectedCustomer}
               onClick={handleSubmit}
             >
-              {loading ? 'Creating...' : 'Create Order'}
+              {loading ? <><FiRefreshCw className="spin" /> Creating...</> : 'Create Order'}
             </button>
             {cart.length === 0 && (activeTab === 'custom' || customItem.name) && (
                 <div style={{ color: 'var(--warning)', fontSize: '0.85rem', marginTop: '5px', textAlign: 'center' }}>

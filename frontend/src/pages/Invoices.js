@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiEye, FiDownload, FiX, FiPrinter, FiDollarSign } from 'react-icons/fi';
+import { FiEye, FiDownload, FiX, FiPrinter, FiDollarSign, FiRefreshCw } from 'react-icons/fi';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import './Invoices.css';
@@ -184,27 +184,27 @@ const Invoices = () => {
                       <button
                         className="btn-icon btn-payment"
                         title="Add Payment"
-                        onClick={() => {
-                          handleViewInvoice(invoice._id);
-                          setShowPaymentModal(true);
-                        }}
+                        onClick={() => handleOpenPayment(invoice._id)}
+                        disabled={actionLoadingId === invoice._id}
                       >
-                        <FiDollarSign />
+                        {actionLoadingId === invoice._id ? <FiRefreshCw className="spin" /> : <FiDollarSign />}
                       </button>
                     )}
                     <button
                       className="btn-icon"
                       title="View Invoice"
                       onClick={() => handleViewInvoice(invoice._id)}
+                      disabled={actionLoadingId === invoice._id}
                     >
-                      <FiEye />
+                      {actionLoadingId === invoice._id ? <FiRefreshCw className="spin" /> : <FiEye />}
                     </button>
                     <button
                       className="btn-icon"
                       title="Download/Print Invoice"
                       onClick={() => handleDownloadInvoice(invoice)}
+                      disabled={actionLoadingId === invoice._id}
                     >
-                      <FiDownload />
+                      {actionLoadingId === invoice._id ? <FiRefreshCw className="spin" /> : <FiDownload />}
                     </button>
                   </div>
                 </div>
@@ -530,6 +530,7 @@ const Invoices = () => {
                   type="button" 
                   className="btn-primary" 
                   onClick={handleAddPayment}
+                  disabled={isAddingPayment}
                 >
                   <FiDollarSign /> {isAddingPayment ? 'Processing…' : 'Add Payment'}
                 </button>

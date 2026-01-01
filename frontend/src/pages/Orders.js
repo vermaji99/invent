@@ -9,6 +9,7 @@ const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewingId, setViewingId] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   
@@ -138,7 +139,7 @@ const Orders = () => {
                         disabled={viewingId === order._id}
                       >
                         {viewingId === order._id ? (
-                          <span className="loading-spinner-small">...</span>
+                          <FiRefreshCw className="spin" />
                         ) : (
                           <FiEye size={18} />
                         )}

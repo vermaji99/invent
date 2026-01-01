@@ -177,3 +177,16 @@ textarea:invalid {
 /* Reduced motion handling is scoped per component/page to avoid globally disabling
    all animations. Dashboard.css and other pages include targeted rules. */
 
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
