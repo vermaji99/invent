@@ -43,6 +43,7 @@ const Billing = () => {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   
   // Scanning State
   const [showCameraScanner, setShowCameraScanner] = useState(false);
@@ -76,8 +77,9 @@ const Billing = () => {
 
   // Process Scanned Code
   const processScannedCode = async (code) => {
-    if (!code) return;
+    if (!code || isScanning) return;
     try {
+      setIsScanning(true);
       const response = await api.get(`/api/products/scan/${code}`);
       const product = response.data;
       
@@ -91,6 +93,8 @@ const Billing = () => {
       playBeep('error');
       console.error(error);
       toast.error('Product not found or invalid code');
+    } finally {
+      setIsScanning(false);
     }
   };
 
@@ -213,7 +217,7 @@ const Billing = () => {
     // const handleClick = () => focusScanner();
     // document.addEventListener('click', handleClick);
     // return () => document.removeEventListener('click', handleClick);
-  }, [showCameraScanner, showCustomerModal, showProductSearch]);
+  }, [showCameraScanner, showCustomerModal, showProductSearch, isScanning]);
 
   // Camera Scanner Effect
   useEffect(() => {
@@ -634,10 +638,11 @@ const Billing = () => {
           ref={scannerInputRef}
           type="text"
           className="scanner-input"
-          placeholder="Scan Barcode..."
+          placeholder={isScanning ? "Processing..." : "Scan Barcode..."}
           onKeyDown={handleScanInput}
           autoComplete="off"
           autoFocus
+          disabled={isScanning}
         />
 
         {/* Camera Scanner Modal */}

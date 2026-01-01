@@ -28,6 +28,8 @@ const Products = () => {
   const [cancelImport, setCancelImport] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isWeightSubmitting, setIsWeightSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [weightFormData, setWeightFormData] = useState({
     name: '',
     category: 'Gold',
@@ -201,11 +203,14 @@ const Products = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
+        setDeletingId(id);
         await api.delete(`/api/products/${id}`);
         toast.success('Product deleted successfully');
         fetchProducts();
       } catch (error) {
         toast.error('Failed to delete product');
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -264,12 +269,15 @@ const Products = () => {
     const ok = window.confirm(`Are you sure you want to delete ${selectedIds.length} selected product(s)?`);
     if (!ok) return;
     try {
+      setIsBulkDeleting(true);
       await Promise.all(selectedIds.map(id => api.delete(`/api/products/${id}`)));
       toast.success(`Deleted ${selectedIds.length} product(s)`);
       setSelectedIds([]);
       fetchProducts();
     } catch (error) {
       toast.error('Failed to delete selected products');
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -307,11 +315,11 @@ const Products = () => {
           <button
             className="btn-primary"
             onClick={handleBulkDelete}
-            disabled={selectedIds.length === 0}
-            style={{ opacity: selectedIds.length === 0 ? 0.6 : 1 }}
+            disabled={selectedIds.length === 0 || isBulkDeleting}
+            style={{ opacity: (selectedIds.length === 0 || isBulkDeleting) ? 0.6 : 1 }}
             title="Delete selected products"
           >
-            <FiTrash2 /> Delete Selected
+            <FiTrash2 /> {isBulkDeleting ? 'Deleting...' : 'Delete Selected'}
           </button>
         </div>
       </div>
@@ -451,8 +459,12 @@ const Products = () => {
                 <button onClick={(e) => { e.stopPropagation(); handleEdit(product); }} className="btn-small">
                   <FiEdit /> Edit
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); handleDelete(product._id); }} className="btn-danger btn-small">
-                  <FiTrash2 /> Del
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDelete(product._id); }} 
+                  className="btn-danger btn-small"
+                  disabled={deletingId === product._id}
+                >
+                  {deletingId === product._id ? 'Deleting...' : <><FiTrash2 /> Del</>}
                 </button>
               </div>
             </div>

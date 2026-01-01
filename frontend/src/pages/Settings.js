@@ -50,6 +50,16 @@ const Settings = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Loading states for actions
+  const [isSubmittingGold, setIsSubmittingGold] = useState(false);
+  const [isFetchingGold, setIsFetchingGold] = useState(false);
+  const [isSubmittingShop, setIsSubmittingShop] = useState(false);
+  const [isSubmittingInvoiceSettings, setIsSubmittingInvoiceSettings] = useState(false);
+  const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  const [isSubmittingUser, setIsSubmittingUser] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState(null);
+
   useEffect(() => {
     fetchSettings();
     fetchUserProfile();
@@ -115,7 +125,9 @@ const Settings = () => {
 
   const handleUserSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmittingUser) return;
     try {
+      setIsSubmittingUser(true);
       if (editingUser) {
         await api.put(`/api/users/${editingUser._id}`, {
           name: userData.name,
@@ -133,17 +145,23 @@ const Settings = () => {
       fetchUsers();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save user');
+    } finally {
+      setIsSubmittingUser(false);
     }
   };
 
   const handleDeleteUser = async (userId) => {
+    if (deletingUserId) return;
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
+        setDeletingUserId(userId);
         await api.delete(`/api/users/${userId}`);
         toast.success('User deleted successfully');
         fetchUsers();
       } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to delete user');
+      } finally {
+        setDeletingUserId(null);
       }
     }
   };
@@ -173,17 +191,23 @@ const Settings = () => {
 
   const handleGoldPriceSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmittingGold) return;
     try {
+      setIsSubmittingGold(true);
       await api.post('/api/gold-price', goldPrice);
       toast.success('Gold price updated successfully');
       fetchSettings();
     } catch (error) {
       toast.error('Failed to update gold price');
+    } finally {
+      setIsSubmittingGold(false);
     }
   };
 
   const handleFetchFromAPI = async () => {
+    if (isFetchingGold) return;
     try {
+      setIsFetchingGold(true);
       const response = await api.post('/api/gold-price/fetch');
       setGoldPrice({
         rate24K: response.data.rate24K,
@@ -194,44 +218,59 @@ const Settings = () => {
       toast.success('Gold price fetched from API');
     } catch (error) {
       toast.error('Failed to fetch gold price from API');
+    } finally {
+      setIsFetchingGold(false);
     }
   };
 
   const handleShopDetailsSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmittingShop) return;
     try {
+      setIsSubmittingShop(true);
       await api.put('/api/settings', { shopDetails });
       toast.success('Shop details saved successfully');
     } catch (error) {
       console.error(error);
       toast.error('Failed to save shop details');
+    } finally {
+      setIsSubmittingShop(false);
     }
   };
 
   const handleInvoiceSettingsSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmittingInvoiceSettings) return;
     try {
+      setIsSubmittingInvoiceSettings(true);
       await api.put('/api/settings', { invoiceSettings });
       toast.success('Invoice settings saved successfully');
     } catch (error) {
       console.error(error);
       toast.error('Failed to save invoice settings');
+    } finally {
+      setIsSubmittingInvoiceSettings(false);
     }
   };
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
+    if (isSubmittingProfile) return;
     try {
+      setIsSubmittingProfile(true);
       await api.put('/api/users/me', userProfile);
       toast.success('Profile updated successfully');
       fetchUserProfile();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setIsSubmittingProfile(false);
     }
   };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
+    if (isSubmittingPassword) return;
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match');
@@ -244,6 +283,7 @@ const Settings = () => {
     }
 
     try {
+      setIsSubmittingPassword(true);
       await api.put('/api/users/me/password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
@@ -256,6 +296,8 @@ const Settings = () => {
       });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to change password');
+    } finally {
+      setIsSubmittingPassword(false);
     }
   };
 
@@ -360,11 +402,11 @@ const Settings = () => {
               </div>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn-secondary" onClick={handleFetchFromAPI}>
-                <FiRefreshCw /> Fetch from API
+              <button type="button" className="btn-secondary" onClick={handleFetchFromAPI} disabled={isFetchingGold}>
+                <FiRefreshCw className={isFetchingGold ? 'spin' : ''} /> {isFetchingGold ? 'Fetching...' : 'Fetch from API'}
               </button>
-              <button type="submit" className="btn-primary">
-                <FiSave /> Save Changes
+              <button type="submit" className="btn-primary" disabled={isSubmittingGold}>
+                <FiSave /> {isSubmittingGold ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </form>
@@ -436,8 +478,8 @@ const Settings = () => {
               </div>
             </div>
             <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                <FiSave /> Save Shop Details
+              <button type="submit" className="btn-primary" disabled={isSubmittingShop}>
+                <FiSave /> {isSubmittingShop ? 'Saving...' : 'Save Shop Details'}
               </button>
             </div>
           </form>
@@ -490,8 +532,8 @@ const Settings = () => {
               </div>
             )}
             <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                <FiSave /> Save Invoice Settings
+              <button type="submit" className="btn-primary" disabled={isSubmittingInvoiceSettings}>
+                <FiSave /> {isSubmittingInvoiceSettings ? 'Saving...' : 'Save Invoice Settings'}
               </button>
             </div>
           </form>
@@ -531,8 +573,8 @@ const Settings = () => {
               />
             </div>
             <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                <FiSave /> Update Profile
+              <button type="submit" className="btn-primary" disabled={isSubmittingProfile}>
+                <FiSave /> {isSubmittingProfile ? 'Updating...' : 'Update Profile'}
               </button>
             </div>
           </form>
@@ -585,8 +627,10 @@ const Settings = () => {
                             className="btn-icon delete" 
                             onClick={() => handleDeleteUser(u._id)}
                             title="Delete User"
+                            disabled={deletingUserId === u._id}
+                            style={{ opacity: deletingUserId === u._id ? 0.5 : 1, cursor: deletingUserId === u._id ? 'not-allowed' : 'pointer' }}
                           >
-                            <FiTrash2 />
+                            {deletingUserId === u._id ? <FiRefreshCw className="spin" /> : <FiTrash2 />}
                           </button>
                         )}
                       </div>
@@ -637,8 +681,8 @@ const Settings = () => {
               />
             </div>
             <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                <FiLock /> Change Password
+              <button type="submit" className="btn-primary" disabled={isSubmittingPassword}>
+                <FiLock /> {isSubmittingPassword ? 'Changing...' : 'Change Password'}
               </button>
             </div>
           </form>
@@ -720,8 +764,8 @@ const Settings = () => {
                 <button type="button" className="btn-secondary" onClick={() => setShowUserModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
-                  {editingUser ? 'Update User' : 'Create User'}
+                <button type="submit" className="btn-primary" disabled={isSubmittingUser}>
+                  {isSubmittingUser ? 'Processing...' : (editingUser ? 'Update User' : 'Create User')}
                 </button>
               </div>
             </form>

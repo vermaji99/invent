@@ -11,6 +11,7 @@ const Expenses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   
   const [formData, setFormData] = useState({
     category: '',
@@ -74,14 +75,18 @@ const Expenses = () => {
   };
 
   const handleDelete = async (id) => {
+    if (deletingId === id) return;
     if (window.confirm('Are you sure you want to delete this expense?')) {
       try {
+        setDeletingId(id);
         await api.delete(`/api/expenses/${id}`);
         toast.success('Expense deleted successfully');
         fetchExpenses();
       } catch (error) {
         console.error(error);
         toast.error('Failed to delete expense');
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -186,8 +191,9 @@ const Expenses = () => {
                       className="btn-icon delete"
                       onClick={() => handleDelete(expense._id)}
                       title="Delete Expense"
+                      disabled={deletingId === expense._id}
                     >
-                      <FiTrash2 />
+                      {deletingId === expense._id ? '...' : <FiTrash2 />}
                     </button>
                   </td>
                 </tr>

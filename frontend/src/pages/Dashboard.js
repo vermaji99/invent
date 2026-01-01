@@ -123,6 +123,15 @@ const Dashboard = () => {
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     return { start: toYMD(start), end: toYMD(end) };
   };
+
+  const startLoadingDetails = (title) => {
+    setDetailsTitle(title);
+    setDetailsColumns([]);
+    setDetailsRows([]);
+    setLoadingDetails(true);
+    setShowDetails(true);
+  };
+
   const openDetails = (title, columns, rows) => {
     setDetailsTitle(title);
     setDetailsColumns(columns);
@@ -131,7 +140,7 @@ const Dashboard = () => {
   };
   const fetchSalesDetails = async (range) => {
     try {
-      setLoadingDetails(true);
+      startLoadingDetails(range === 'today' ? "Today's Sales — Details" : 'Monthly Sales — Details');
       const { start, end } = startEndFor(range);
       const res = await api.get('/api/invoices', { params: { startDate: start, endDate: end } });
       const rows = (res.data || []).map(inv => ({
@@ -166,7 +175,7 @@ const Dashboard = () => {
   };
   const fetchStockDetails = async () => {
     try {
-      setLoadingDetails(true);
+      startLoadingDetails('Total Stock Value — Details');
       const res = await api.get('/api/products');
       const rows = (res.data || []).map(p => {
         const qty = Number(p.quantity || 0);
@@ -203,7 +212,7 @@ const Dashboard = () => {
   };
   const fetchWeightDetails = async (category) => {
     try {
-      setLoadingDetails(true);
+      startLoadingDetails(`Total ${category} Stock Weight — Details`);
       const res = await api.get('/api/products', { params: { category } });
       const rows = (res.data || []).map(p => ({
         name: p.name,

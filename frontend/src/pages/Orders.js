@@ -129,10 +129,19 @@ const Orders = () => {
                     <td>
                       <button 
                         className="action-btn"
-                        onClick={() => navigate(`/orders/${order._id}`)}
+                        onClick={() => {
+                          if (viewingId) return;
+                          setViewingId(order._id);
+                          navigate(`/orders/${order._id}`);
+                        }}
                         title="View Details"
+                        disabled={viewingId === order._id}
                       >
-                        <FiEye size={18} />
+                        {viewingId === order._id ? (
+                          <span className="loading-spinner-small">...</span>
+                        ) : (
+                          <FiEye size={18} />
+                        )}
                       </button>
                     </td>
                   </tr>

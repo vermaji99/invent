@@ -14,6 +14,7 @@ const Invoices = () => {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const printRef = useRef();
   const [isAddingPayment, setIsAddingPayment] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
   useEffect(() => {
     fetchInvoices();
@@ -30,20 +31,45 @@ const Invoices = () => {
     }
   };
 
+  const fetchInvoiceDetails = async (invoiceId) => {
+    const response = await api.get(`/api/invoices/${invoiceId}`);
+    setSelectedInvoice(response.data);
+    return response.data;
+  };
+
   const handleViewInvoice = async (invoiceId) => {
+    if (actionLoadingId) return;
     try {
-      const response = await api.get(`/api/invoices/${invoiceId}`);
-      setSelectedInvoice(response.data);
+      setActionLoadingId(invoiceId);
+      await fetchInvoiceDetails(invoiceId);
       setShowViewModal(true);
     } catch (error) {
       toast.error('Failed to load invoice details');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleOpenPayment = async (invoiceId) => {
+    if (actionLoadingId) return;
+    try {
+      setActionLoadingId(invoiceId);
+      await fetchInvoiceDetails(invoiceId);
+      setPaymentAmount('');
+      setPaymentMode('Cash');
+      setShowPaymentModal(true);
+    } catch (error) {
+      toast.error('Failed to load invoice details');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
   const handleDownloadInvoice = async (invoice) => {
+    if (actionLoadingId) return;
     try {
-      const response = await api.get(`/api/invoices/${invoice._id}`);
-      setSelectedInvoice(response.data);
+      setActionLoadingId(invoice._id);
+      await fetchInvoiceDetails(invoice._id);
       
       // Wait for state to update, then trigger print
       setTimeout(() => {
@@ -51,6 +77,8 @@ const Invoices = () => {
       }, 100);
     } catch (error) {
       toast.error('Failed to load invoice for download');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 

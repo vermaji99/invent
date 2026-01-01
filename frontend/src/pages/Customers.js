@@ -19,6 +19,8 @@ const Customers = () => {
   const [showArrearsOnly, setShowArrearsOnly] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [viewingHistoryId, setViewingHistoryId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -52,7 +54,9 @@ const Customers = () => {
   };
 
   const handleViewHistory = async (customer) => {
+    if (viewingHistoryId) return;
     try {
+      setViewingHistoryId(customer._id);
       setSelectedCustomer(customer);
       const res = await api.get(`/api/customers/${customer._id}`);
       setHistoryData({
@@ -62,6 +66,8 @@ const Customers = () => {
       setShowHistoryModal(true);
     } catch (error) {
       toast.error('Failed to load history');
+    } finally {
+      setViewingHistoryId(null);
     }
   };
 
@@ -231,8 +237,8 @@ const Customers = () => {
                   <FiUser />
                 </div>
                 <div className="customer-actions">
-                  <button onClick={() => handleViewHistory(customer)} className="icon-btn" title="View History">
-                    <FiClock />
+                  <button onClick={() => handleViewHistory(customer)} className="icon-btn" title="View History" disabled={viewingHistoryId === customer._id}>
+                    {viewingHistoryId === customer._id ? <FiRefreshCw className="spin" /> : <FiClock />}
                   </button>
                   {customer.totalDue > 0 && (
                     <button 
@@ -250,8 +256,8 @@ const Customers = () => {
                   <button onClick={() => handleEdit(customer)} className="icon-btn" title="Edit">
                     <FiEdit />
                   </button>
-                  <button onClick={() => handleDelete(customer._id)} className="icon-btn btn-danger" title="Delete">
-                    <FiTrash2 />
+                  <button onClick={() => handleDelete(customer._id)} className="icon-btn btn-danger" title="Delete" disabled={deletingId === customer._id}>
+                    {deletingId === customer._id ? '...' : <FiTrash2 />}
                   </button>
                 </div>
               </div>

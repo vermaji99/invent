@@ -165,8 +165,9 @@ const OrderDetail = () => {
     setShowEditModal(true);
   };
   const applyEditItem = async () => {
-    if (!editingItem) return;
+    if (!editingItem || isSavingItem) return;
     try {
+      setIsSavingItem(true);
       const payload = {
         quantity: Number(editingItem.quantity),
         price: Number(editingItem.price),
@@ -195,6 +196,8 @@ const OrderDetail = () => {
       fetchOrder();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update item');
+    } finally {
+      setIsSavingItem(false);
     }
   };
 
@@ -715,7 +718,9 @@ const OrderDetail = () => {
             )}
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => { setShowEditModal(false); setEditingItem(null); }}>Cancel</button>
-              <button className="btn btn-primary" onClick={applyEditItem}>Save</button>
+              <button className="btn btn-primary" onClick={applyEditItem} disabled={isSavingItem}>
+                {isSavingItem ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         </div>

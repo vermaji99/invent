@@ -48,6 +48,11 @@ const OrderCreate = () => {
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
 
+  // Loading/Cooldown States
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [isAddingInventory, setIsAddingInventory] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
   // Load Products on Mount
   useEffect(() => {
     fetchProducts();
@@ -108,17 +113,24 @@ const OrderCreate = () => {
   };
 
   const confirmAddItem = () => {
+    if (isAddingInventory) return;
     if (!addProduct) return;
+    
+    setIsAddingInventory(true);
+    
     const qty = Number(addQty);
     const price = Number(addPrice);
     if (!qty || qty <= 0) {
       toast.error('Quantity must be at least 1');
+      setIsAddingInventory(false);
       return;
     }
-    if (!price || price <= 0) {
+    if (!price || price < 0) {
       toast.error('Price must be positive');
+      setIsAddingInventory(false);
       return;
     }
+    
     const existing = cart.find(item => item.product === addProduct._id);
     if (existing) {
       setCart(cart.map(item => 
@@ -135,8 +147,10 @@ const OrderCreate = () => {
         image: addProduct.images?.[0]
       }]);
     }
+    
     setShowAddModal(false);
     setAddProduct(null);
+    setTimeout(() => setIsAddingInventory(false), 300);
   };
 
   const handleImageUpload = async (e) => {
@@ -166,6 +180,8 @@ const OrderCreate = () => {
   };
 
   const addCustomItemToCart = () => {
+    if (isAddingCustom) return;
+    
     // Debug log to confirm function execution
     console.log('Adding custom item:', customItem);
 
@@ -174,6 +190,8 @@ const OrderCreate = () => {
        return;
     }
     
+    setIsAddingCustom(true);
+
     setCart([...cart, {
         isCustom: true,
         tempId: Date.now(),
@@ -194,6 +212,7 @@ const OrderCreate = () => {
     });
     
     toast.success('Custom item added');
+    setTimeout(() => setIsAddingCustom(false), 500);
   };
 
   const removeFromCart = (itemToRemove) => {
@@ -245,10 +264,15 @@ const OrderCreate = () => {
   };
 
   const applyEditItem = () => {
+    if (isSavingEdit) return;
     if (!editingItem) return;
+
+    setIsSavingEdit(true);
+
     if (editingItem.isCustom) {
       if (!editingItem.name || !editingItem.price || !editingItem.quantity) {
         toast.error('Fill required fields for custom item');
+        setIsSavingEdit(false);
         return;
       }
       setCart(prev => prev.map(it => (it.tempId === editingItem.tempId ? {
@@ -265,6 +289,7 @@ const OrderCreate = () => {
     } else {
       if (!editingItem.quantity || editingItem.quantity <= 0) {
         toast.error('Quantity must be at least 1');
+        setIsSavingEdit(false);
         return;
       }
       setCart(prev => prev.map(it => (it.product === editingItem.product ? {
@@ -275,6 +300,7 @@ const OrderCreate = () => {
     }
     setShowEditModal(false);
     setEditingItem(null);
+    setTimeout(() => setIsSavingEdit(false), 300);
   };
 
   const calculateTotal = () => {
@@ -786,8 +812,8 @@ const OrderCreate = () => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => { setShowAddModal(false); setAddProduct(null); }}>Cancel</button>
-                <button className="btn btn-primary" onClick={confirmAddItem}>Add to Order</button>
+                <button className="btn btn-secondary" onClick={() => { setShowAddModal(false); setAddProduct(null); }} disabled={isAddingInventory}>Cancel</button>
+                <button className="btn btn-primary" onClick={confirmAddItem} disabled={isAddingInventory}>{isAddingInventory ? 'Adding...' : 'Add to Order'}</button>
               </div>
             </div>
           </div>

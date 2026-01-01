@@ -10,6 +10,8 @@ const OldGold = () => {
   const [invoices, setInvoices] = useState([]);
   const [goldPrice, setGoldPrice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdjusting, setIsAdjusting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -457,8 +459,9 @@ const OldGold = () => {
                         handleAdjust(invoice._id, adjustAmount);
                       }}
                       className="btn-adjust-invoice"
+                      disabled={isAdjusting}
                     >
-                      Adjust {formatCurrency(Math.min(selectedRecord.totalValue, invoice.dueAmount))}
+                      {isAdjusting ? 'Adjusting...' : `Adjust ${formatCurrency(Math.min(selectedRecord.totalValue, invoice.dueAmount))}`}
                     </button>
                   </div>
                 ))}
