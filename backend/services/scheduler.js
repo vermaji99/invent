@@ -18,7 +18,7 @@ async function runLowStockScan() {
       const headers = ['Product', 'Product ID', 'Current Stock', 'Minimum Level', 'Date & Time'];
       const rows = [[p.name, String(p._id), String(qty), String(min), new Date().toLocaleString()]];
       const html = wrapHtml('Low Stock Alert', table(headers, rows));
-      const r = await sendEmail({ subject: 'Low Stock Alert', html });
+      const r = await sendEmail({ subject: 'Low Stock Alert', html, to: [process.env.ADMIN_EMAIL] });
       if (!state) {
         await AlertState.create({ productId: p._id, lastAlertQuantity: qty });
       } else {
@@ -99,7 +99,7 @@ async function runPeriodReport(period) {
     '<br/>' +
     table(['Product', 'Qty', 'Min'], lowStockProducts.map(p => [p.name, String(p.quantity), String(p.lowStockAlert)]))
   );
-  await sendEmail({ subject: `${period === 'weekly' ? 'Weekly' : 'Monthly'} Stock Report`, html });
+  await sendEmail({ subject: `${period === 'weekly' ? 'Weekly' : 'Monthly'} Stock Report`, html, to: [process.env.ADMIN_EMAIL] });
 }
 
 async function runDeadlineScan() {
@@ -117,7 +117,7 @@ async function runDeadlineScan() {
     return [String(o.orderNumber), String(o.customerDetails?.name || 'N/A'), due.toLocaleString(), `${remainingDays} day(s)`];
   });
   const html = wrapHtml('Upcoming Deadlines (2 days)', table(['Order/Task ID', 'Customer', 'Due Date', 'Remaining'], rows));
-  await sendEmail({ subject: 'Deadline Alert', html });
+  await sendEmail({ subject: 'Deadline Alert', html, to: [process.env.ADMIN_EMAIL] });
 }
 
 function initScheduler() {
