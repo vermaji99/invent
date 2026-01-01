@@ -34,6 +34,7 @@ const Dashboard = () => {
   const [orderMetrics, setOrderMetrics] = useState(null);
   const [deliveryAlerts, setDeliveryAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pledgeMetrics, setPledgeMetrics] = useState(null);
   const [showCashUsage, setShowCashUsage] = useState(false);
   const [showProfitDetail, setShowProfitDetail] = useState(false);
   const [profitDetail, setProfitDetail] = useState(null);
@@ -50,6 +51,7 @@ const Dashboard = () => {
   useEffect(() => {
     fetchDashboardStats();
     fetchOrderData();
+    fetchPledgeMetrics();
   }, []);
 
   useEffect(() => {
@@ -104,6 +106,12 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+  const fetchPledgeMetrics = async () => {
+    try {
+      const res = await api.get('/api/pledges/metrics');
+      setPledgeMetrics(res.data);
+    } catch (e) {}
   };
   
   const fmtINR = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
@@ -541,6 +549,15 @@ const Dashboard = () => {
       {/* Sales & Inventory Section */}
       <h2 className="section-title" style={{ marginTop: '2rem' }}>Sales & Inventory</h2>
       <div className="stats-grid">
+        {pledgeMetrics && (
+          <div className="stat-card">
+            <div className="stat-card-body">
+              <h3>Active Pledged Amount</h3>
+              <p className="stat-value">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(pledgeMetrics.totalActiveAmount || 0)}</p>
+              <p className="stat-change">Overdue: {pledgeMetrics.overdue}</p>
+            </div>
+          </div>
+        )}
         <div className="stat-card" onClick={() => fetchSalesDetails('today')}>
            <div className="stat-card-body">
               <h3>Today's Sales</h3>

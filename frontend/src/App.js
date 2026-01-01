@@ -18,6 +18,9 @@ import Settings from './pages/Settings';
 import Orders from './pages/Orders';
 import OrderCreate from './pages/OrderCreate';
 import OrderDetail from './pages/OrderDetail';
+import Pledges from './pages/Pledges';
+import PledgeCreate from './pages/PledgeCreate';
+import PledgeDetail from './pages/PledgeDetail';
 import Layout from './components/Layout';
 
 const PrivateRoute = ({ children }) => {
@@ -60,6 +63,9 @@ function App() {
             <Route path="suppliers" element={<Suppliers />} />
             <Route path="purchases" element={<Purchases />} />
             <Route path="old-gold" element={<OldGold />} />
+            <Route path="pledges" element={<Pledges />} />
+            <Route path="pledges/create" element={<PledgeCreate />} />
+            <Route path="pledges/:id" element={<PledgeDetail />} />
             <Route path="expenses" element={<Expenses />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />

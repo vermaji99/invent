@@ -4,6 +4,7 @@ const Invoice = require('../models/Invoice');
 const Order = require('../models/Order');
 const AlertState = require('../models/AlertState');
 const { sendEmail, wrapHtml, table } = require('./emailService');
+const { runPledgeReminders } = require('./pledgeReminderService');
 
 async function runLowStockScan() {
   const items = await Product.find({ isActive: true }, { name: 1, quantity: 1, lowStockAlert: 1, _id: 1 });
@@ -125,6 +126,7 @@ function initScheduler() {
   cron.schedule('0 8 * * 1', () => runPeriodReport('weekly'));
   cron.schedule('0 8 1 * *', () => runPeriodReport('monthly'));
   cron.schedule('0 9 * * *', runDeadlineScan);
+  cron.schedule('15 9 * * *', runPledgeReminders);
 }
 
 module.exports = {
@@ -133,4 +135,3 @@ module.exports = {
   runPeriodReport,
   runDeadlineScan
 };
-

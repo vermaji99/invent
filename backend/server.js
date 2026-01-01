@@ -38,6 +38,7 @@ app.use('/api/payments', require('./routes/payments'));
 app.use('/api/supplier-payments', require('./routes/supplierPayments'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/admin/otp', require('./routes/adminOtp'));
+app.use('/api/pledges', require('./routes/pledges'));
 
 // Health check
 app.get('/api/health', (req, res) => {
