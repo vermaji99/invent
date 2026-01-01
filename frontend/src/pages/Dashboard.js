@@ -390,7 +390,8 @@ const Dashboard = () => {
 
   const usageData = [
     { name: 'Purchases', value: stats.moneyUsage.purchases },
-    { name: 'Expenses', value: stats.moneyUsage.expenses }
+    { name: 'Expenses', value: stats.moneyUsage.expenses },
+    { name: 'Investments', value: stats.moneyUsage.investments || 0 }
   ];
 
   const COLORS = ['#D4AF37', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];

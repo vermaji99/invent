@@ -34,10 +34,10 @@ async function createPledge(req, res) {
     try {
       await Transaction.create({
         type: 'DEBIT',
-        category: 'EXPENSE',
+        category: 'OTHER',
         amount: Number(payload.loan?.amountGiven || 0),
         paymentMode: 'Cash',
-        description: `Pledge Outflow ${receiptNumber}`,
+        description: `Investment (Pledge Outflow) ${receiptNumber}`,
         date: new Date(),
         performedBy: req.user.id
       });

@@ -255,7 +255,18 @@ router.get('/stats', auth, async (req, res) => {
        if (txn.category === 'SALES') salesTotal += val;
        else if (txn.category === 'CUSTOMER_PAYMENT') customerPaymentsTotal += val;
        else if (txn.category === 'PURCHASE' || txn.category === 'SUPPLIER_PAYMENT') purchaseOutflow += val;
-       else if (txn.category === 'EXPENSE') expenseOutflow += val;
+       else if (txn.category === 'EXPENSE') {
+         const isInvestmentMarker = (txn.description || '').toLowerCase().includes('pledge outflow') || (txn.description || '').toLowerCase().includes('investment');
+         if (!isInvestmentMarker) expenseOutflow += val;
+       }
+       else if (txn.category === 'OTHER') {
+         const isInvestmentMarker = (txn.description || '').toLowerCase().includes('pledge outflow') || (txn.description || '').toLowerCase().includes('investment');
+         if (isInvestmentMarker && txn.type === 'DEBIT') {
+           // Count as Investment outflow
+           // attach to a temp variable; will expose later
+           purchaseOutflow += 0; // no-op
+         }
+       }
     });
 
     const totalCashInShop = totalCashIn - totalCashOut;
@@ -518,6 +529,15 @@ router.get('/stats', auth, async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
+    // Compute investments outflow from transactions explicitly marked
+    let investmentOutflow = 0;
+    transactions.forEach(txn => {
+      const isInvestmentMarker = (txn.description || '').toLowerCase().includes('pledge outflow') || (txn.description || '').toLowerCase().includes('investment');
+      if (isInvestmentMarker && txn.type === 'DEBIT') {
+        investmentOutflow += txn.amount;
+      }
+    });
+
     res.json({
       todaySales: todaySales[0]?.total || 0,
       todaySalesCount: todaySales[0]?.count || 0,
@@ -538,7 +558,8 @@ router.get('/stats', auth, async (req, res) => {
       
       moneyUsage: {
         purchases: purchaseOutflow, // Includes supplier payments
-        expenses: expenseOutflow
+        expenses: expenseOutflow,
+        investments: investmentOutflow
       },
       cashSourceBreakdown,
       cashSourceRecent,
