@@ -19,10 +19,16 @@ const PledgeCreate = () => {
   const [snapshot, setSnapshot] = useState({ totalInterest: 0, totalPayable: 0, remainingDays: 0 });
 
   const uploadFile = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-    return res.data?.url || res.data?.path || res.data;
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      if (!res.data?.url) throw new Error('Upload failed');
+      return res.data.url;
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to upload file');
+      throw e;
+    }
   };
 
   const recalc = async () => {
@@ -60,6 +66,10 @@ const PledgeCreate = () => {
     e.preventDefault();
     if (!customer.name || !customer.phone || !customer.email || !customer.address || !customer.governmentId) {
       toast.error('Fill all mandatory customer fields');
+      return;
+    }
+    if (!customer.idProofUrl) {
+      toast.error('Upload ID Proof Photo');
       return;
     }
     if (!gold.itemName || !gold.grossWeight || !gold.netWeight || !gold.purity || !gold.valuationAmount) {
@@ -248,4 +258,3 @@ const PledgeCreate = () => {
 };
 
 export default PledgeCreate;
-
