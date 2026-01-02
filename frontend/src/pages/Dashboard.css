@@ -1,11 +1,29 @@
 .dashboard {
   padding: 2rem;
+  position: relative;
 }
 
 .dashboard-header {
   margin-bottom: 2rem;
 }
 
+.dashboard-header::after {
+  content: "";
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, rgba(34,197,94,0.6), rgba(212,175,55,0.8), rgba(59,130,246,0.6));
+  background-size: 200% 100%;
+  box-shadow: 0 0 10px rgba(212,175,55,0.25);
+  animation: progressBar 6s linear infinite;
+}
+
+@keyframes progressBar {
+  0% { background-position: 0% 0; }
+  50% { background-position: 100% 0; }
+  100% { background-position: 200% 0; }
+}
 .dashboard-header h1 {
   font-size: 2rem;
   color: var(--text-primary);
@@ -30,6 +48,8 @@
   border-radius: 12px;
   padding: 1.5rem;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  position: relative;
+  overflow: hidden;
   opacity: 0;
   transform: translateY(8px);
   animation: dashFadeUp 400ms ease-out forwards;
@@ -285,6 +305,8 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
   opacity: 0;
   transform: translateY(6px);
   animation: dashFadeUp 380ms ease-out forwards 140ms;
@@ -295,6 +317,83 @@
   color: var(--text-primary);
   margin-bottom: 1.5rem;
   text-align: center;
+}
+
+/* Tech overlay background */
+.dashboard-tech-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at top left, rgba(212,175,55,0.06), transparent 45%),
+    radial-gradient(ellipse at bottom right, rgba(212,175,55,0.05), transparent 50%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 20px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 20px);
+  border-radius: 12px;
+  z-index: 0;
+}
+
+/* Tech status bar */
+.tech-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+.tech-status-left, .tech-status-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+}
+.status-dot.warn {
+  background: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+.status-dot.error {
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+.tech-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.tech-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Neon border accent */
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(255,255,255,0.05));
+  -webkit-mask: 
+    linear-gradient(#000 0 0) content-box, 
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0.0;
+  transition: opacity 180ms ease;
+}
+.stat-card:hover::before {
+  opacity: 1;
 }
 
 .alert-card {
@@ -633,4 +732,100 @@
   .summary-card .num {
     font-size: 1rem;
   }
+}
+
+.dashboard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at top left, rgba(212,175,55,0.06), transparent 45%),
+    radial-gradient(ellipse at bottom right, rgba(212,175,55,0.05), transparent 50%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 24px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 24px);
+  z-index: 0;
+  animation: gridShift 10s linear infinite;
+}
+
+@keyframes gridShift {
+  0% { background-position: 0 0, 0 0, 0 0, 0 0; }
+  50% { background-position: 10px 0, -10px 0, 0 8px, 0 -8px; }
+  100% { background-position: 0 0, 0 0, 0 0, 0 0; }
+}
+
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 0 rgba(212,175,55,0.0), 0 0 0 rgba(212,175,55,0.0); }
+  50% { text-shadow: 0 0 8px rgba(212,175,55,0.35), 0 0 18px rgba(212,175,55,0.25); }
+  100% { text-shadow: 0 0 0 rgba(212,175,55,0.0), 0 0 0 rgba(212,175,55,0.0); }
+}
+
+.stat-value {
+  animation: glowPulse 3.2s ease-in-out infinite;
+}
+
+.stat-icon {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+.stat-card::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  height: 2px;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, rgba(212,175,55,0.3), rgba(59,130,246,0.3), rgba(16,185,129,0.3), rgba(245,158,11,0.3));
+  filter: drop-shadow(0 0 4px rgba(212,175,55,0.25));
+  background-size: 300% 100%;
+  animation: sparklineFlow 5s linear infinite;
+}
+
+@keyframes sparklineFlow {
+  0% { background-position: 0% 0; }
+  50% { background-position: 150% 0; }
+  100% { background-position: 300% 0; }
+}
+
+.section-title {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 6px;
+}
+.section-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(212,175,55,0.0), rgba(212,175,55,0.55), rgba(212,175,55,0.0));
+  animation: shimmer 2.8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+.chart-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(255,255,255,0.05));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.chart-card:hover::before {
+  opacity: 1;
 }
