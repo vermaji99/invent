@@ -113,6 +113,45 @@ const Dashboard = () => {
       setPledgeMetrics(res.data);
     } catch (e) {}
   };
+  const fetchPledgeDetails = async () => {
+    try {
+      startLoadingDetails('Active Pledged Amount — Details');
+      const res = await api.get('/api/pledges', { params: { status: 'Active' } });
+      const rows = (res.data || []).map(p => ({
+        receiptNumber: p.receiptNumber,
+        customer: p.customer?.name || '',
+        phone: p.customer?.phone || '',
+        email: p.customer?.email || '',
+        item: p.gold?.itemName || '',
+        netWeight: p.gold?.netWeight || 0,
+        purity: p.gold?.purity || '',
+        loanAmount: p.loan?.amountGiven || 0,
+        totalInterest: p.totalInterest || 0,
+        totalPayable: p.totalPayable || 0,
+        endDate: p.loan?.endDate,
+        remainingDays: p.remainingDays || 0,
+        status: p.status || ''
+      }));
+      openDetails('Active Pledged Amount — Details', [
+        { key: 'receiptNumber', label: 'Receipt #' },
+        { key: 'customer', label: 'Customer' },
+        { key: 'phone', label: 'Mobile' },
+        { key: 'email', label: 'Email' },
+        { key: 'item', label: 'Item' },
+        { key: 'netWeight', label: 'Net Wt (g)' },
+        { key: 'purity', label: 'Purity' },
+        { key: 'loanAmount', label: 'Loan Amount', fmt: (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0) },
+        { key: 'totalInterest', label: 'Interest', fmt: (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0) },
+        { key: 'totalPayable', label: 'Payable', fmt: (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0) },
+        { key: 'endDate', label: 'Due Date', fmt: (v) => v ? new Date(v).toLocaleDateString('en-IN') : '' },
+        { key: 'remainingDays', label: 'Remaining (days)' },
+        { key: 'status', label: 'Status' }
+      ], rows);
+    } catch (e) {
+      toast.error('Failed to load pledge details');
+      setLoadingDetails(false);
+    }
+  };
   
   const fmtINR = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
   const toYMD = (d) => {
@@ -551,7 +590,7 @@ const Dashboard = () => {
       <h2 className="section-title" style={{ marginTop: '2rem' }}>Sales & Inventory</h2>
       <div className="stats-grid">
         {pledgeMetrics && (
-          <div className="stat-card">
+          <div className="stat-card" style={{ cursor: 'pointer' }} onClick={fetchPledgeDetails}>
             <div className="stat-card-body">
               <h3>Active Pledged Amount</h3>
               <p className="stat-value">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(pledgeMetrics.totalActiveAmount || 0)}</p>
