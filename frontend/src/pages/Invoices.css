@@ -593,23 +593,35 @@
   gap: 1rem;
   align-items: center;
 }
-.invoices-toolbar .filters .preset select,
-.invoices-toolbar .filters .date-range input,
-.invoices-toolbar .filters .date-range button {
+.invoices-toolbar .filters .group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.invoices-toolbar .filters .group .label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.invoices-toolbar .filters .group select,
+.invoices-toolbar .filters .group input,
+.invoices-toolbar .filters .group button {
   padding: 0.4rem 0.6rem;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   color: var(--text-primary);
 }
-.invoices-toolbar .filters .preset svg,
-.invoices-toolbar .filters .date-range svg {
+.invoices-toolbar .filters .group .label svg {
   margin-right: 6px;
 }
 .invoices-toolbar .batch-actions {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+.invoices-toolbar .batch-actions .count {
+  color: var(--text-secondary);
+  margin-right: 0.5rem;
 }
 .invoices-toolbar .batch-actions button {
   padding: 0.4rem 0.6rem;

@@ -17,8 +17,8 @@ const Invoices = () => {
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [filterPreset, setFilterPreset] = useState('LAST_7_DAYS');
-  const [filterStartDate, setFilterStartDate] = useState('');
-  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterStartDateDD, setFilterStartDateDD] = useState('');
+  const [filterEndDateDD, setFilterEndDateDD] = useState('');
   const [printBatch, setPrintBatch] = useState([]);
   const batchPrintRef = useRef();
 
@@ -30,6 +30,7 @@ const Invoices = () => {
     try {
       const response = await api.get('/api/invoices', { params });
       setInvoices(response.data);
+      setSelectedIds(new Set());
     } catch (error) {
       toast.error('Failed to load invoices');
     } finally {
@@ -48,6 +49,19 @@ const Invoices = () => {
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
+  };
+  const ymdToDDMMYYYY = (ymd) => {
+    if (!ymd) return '';
+    const [y, m, d] = ymd.split('-');
+    return `${d}-${m}-${y}`;
+  };
+  const ddmmToYMD = (ddmm) => {
+    if (!ddmm) return '';
+    const parts = ddmm.split('-');
+    if (parts.length !== 3) return '';
+    const [dd, mm, yyyy] = parts;
+    if (!dd || !mm || !yyyy) return '';
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
   };
 
   const applyPreset = async (preset, initial = false) => {
@@ -78,12 +92,12 @@ const Invoices = () => {
       start = toYMD(s);
       end = toYMD(e);
     } else if (preset === 'CUSTOM') {
-      start = filterStartDate || '';
-      end = filterEndDate || '';
+      start = ddmmToYMD(filterStartDateDD) || '';
+      end = ddmmToYMD(filterEndDateDD) || '';
     }
     setFilterPreset(preset);
-    setFilterStartDate(start);
-    setFilterEndDate(end);
+    setFilterStartDateDD(ymdToDDMMYYYY(start));
+    setFilterEndDateDD(ymdToDDMMYYYY(end));
     setLoading(true);
     await fetchInvoices({ startDate: start || undefined, endDate: end || undefined });
     if (!initial) {
@@ -93,19 +107,21 @@ const Invoices = () => {
 
   const handleApplyCustom = async () => {
     setFilterPreset('CUSTOM');
-    if (!filterStartDate || !filterEndDate) {
+    if (!filterStartDateDD || !filterEndDateDD) {
       toast.error('Select both start and end dates');
       return;
     }
     setLoading(true);
-    await fetchInvoices({ startDate: filterStartDate, endDate: filterEndDate });
+    const sYMD = ddmmToYMD(filterStartDateDD);
+    const eYMD = ddmmToYMD(filterEndDateDD);
+    await fetchInvoices({ startDate: sYMD, endDate: eYMD });
     toast.success('Invoices filtered');
   };
 
   const handleResetFilter = async () => {
     setFilterPreset('LAST_7_DAYS');
-    setFilterStartDate('');
-    setFilterEndDate('');
+    setFilterStartDateDD('');
+    setFilterEndDateDD('');
     setLoading(true);
     await fetchInvoices({});
     toast.success('Filter reset');
@@ -267,8 +283,8 @@ const Invoices = () => {
 
       <div className="invoices-toolbar">
         <div className="filters">
-          <div className="preset">
-            <FiFilter />
+          <div className="group">
+            <label className="label"><FiFilter /> Preset</label>
             <select value={filterPreset} onChange={(e) => applyPreset(e.target.value)}>
               <option value="TODAY">Today</option>
               <option value="YESTERDAY">Yesterday</option>
@@ -278,19 +294,34 @@ const Invoices = () => {
               <option value="CUSTOM">Custom Range</option>
             </select>
           </div>
-          <div className="date-range">
-            <label><FiCalendar /> From</label>
-            <input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
-            <label>To</label>
-            <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
-            <button className="btn-primary" onClick={handleApplyCustom}>Apply</button>
-            <button onClick={handleResetFilter}>Reset</button>
+          <div className="group">
+            <label className="label"><FiCalendar /> From</label>
+            <input
+              type="text"
+              placeholder="dd-mm-yyyy"
+              value={filterStartDateDD}
+              onChange={(e) => setFilterStartDateDD(e.target.value)}
+            />
+          </div>
+          <div className="group">
+            <label className="label">To</label>
+            <input
+              type="text"
+              placeholder="dd-mm-yyyy"
+              value={filterEndDateDD}
+              onChange={(e) => setFilterEndDateDD(e.target.value)}
+            />
+          </div>
+          <div className="group actions">
+            <button className="btn-primary" onClick={handleApplyCustom} disabled={loading}>Apply</button>
+            <button onClick={handleResetFilter} disabled={loading}>Reset</button>
           </div>
         </div>
         <div className="batch-actions">
-          <button onClick={selectAllVisible}><FiCheckSquare /> Select All</button>
-          <button onClick={clearSelection}><FiSquare /> Clear</button>
-          <button className="btn-primary" onClick={handlePrintSelected}><FiPrinter /> Print Selected</button>
+          <div className="count">Selected: {selectedIds.size}</div>
+          <button onClick={selectAllVisible} disabled={loading || invoices.length === 0}><FiCheckSquare /> Select All</button>
+          <button onClick={clearSelection} disabled={selectedIds.size === 0}><FiSquare /> Clear</button>
+          <button className="btn-primary" onClick={handlePrintSelected} disabled={selectedIds.size === 0}><FiPrinter /> Print Selected</button>
         </div>
       </div>
 
