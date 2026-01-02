@@ -715,6 +715,69 @@
     justify-content: space-between;
   }
 }
+/* ===============================
+   MOBILE FIX (REAL RESPONSIVE)
+   =============================== */
+
+@media (max-width: 480px) {
+
+  /* Toolbar card */
+  .invoices-toolbar {
+    padding: 1rem;
+    gap: 1.2rem;
+  }
+
+  /* Filters stack */
+  .invoices-toolbar .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .filters .group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters .group .label {
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+  }
+
+  .filters select,
+  .filters input {
+    width: 100%;
+    min-width: unset;
+  }
+
+  /* Apply / Reset row */
+  .toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .toolbar-actions button {
+    flex: 1;
+  }
+
+  /* Batch actions */
+  .batch-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .batch-actions .count {
+    text-align: center;
+    margin: 0;
+  }
+
+  .batch-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 
 
 .select-checkbox {
