@@ -581,72 +581,100 @@
   justify-content: flex-end;
 }
 
+/* =========================
+   INVOICES TOOLBAR
+   ========================= */
+
 .invoices-toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
   flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
 }
+
+/* =========================
+   FILTERS SECTION
+   ========================= */
+
 .invoices-toolbar .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
-  flex-wrap: wrap;
 }
+
 .invoices-toolbar .filters .group {
   display: flex;
-  flex-direction: row;
   align-items: center;
   gap: 6px;
 }
+
 .invoices-toolbar .filters .group .label {
   font-size: 0.75rem;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 }
-.invoices-toolbar .filters .group select,
-.invoices-toolbar .filters .group input,
-.invoices-toolbar .filters .group button {
-  padding: 0.3rem 0.5rem;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  height: 30px;
-}
+
 .invoices-toolbar .filters .group .label svg {
   margin-right: 6px;
 }
-.invoices-toolbar .batch-actions {
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.invoices-toolbar .batch-actions .count {
-  color: var(--text-secondary);
-  margin-right: 0.5rem;
-  font-size: 0.8rem;
-}
-.invoices-toolbar .batch-actions button {
-  padding: 0.3rem 0.5rem;
+
+.invoices-toolbar .filters .group select,
+.invoices-toolbar .filters .group input,
+.invoices-toolbar .filters .group button {
+  height: 32px;
+  padding: 0 0.6rem;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   color: var(--text-primary);
+  font-size: 0.8rem;
+  outline: none;
+}
+
+/* =========================
+   BATCH ACTIONS
+   ========================= */
+
+.invoices-toolbar .batch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.invoices-toolbar .batch-actions .count {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-right: 0.5rem;
+  white-space: nowrap;
+}
+
+.invoices-toolbar .batch-actions button {
+  height: 32px;
+  padding: 0 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
-  height: 30px;
+  cursor: pointer;
 }
+
 .invoices-toolbar .batch-actions .btn-primary {
   background: var(--gold-primary);
   border-color: var(--gold-primary);
   color: #000;
 }
+
+
 .select-checkbox {
   margin-left: auto;
   display: flex;
@@ -691,17 +719,27 @@
   color: var(--gold-primary);
 }
 
+/* =========================
+   TABLET & DESKTOP
+   ========================= */
+
+@media (min-width: 768px) {
+  .invoices-toolbar {
+    align-items: center;
+  }
+}
+
 @media (min-width: 1024px) {
   .invoices-toolbar {
     flex-wrap: nowrap;
   }
-  .invoices-toolbar .filters {
-    flex-wrap: nowrap;
-  }
+
+  .invoices-toolbar .filters,
   .invoices-toolbar .batch-actions {
     flex-wrap: nowrap;
   }
 }
+
 @media (min-width: 480px) {
   .invoice-card {
     padding: 1.1rem;
