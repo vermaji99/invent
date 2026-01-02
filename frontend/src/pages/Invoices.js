@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiEye, FiDownload, FiX, FiPrinter, FiDollarSign, FiRefreshCw } from 'react-icons/fi';
+import { FiEye, FiDownload, FiX, FiPrinter, FiDollarSign, FiRefreshCw, FiFilter, FiCheckSquare, FiSquare, FiCalendar } from 'react-icons/fi';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import './Invoices.css';
@@ -15,14 +15,20 @@ const Invoices = () => {
   const printRef = useRef();
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [filterPreset, setFilterPreset] = useState('LAST_7_DAYS');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [printBatch, setPrintBatch] = useState([]);
+  const batchPrintRef = useRef();
 
   useEffect(() => {
-    fetchInvoices();
+    applyPreset('LAST_7_DAYS', true);
   }, []);
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = async (params) => {
     try {
-      const response = await api.get('/api/invoices');
+      const response = await api.get('/api/invoices', { params });
       setInvoices(response.data);
     } catch (error) {
       toast.error('Failed to load invoices');
@@ -35,6 +41,119 @@ const Invoices = () => {
     const response = await api.get(`/api/invoices/${invoiceId}`);
     setSelectedInvoice(response.data);
     return response.data;
+  };
+
+  const toYMD = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const applyPreset = async (preset, initial = false) => {
+    let start = '';
+    let end = '';
+    const now = new Date();
+    if (preset === 'TODAY') {
+      start = toYMD(now);
+      end = toYMD(now);
+    } else if (preset === 'YESTERDAY') {
+      const y = new Date(now);
+      y.setDate(y.getDate() - 1);
+      start = toYMD(y);
+      end = toYMD(y);
+    } else if (preset === 'LAST_7_DAYS') {
+      const s = new Date(now);
+      s.setDate(s.getDate() - 6);
+      start = toYMD(s);
+      end = toYMD(now);
+    } else if (preset === 'THIS_MONTH') {
+      const s = new Date(now.getFullYear(), now.getMonth(), 1);
+      const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      start = toYMD(s);
+      end = toYMD(e);
+    } else if (preset === 'LAST_MONTH') {
+      const s = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const e = new Date(now.getFullYear(), now.getMonth(), 0);
+      start = toYMD(s);
+      end = toYMD(e);
+    } else if (preset === 'CUSTOM') {
+      start = filterStartDate || '';
+      end = filterEndDate || '';
+    }
+    setFilterPreset(preset);
+    setFilterStartDate(start);
+    setFilterEndDate(end);
+    setLoading(true);
+    await fetchInvoices({ startDate: start || undefined, endDate: end || undefined });
+    if (!initial) {
+      toast.success('Invoices filtered');
+    }
+  };
+
+  const handleApplyCustom = async () => {
+    setFilterPreset('CUSTOM');
+    if (!filterStartDate || !filterEndDate) {
+      toast.error('Select both start and end dates');
+      return;
+    }
+    setLoading(true);
+    await fetchInvoices({ startDate: filterStartDate, endDate: filterEndDate });
+    toast.success('Invoices filtered');
+  };
+
+  const handleResetFilter = async () => {
+    setFilterPreset('LAST_7_DAYS');
+    setFilterStartDate('');
+    setFilterEndDate('');
+    setLoading(true);
+    await fetchInvoices({});
+    toast.success('Filter reset');
+  };
+
+  const toggleSelect = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const selectAllVisible = () => {
+    const next = new Set(selectedIds);
+    invoices.forEach(inv => next.add(inv._id));
+    setSelectedIds(next);
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  const fetchBatchDetails = async (ids) => {
+    const results = [];
+    for (const id of ids) {
+      try {
+        const res = await api.get(`/api/invoices/${id}`);
+        results.push(res.data);
+      } catch (e) {}
+    }
+    return results;
+  };
+
+  const handlePrintSelected = async () => {
+    if (selectedIds.size === 0) {
+      toast.error('Please select at least one invoice');
+      return;
+    }
+    const ids = Array.from(selectedIds);
+    const details = await fetchBatchDetails(ids);
+    if (details.length === 0) {
+      toast.error('No invoices loaded for printing');
+      return;
+    }
+    setPrintBatch(details);
+    setTimeout(() => {
+      window.print();
+    }, 150);
   };
 
   const handleViewInvoice = async (invoiceId) => {
@@ -146,6 +265,35 @@ const Invoices = () => {
         <p>View and manage all invoices</p>
       </div>
 
+      <div className="invoices-toolbar">
+        <div className="filters">
+          <div className="preset">
+            <FiFilter />
+            <select value={filterPreset} onChange={(e) => applyPreset(e.target.value)}>
+              <option value="TODAY">Today</option>
+              <option value="YESTERDAY">Yesterday</option>
+              <option value="LAST_7_DAYS">Last 7 Days</option>
+              <option value="THIS_MONTH">This Month</option>
+              <option value="LAST_MONTH">Last Month</option>
+              <option value="CUSTOM">Custom Range</option>
+            </select>
+          </div>
+          <div className="date-range">
+            <label><FiCalendar /> From</label>
+            <input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
+            <label>To</label>
+            <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
+            <button className="btn-primary" onClick={handleApplyCustom}>Apply</button>
+            <button onClick={handleResetFilter}>Reset</button>
+          </div>
+        </div>
+        <div className="batch-actions">
+          <button onClick={selectAllVisible}><FiCheckSquare /> Select All</button>
+          <button onClick={clearSelection}><FiSquare /> Clear</button>
+          <button className="btn-primary" onClick={handlePrintSelected}><FiPrinter /> Print Selected</button>
+        </div>
+      </div>
+
       {loading ? (
         <div className="loading">Loading invoices...</div>
       ) : (
@@ -160,6 +308,13 @@ const Invoices = () => {
                     <span className={`status-badge ${(invoice.dueAmount <= 0 ? 'Paid' : invoice.status).toLowerCase()}`}>
                       {invoice.dueAmount <= 0 ? 'Paid' : invoice.status}
                     </span>
+                    <label className="select-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(invoice._id)}
+                        onChange={() => toggleSelect(invoice._id)}
+                      />
+                    </label>
                   </div>
                   <div className="card-meta">
                     <span>{invoice.customer?.name || 'N/A'}</span>
@@ -458,6 +613,86 @@ const Invoices = () => {
             </div>
             {selectedInvoice.dueAmount > 0 && <p>Due: {formatCurrency(selectedInvoice.dueAmount)}</p>}
           </div>
+        </div>
+      )}
+
+      {printBatch.length > 0 && (
+        <div ref={batchPrintRef} className="invoice-print-batch" style={{ display: 'none' }}>
+          {printBatch.map((inv, idx) => (
+            <div key={inv._id} className="invoice-print-item">
+              <div className="print-invoice-header">
+                <h1>VSKK</h1>
+                <p className="shop-subtitle">Vaibhav Swarn Kala Kendra</p>
+                <p>INVOICE</p>
+              </div>
+              <div className="print-invoice-info">
+                <div>
+                  <p><strong>Invoice #:</strong> {inv.invoiceNumber}</p>
+                  <p><strong>Date:</strong> {formatDate(inv.createdAt)}</p>
+                </div>
+                <div>
+                  <p><strong>Bill To:</strong></p>
+                  <p>{inv.customer?.name || 'N/A'}</p>
+                  <p>{inv.customer?.phone || ''}</p>
+                </div>
+              </div>
+              <table className="print-invoice-table">
+                <thead>
+                  <tr>
+                    <th>SN</th>
+                    <th>Description</th>
+                    <th>HUID</th>
+                    <th>HSN/SAC</th>
+                    <th>Weight (g)</th>
+                    <th>Purity</th>
+                    <th>Rate</th>
+                    <th>Making</th>
+                    <th>Wastage</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(inv.items || []).map((item, i) => (
+                    <tr key={i}>
+                      <td>{i + 1}</td>
+                      <td>
+                        {item.product?.name || 'Product'}
+                        <br />
+                        <small>{item.product?.category}</small>
+                      </td>
+                      <td>{item.product?.huid || '-'}</td>
+                      <td>{item.product?.hsnCode || '7113'}</td>
+                      <td>{item.weight}</td>
+                      <td>{item.product?.purity || '22K'}</td>
+                      <td>{formatCurrency(item.rate)}</td>
+                      <td>{formatCurrency(item.makingCharge || 0)}</td>
+                      <td>{formatCurrency(item.wastage || 0)}</td>
+                      <td>{formatCurrency(item.subtotal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="print-invoice-totals">
+                <p><strong>Total Cart Value: {formatCurrency(inv.subtotal)}</strong></p>
+                <p>GST: {formatCurrency(inv.gst)}</p>
+                {inv.discount > 0 && <p>Discount: -{formatCurrency(inv.discount)}</p>}
+                <p className="total">Total: {formatCurrency(inv.total)}</p>
+                <div className="print-payment-details">
+                  <p><strong>Payment Details:</strong></p>
+                  <p>Payment Mode: {inv.paymentMode}</p>
+                  {inv.paymentDetails && (
+                    <>
+                      {inv.paymentDetails.cash > 0 && <p>Cash: {formatCurrency(inv.paymentDetails.cash)}</p>}
+                      {inv.paymentDetails.upi > 0 && <p>UPI: {formatCurrency(inv.paymentDetails.upi)}</p>}
+                      {inv.paymentDetails.card > 0 && <p>Card: {formatCurrency(inv.paymentDetails.card)}</p>}
+                    </>
+                  )}
+                  <p><strong>Total Paid: {formatCurrency(inv.paidAmount)}</strong></p>
+                </div>
+                {inv.dueAmount > 0 && <p>Due: {formatCurrency(inv.dueAmount)}</p>}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
