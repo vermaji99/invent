@@ -335,22 +335,36 @@ const Invoices = () => {
             {invoices.length === 0 ? (
               <div className="no-data">No invoices found</div>
             ) : (
-               invoices.map((invoice) => (
-                 <div className={`invoice-card ${selectedIds.has(invoice._id) ? 'selected' : ''}`} key={invoice._id}>
-                   <div className="card-header">
-                     <span className="invoice-number">{invoice.invoiceNumber}</span>
-                     <span className={`status-badge ${(invoice.dueAmount <= 0 ? 'Paid' : invoice.status).toLowerCase()}`}>
-                       {invoice.dueAmount <= 0 ? 'Paid' : invoice.status}
-                     </span>
-                     <label className="select-checkbox">
-                       <input
-                         type="checkbox"
-                         title="Select invoice"
-                         checked={selectedIds.has(invoice._id)}
-                         onChange={() => toggleSelect(invoice._id)}
-                       />
-                     </label>
-                   </div>
+              invoices.map((invoice) => (
+                <div
+                  className={`invoice-card ${selectedIds.has(invoice._id) ? 'selected' : ''}`}
+                  key={invoice._id}
+                  onClick={() => toggleSelect(invoice._id)}
+                  role="checkbox"
+                  aria-checked={selectedIds.has(invoice._id)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      toggleSelect(invoice._id);
+                    }
+                  }}
+                >
+                  <div className="card-header">
+                    <span className="invoice-number">{invoice.invoiceNumber}</span>
+                    <span className={`status-badge ${(invoice.dueAmount <= 0 ? 'Paid' : invoice.status).toLowerCase()}`}>
+                      {invoice.dueAmount <= 0 ? 'Paid' : invoice.status}
+                    </span>
+                    <label className="select-checkbox">
+                      <input
+                        type="checkbox"
+                        title="Select invoice"
+                        checked={selectedIds.has(invoice._id)}
+                        onChange={() => toggleSelect(invoice._id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </label>
+                  </div>
                   <div className="card-meta">
                     <span>{invoice.customer?.name || 'N/A'}</span>
                     <span>{formatDate(invoice.createdAt)}</span>
@@ -374,7 +388,7 @@ const Invoices = () => {
                       <button
                         className="btn-icon btn-payment"
                         title="Add Payment"
-                        onClick={() => handleOpenPayment(invoice._id)}
+                        onClick={(e) => { e.stopPropagation(); handleOpenPayment(invoice._id); }}
                         disabled={actionLoadingId === invoice._id}
                       >
                         {actionLoadingId === invoice._id ? <FiRefreshCw className="spin" /> : <FiDollarSign />}
@@ -383,7 +397,7 @@ const Invoices = () => {
                     <button
                       className="btn-icon"
                       title="View Invoice"
-                      onClick={() => handleViewInvoice(invoice._id)}
+                      onClick={(e) => { e.stopPropagation(); handleViewInvoice(invoice._id); }}
                       disabled={actionLoadingId === invoice._id}
                     >
                       {actionLoadingId === invoice._id ? <FiRefreshCw className="spin" /> : <FiEye />}
@@ -391,7 +405,7 @@ const Invoices = () => {
                     <button
                       className="btn-icon"
                       title="Download/Print Invoice"
-                      onClick={() => handleDownloadInvoice(invoice)}
+                      onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(invoice); }}
                       disabled={actionLoadingId === invoice._id}
                     >
                       {actionLoadingId === invoice._id ? <FiRefreshCw className="spin" /> : <FiDownload />}
