@@ -582,96 +582,138 @@
 }
 
 /* =========================
-   INVOICES TOOLBAR
+   TOOLBAR WRAPPER
    ========================= */
 
 .invoices-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(180deg, #0b1220, #060b16);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 /* =========================
-   FILTERS SECTION
+   LEFT : FILTERS
    ========================= */
 
 .invoices-toolbar .filters {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.75rem;
-  align-items: center;
 }
 
-.invoices-toolbar .filters .group {
+.filters .group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.4rem;
 }
 
-.invoices-toolbar .filters .group .label {
+.filters select,
+.filters input {
+  height: 36px;
+  padding: 0 0.75rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 0.85rem;
+  min-width: 140px;
+}
+
+.filters .group .label {
   font-size: 0.75rem;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
+  color: #9aa4b2;
   white-space: nowrap;
-}
-
-.invoices-toolbar .filters .group .label svg {
-  margin-right: 6px;
-}
-
-.invoices-toolbar .filters .group select,
-.invoices-toolbar .filters .group input,
-.invoices-toolbar .filters .group button {
-  height: 32px;
-  padding: 0 0.6rem;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  outline: none;
 }
 
 /* =========================
-   BATCH ACTIONS
+   MIDDLE : DATE ACTIONS
    ========================= */
 
-.invoices-toolbar .batch-actions {
+.toolbar-actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
-  align-items: center;
 }
 
-.invoices-toolbar .batch-actions .count {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-right: 0.5rem;
-  white-space: nowrap;
-}
-
-.invoices-toolbar .batch-actions button {
-  height: 32px;
-  padding: 0 0.6rem;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.toolbar-actions button {
+  height: 36px;
+  padding: 0 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
   cursor: pointer;
 }
 
-.invoices-toolbar .batch-actions .btn-primary {
-  background: var(--gold-primary);
-  border-color: var(--gold-primary);
+/* Primary Apply */
+.toolbar-actions .btn-apply {
+  background: linear-gradient(180deg, #f5c542, #e3b11f);
+  border-color: #f5c542;
   color: #000;
+  font-weight: 600;
+}
+
+/* Reset */
+.toolbar-actions .btn-reset {
+  opacity: 0.75;
+}
+
+/* =========================
+   RIGHT : BATCH / PRINT
+   ========================= */
+
+.batch-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.batch-actions .count {
+  font-size: 0.8rem;
+  color: #9aa4b2;
+}
+
+.batch-actions button {
+  height: 36px;
+  padding: 0 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+/* Print Highlight */
+.batch-actions .btn-print {
+  background: linear-gradient(180deg, #f5c542, #e3b11f);
+  border-color: #f5c542;
+  color: #000;
+  font-weight: 600;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 768px) {
+  .invoices-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters,
+  .toolbar-actions,
+  .batch-actions {
+    justify-content: space-between;
+  }
 }
 
 
@@ -719,26 +761,6 @@
   color: var(--gold-primary);
 }
 
-/* =========================
-   TABLET & DESKTOP
-   ========================= */
-
-@media (min-width: 768px) {
-  .invoices-toolbar {
-    align-items: center;
-  }
-}
-
-@media (min-width: 1024px) {
-  .invoices-toolbar {
-    flex-wrap: nowrap;
-  }
-
-  .invoices-toolbar .filters,
-  .invoices-toolbar .batch-actions {
-    flex-wrap: nowrap;
-  }
-}
 
 @media (min-width: 480px) {
   .invoice-card {
