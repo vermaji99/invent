@@ -587,16 +587,19 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 .invoices-toolbar .filters {
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 .invoices-toolbar .filters .group {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 .invoices-toolbar .filters .group .label {
   font-size: 0.8rem;
@@ -618,6 +621,7 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 .invoices-toolbar .batch-actions .count {
   color: var(--text-secondary);
@@ -646,6 +650,7 @@
 .select-checkbox input {
   width: 18px;
   height: 18px;
+  accent-color: var(--gold-primary);
 }
 
 .invoice-print-batch {
@@ -660,6 +665,23 @@
 }
 .invoice-print-item:last-child {
   page-break-after: avoid;
+}
+
+.invoice-card.selected {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.35), 0 8px 22px rgba(212, 175, 55, 0.18);
+}
+
+@media (min-width: 1024px) {
+  .invoices-toolbar {
+    flex-wrap: nowrap;
+  }
+  .invoices-toolbar .filters {
+    flex-wrap: nowrap;
+  }
+  .invoices-toolbar .batch-actions {
+    flex-wrap: nowrap;
+  }
 }
 @media (min-width: 480px) {
   .invoice-card {

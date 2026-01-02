@@ -295,6 +295,9 @@ const Invoices = () => {
             </select>
           </div>
           <div className="group">
+            <span className="label">Custom Range</span>
+          </div>
+          <div className="group">
             <label className="label"><FiCalendar /> From</label>
             <input
               type="text"
@@ -332,21 +335,22 @@ const Invoices = () => {
             {invoices.length === 0 ? (
               <div className="no-data">No invoices found</div>
             ) : (
-              invoices.map((invoice) => (
-                <div className="invoice-card" key={invoice._id}>
-                  <div className="card-header">
-                    <span className="invoice-number">{invoice.invoiceNumber}</span>
-                    <span className={`status-badge ${(invoice.dueAmount <= 0 ? 'Paid' : invoice.status).toLowerCase()}`}>
-                      {invoice.dueAmount <= 0 ? 'Paid' : invoice.status}
-                    </span>
-                    <label className="select-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(invoice._id)}
-                        onChange={() => toggleSelect(invoice._id)}
-                      />
-                    </label>
-                  </div>
+               invoices.map((invoice) => (
+                 <div className={`invoice-card ${selectedIds.has(invoice._id) ? 'selected' : ''}`} key={invoice._id}>
+                   <div className="card-header">
+                     <span className="invoice-number">{invoice.invoiceNumber}</span>
+                     <span className={`status-badge ${(invoice.dueAmount <= 0 ? 'Paid' : invoice.status).toLowerCase()}`}>
+                       {invoice.dueAmount <= 0 ? 'Paid' : invoice.status}
+                     </span>
+                     <label className="select-checkbox">
+                       <input
+                         type="checkbox"
+                         title="Select invoice"
+                         checked={selectedIds.has(invoice._id)}
+                         onChange={() => toggleSelect(invoice._id)}
+                       />
+                     </label>
+                   </div>
                   <div className="card-meta">
                     <span>{invoice.customer?.name || 'N/A'}</span>
                     <span>{formatDate(invoice.createdAt)}</span>
