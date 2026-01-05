@@ -1,13 +1,13 @@
 const SibApiV3Sdk = require("@sendinblue/client");
 
-const EMAIL_FROM = process.env.EMAIL_FROM;
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
-
 let apiInstance = null;
 let initialized = false;
 
 function initEmailService() {
   if (initialized) return;
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  const EMAIL_FROM = process.env.EMAIL_FROM;
+
   try {
     if (!BREVO_API_KEY) {
       console.error("[EmailService] BREVO_API_KEY missing");
@@ -20,7 +20,7 @@ function initEmailService() {
     apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
     apiInstance.setApiKey(
       SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
-      process.env.BREVO_API_KEY
+      BREVO_API_KEY
     );
     initialized = true;
     console.log("[EmailService] Brevo initialized");
@@ -40,6 +40,7 @@ async function sendEmail({ subject, html, to }) {
       return { ok: false, error: "Email service not initialized" };
     }
   }
+  const EMAIL_FROM = process.env.EMAIL_FROM;
   try {
     const payload = {
       sender: { email: EMAIL_FROM },
@@ -75,8 +76,36 @@ async function sendAdminOTP(email, otp) {
   return result;
 }
 
+function wrapHtml(title, body) {
+  return `
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+          h2 { color: #333; }
+        </style>
+      </head>
+      <body>
+        <h2>${title}</h2>
+        ${body}
+      </body>
+    </html>
+  `;
+}
+
+function table(headers, rows) {
+  const headerHtml = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+  const rowsHtml = rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+  return `<table><thead>${headerHtml}</thead><tbody>${rowsHtml}</tbody></table>`;
+}
+
 module.exports = {
   initEmailService,
   sendEmail,
-  sendAdminOTP
+  sendAdminOTP,
+  wrapHtml,
+  table
 };
