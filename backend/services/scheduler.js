@@ -44,13 +44,13 @@ function periodStartEnd(period) {
     const day = now.getDay();
     const diffToMonday = (day + 6) % 7;
     start = new Date(now);
-    start.setDate(now.getDate() - diffToMonday);
+    start.setDate(now.getDate() - diffToMonday - 7);
     start.setHours(0, 0, 0, 0);
     end = new Date(start);
     end.setDate(start.getDate() + 7);
   } else {
-    start = new Date(now.getFullYear(), now.getMonth(), 1);
-    end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    end = new Date(now.getFullYear(), now.getMonth(), 1);
   }
   return { start, end };
 }
@@ -123,8 +123,8 @@ async function runDeadlineScan() {
 
 function initScheduler() {
   cron.schedule('*/30 * * * *', runLowStockScan);
-  cron.schedule('0 8 * * 1', () => runPeriodReport('weekly'));
-  cron.schedule('0 8 1 * *', () => runPeriodReport('monthly'));
+  cron.schedule('0 10 * * 1', () => runPeriodReport('weekly'));
+  cron.schedule('0 10 1 * *', () => runPeriodReport('monthly'));
   cron.schedule('0 9 * * *', runDeadlineScan);
   cron.schedule('15 9 * * *', runPledgeReminders);
 }
