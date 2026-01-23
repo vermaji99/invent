@@ -55,8 +55,12 @@ router.post('/register', [
       }
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Register Error:', error);
+    // Handle duplicate key error just in case race condition
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+    res.status(500).json({ message: 'Server error during registration' });
   }
 });
 
@@ -109,8 +113,8 @@ router.post('/login', [
       }
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login Error:', error);
+    res.status(500).json({ message: 'Server error during login. Please try again later.' });
   }
 });
 
@@ -122,8 +126,8 @@ router.get('/me', auth, async (req, res) => {
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Auth Me Error:', error);
+    res.status(500).json({ message: 'Server error retrieving user details' });
   }
 });
 
