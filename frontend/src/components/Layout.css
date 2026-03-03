@@ -14,17 +14,19 @@
 
 .sidebar {
   width: 260px;
-  background: var(--bg-secondary);
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(15px);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
   position: fixed;
   height: calc(100vh - 60px);
   overflow-y: auto;
   z-index: 100;
   left: 0;
   top: 60px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
 }
 
 .sidebar.closed {
@@ -111,20 +113,21 @@
   padding: 1rem 1.5rem;
   color: var(--text-secondary);
   text-decoration: none;
-  transition: color 160ms ease, background 160ms ease;
+  transition: all 0.4s ease;
   border-left: 3px solid transparent;
   position: relative;
 }
 
 .nav-item:hover {
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.06);
   color: var(--gold-primary);
 }
 
 .nav-item.active {
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.06);
   color: var(--gold-primary);
   border-left-color: var(--gold-primary);
+  box-shadow: inset 4px 0 0 rgba(180,255,0,0.9), 0 0 20px rgba(180,255,0,0.15);
 }
 
 /* Premium active underline */
@@ -205,12 +208,14 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem;
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
 }
 
 .logout-btn:hover {

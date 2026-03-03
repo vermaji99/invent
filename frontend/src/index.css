@@ -5,21 +5,21 @@
 }
 
 :root {
-  --primary: #0B1C2D;
-  --gold-primary: #C9A227;
-  --gold-secondary: #B8962E;
-  --gold-dark: #B8962E;
-  --bg-primary: #050B18;
-  --bg-secondary: #0B1C2D;
-  --bg-tertiary: #11263C;
-  --text-primary: #E5E7EB;
-  --text-secondary: #9CA3AF;
-  --text-muted: #6B7280;
+  --primary: #0f0f0f;
+  --gold-primary: #b4ff00;
+  --gold-secondary: #7a5cff;
+  --gold-dark: #7a5cff;
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #b5b5b5;
+  --text-muted: #8a8a8a;
   --success: #1E7F5C;
   --danger: #991B1B;
   --warning: #D97706;
   --info: #0B1C2D;
-  --border-color: #1F2937;
+  --border-color: rgba(255,255,255,0.08);
 }
 
 body {
@@ -29,7 +29,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-primary);
+  background:
+    radial-gradient(600px circle at 12% 8%, rgba(180,255,0,0.08), transparent 60%),
+    radial-gradient(700px circle at 88% 22%, rgba(122,92,255,0.08), transparent 65%),
+    linear-gradient(180deg, #0f0f0f, #141414);
+  background-attachment: fixed;
   color: var(--text-primary);
 }
 
@@ -127,7 +131,7 @@ code {
   border-radius: 10px;
 }
 .btn-primary:hover {
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.25);
+  box-shadow: 0 0 0 3px rgba(180, 255, 0, 0.25);
 }
 .btn-secondary {
   background: transparent;
@@ -148,7 +152,7 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.25);
+  box-shadow: 0 0 0 3px rgba(180, 255, 0, 0.25);
 }
 
 /* Soft shake on HTML5 invalid inputs */
