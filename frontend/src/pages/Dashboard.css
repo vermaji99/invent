@@ -23,6 +23,10 @@
   letter-spacing: 0.5px;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateY(8px);
+  will-change: transform, opacity;
+  animation: heroIn 0.6s cubic-bezier(.22,1,.36,1) forwards;
 }
 
 .dashboard-header p {
@@ -47,10 +51,10 @@
   position: relative;
   overflow: visible;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(30px) scale(0.98);
   will-change: transform, opacity;
-  animation-name: fadeLift;
-  animation-duration: 0.65s;
+  animation-name: fadeSlideScale;
+  animation-duration: 0.6s;
   animation-timing-function: cubic-bezier(.22,1,.36,1);
   animation-fill-mode: both;
   animation-timeline: view();
@@ -92,10 +96,10 @@
   overflow: visible;
   box-sizing: border-box;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(30px) scale(0.98);
   will-change: transform, opacity;
-  animation-name: fadeLift;
-  animation-duration: 0.65s;
+  animation-name: fadeSlideScale;
+  animation-duration: 0.6s;
   animation-timing-function: cubic-bezier(.22,1,.36,1);
   animation-fill-mode: both;
   animation-timeline: view();
@@ -328,10 +332,10 @@
   position: relative;
   overflow: visible;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(30px) scale(0.98);
   will-change: transform, opacity;
-  animation-name: fadeLift;
-  animation-duration: 0.65s;
+  animation-name: fadeSlideScale;
+  animation-duration: 0.6s;
   animation-timing-function: cubic-bezier(.22,1,.36,1);
   animation-fill-mode: both;
   animation-timeline: view();
@@ -362,7 +366,7 @@
 .dashboard::after { content: none; }
 @keyframes gridShift {
   0% { background-position: 0 0, 0 0, 0 0, 0 0; }
-  50% { background-position: 10px 0, -10px 0, 0 8px, 0 -8px; }
+  50% { background-position: 6px 0, -6px 0, 0 4px, 0 -4px; }
   100% { background-position: 0 0, 0 0, 0 0, 0 0; }
 }
 @keyframes overlayTilt {
@@ -830,23 +834,25 @@
 }
 
 /* Scroll-driven fade + lift */
-@keyframes fadeLift {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fadeSlideScale {
+  from { opacity: 0; transform: translateY(30px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Staggered reveal within sections */
-.stats-grid .stat-card:nth-child(2) { animation-delay: 60ms; }
-.stats-grid .stat-card:nth-child(3) { animation-delay: 120ms; }
-.stats-grid .stat-card:nth-child(4) { animation-delay: 180ms; }
-.charts-grid .chart-card:nth-child(2) { animation-delay: 60ms; }
-.charts-grid .chart-card:nth-child(3) { animation-delay: 120ms; }
-.charts-grid .chart-card:nth-child(4) { animation-delay: 180ms; }
+.stats-grid .stat-card:nth-child(1) { animation-delay: 0ms; }
+.stats-grid .stat-card:nth-child(2) { animation-delay: 80ms; }
+.stats-grid .stat-card:nth-child(3) { animation-delay: 140ms; }
+.stats-grid .stat-card:nth-child(4) { animation-delay: 200ms; }
+.charts-grid .chart-card:nth-child(1) { animation-delay: 0ms; }
+.charts-grid .chart-card:nth-child(2) { animation-delay: 80ms; }
+.charts-grid .chart-card:nth-child(3) { animation-delay: 140ms; }
+.charts-grid .chart-card:nth-child(4) { animation-delay: 200ms; }
 
 /* Subtle background parallax on tech overlay */
 @keyframes techParallax {
   from { transform: translateY(0); }
-  to { transform: translateY(-24px); }
+  to { transform: translateY(-25px); }
 }
 .dashboard-tech-overlay {
   will-change: transform;
@@ -860,12 +866,17 @@
   .stat-card,
   .profit-card,
   .chart-card {
-    transform: translateY(10px);
+    transform: translateY(15px) scale(1);
   }
   .dashboard-tech-overlay {
     animation: none;
     transform: none;
   }
+}
+
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes sparklineFlow {
