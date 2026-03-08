@@ -433,7 +433,7 @@ const Dashboard = () => {
     { name: 'Investments', value: stats.moneyUsage.investments || 0 }
   ];
 
-  const COLORS = ['#D4AF37', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  const COLORS = ['#C6FF3A', '#7B61FF', '#FF9F43', '#FFD166', '#FF4D4D'];
 
   return (
     <div className="dashboard">
@@ -447,21 +447,22 @@ const Dashboard = () => {
       <div className="stats-grid">
         {moneyFlowCards.map((card, index) => {
           const Icon = card.icon;
+          const isCashCard = index === 0;
           return (
             <div
               key={index}
               className="stat-card"
-              style={{ borderTop: `4px solid ${card.color}`, cursor: index === 0 ? 'pointer' : 'default' }}
-              onClick={() => { if (index === 0) { setShowCashUsage(true); fetchCashLedger(); } }}
+              onClick={() => { if (isCashCard) { setShowCashUsage(true); fetchCashLedger(); } }}
             >
               <div className="stat-card-header">
-                <div className="stat-icon" style={{ backgroundColor: card.bgColor, color: card.color }}>
+                <div className="stat-icon">
                   <Icon />
                 </div>
               </div>
               <div className="stat-card-body">
                 <h3>{card.title}</h3>
-                <p className="stat-value" style={{ color: card.color }}>{card.value}</p>
+                <p className="stat-value">{card.value}</p>
+                {isCashCard && <p className="stat-change">Click to view ledger</p>}
               </div>
             </div>
           );
@@ -482,12 +483,17 @@ const Dashboard = () => {
                 fill="#8884d8"
                 paddingAngle={5}
                 dataKey="value"
+                stroke="none"
               >
                 {sourceData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => formatCurrency(value)} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                itemStyle={{ color: '#FFFFFF' }}
+                formatter={(value) => formatCurrency(value)} 
+              />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -497,11 +503,15 @@ const Dashboard = () => {
           <h3>Money Usage / Outflow</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={usageData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(value)} />
-              <Bar dataKey="value" fill="#ef4444" name="Amount (₹)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="name" stroke="#A0A0A0" />
+              <YAxis stroke="#A0A0A0" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                itemStyle={{ color: '#FFFFFF' }}
+                formatter={(value) => formatCurrency(value)} 
+              />
+              <Bar dataKey="value" fill="#7B61FF" radius={[6, 6, 0, 0]} name="Amount (₹)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -511,31 +521,25 @@ const Dashboard = () => {
       {/* Order Management Section */}
       {orderMetrics && (
         <>
-            <h2 className="section-title" style={{ marginTop: '2rem' }}>Order Management</h2>
+            <h2 className="section-title">Order Management</h2>
             
             {/* Delivery Alerts */}
             {deliveryAlerts.length > 0 && (
-                <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {deliveryAlerts.map(alert => (
-                        <div key={alert._id} style={{ 
-                            padding: '10px 15px', 
-                            borderRadius: '8px', 
-                            backgroundColor: new Date(alert.expectedDeliveryDate) < new Date() ? '#fee2e2' : '#fef3c7',
-                            color: new Date(alert.expectedDeliveryDate) < new Date() ? '#991b1b' : '#92400e',
-                            border: `1px solid ${new Date(alert.expectedDeliveryDate) < new Date() ? '#fecaca' : '#fde68a'}`,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <FiAlertCircle />
-                                <div>
-                                    <strong>{new Date(alert.expectedDeliveryDate) < new Date() ? 'Overdue' : 'Due Soon'}:</strong> Order #{alert.orderNumber} for {alert.customerDetails.name}
-                                </div>
-                            </div>
-                            <div>{new Date(alert.expectedDeliveryDate).toLocaleDateString()}</div>
-                        </div>
-                    ))}
+                <div style={{ marginBottom: '24px' }}>
+                    {deliveryAlerts.map(alert => {
+                        const isOverdue = new Date(alert.expectedDeliveryDate) < new Date();
+                        return (
+                          <div key={alert._id} className={`delivery-alert ${isOverdue ? 'delivery-alert-overdue' : 'delivery-alert-soon'}`}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <FiAlertCircle />
+                                  <div>
+                                      {isOverdue ? 'Overdue' : 'Due Soon'}: Order #{alert.orderNumber} for {alert.customerDetails.name}
+                                  </div>
+                              </div>
+                              <div>{new Date(alert.expectedDeliveryDate).toLocaleDateString()}</div>
+                          </div>
+                        );
+                    })}
                 </div>
             )}
 
@@ -549,21 +553,21 @@ const Dashboard = () => {
                 <div className="stat-card">
                    <div className="stat-card-body">
                       <h3>Pending Balance</h3>
-                      <p className="stat-value" style={{ color: '#ef4444' }}>{formatCurrency(orderMetrics.pendingBalance)}</p>
+                      <p className="stat-value" style={{ color: '#FF4D4D' }}>{formatCurrency(orderMetrics.pendingBalance)}</p>
                       <p className="stat-change">To be collected</p>
                    </div>
                 </div>
                 <div className="stat-card">
                    <div className="stat-card-body">
                       <h3>Total Advance</h3>
-                      <p className="stat-value" style={{ color: '#10b981' }}>{formatCurrency(orderMetrics.totalAdvance)}</p>
+                      <p className="stat-value" style={{ color: '#C6FF3A' }}>{formatCurrency(orderMetrics.totalAdvance)}</p>
                       <p className="stat-change">Collected</p>
                    </div>
                 </div>
                  <div className="stat-card">
                    <div className="stat-card-body">
                       <h3>Near Delivery</h3>
-                      <p className="stat-value" style={{ color: '#f59e0b' }}>{orderMetrics.nearDelivery}</p>
+                      <p className="stat-value" style={{ color: '#FF9F43' }}>{orderMetrics.nearDelivery}</p>
                       <p className="stat-change">Within 24 hours</p>
                    </div>
                 </div>
@@ -574,11 +578,13 @@ const Dashboard = () => {
                   <h3>Order Status Distribution</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={orderMetrics.statusCounts}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="_id" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#3b82f6" name="Orders" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="_id" stroke="#A0A0A0" />
+                      <YAxis stroke="#A0A0A0" />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                      />
+                      <Bar dataKey="count" fill="#C6FF3A" radius={[6, 6, 0, 0]} name="Orders" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -587,10 +593,10 @@ const Dashboard = () => {
       )}
 
       {/* Sales & Inventory Section */}
-      <h2 className="section-title" style={{ marginTop: '2rem' }}>Sales & Inventory</h2>
+      <h2 className="section-title">Sales & Inventory</h2>
       <div className="stats-grid">
         {pledgeMetrics && (
-          <div className="stat-card" style={{ cursor: 'pointer' }} onClick={fetchPledgeDetails}>
+          <div className="stat-card" onClick={fetchPledgeDetails}>
             <div className="stat-card-body">
               <h3>Active Pledged Amount</h3>
               <p className="stat-value">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(pledgeMetrics.totalActiveAmount || 0)}</p>
@@ -688,14 +694,14 @@ const Dashboard = () => {
         </div>
         <div className="stat-card" onClick={() => fetchWeightDetails('Gold')}>
            <div className="stat-card-body">
-              <h3>Total Gold Stock Weight</h3>
+              <h3>Gold Stock Weight</h3>
               <p className="stat-value"><CountUp value={(stats.weights?.gold || 0)} duration={700} format={(v) => `${v.toFixed(2)} g`} /></p>
               <p className="stat-change">Net weight × Quantity</p>
            </div>
         </div>
         <div className="stat-card" onClick={() => fetchWeightDetails('Silver')}>
            <div className="stat-card-body">
-              <h3>Total Silver Stock Weight</h3>
+              <h3>Silver Stock Weight</h3>
               <p className="stat-value"><CountUp value={(stats.weights?.silver || 0)} duration={700} format={(v) => `${v.toFixed(2)} g`} /></p>
               <p className="stat-change">Net weight × Quantity</p>
            </div>
@@ -704,27 +710,27 @@ const Dashboard = () => {
            <div className="stat-card-body">
               <h3>Old Gold Weight</h3>
               <p className="stat-value"><CountUp value={(stats.oldMetalWeights?.gold || 0)} duration={600} format={(v) => `${v.toFixed(2)} g`} /></p>
-              <p className="stat-change">Pending/Adjusted records</p>
+              <p className="stat-change">Pending/Adjusted</p>
            </div>
         </div>
         <div className="stat-card" onClick={() => fetchOldMetalDetails('Silver')}>
            <div className="stat-card-body">
               <h3>Old Silver Weight</h3>
               <p className="stat-value"><CountUp value={(stats.oldMetalWeights?.silver || 0)} duration={600} format={(v) => `${v.toFixed(2)} g`} /></p>
-              <p className="stat-change">Pending/Adjusted records</p>
+              <p className="stat-change">Pending/Adjusted</p>
            </div>
         </div>
         <div className="stat-card" onClick={fetchPendingDues}>
            <div className="stat-card-body">
               <h3>Pending Dues</h3>
-              <p className="stat-value text-red"><CountUp value={stats.pendingDues} duration={800} format={formatCurrency} /></p>
-              <p className="stat-change">Outstanding</p>
+              <p className="stat-value" style={{ color: '#FF4D4D' }}><CountUp value={stats.pendingDues} duration={800} format={formatCurrency} /></p>
+              <p className="stat-change">Outstanding invoices</p>
            </div>
         </div>
         <div className="stat-card" onClick={fetchLowStockDetails}>
            <div className="stat-card-body">
               <h3>Low Stock Alerts</h3>
-              <p className="stat-value" style={{ color: '#ef4444' }}>{stats.lowStock?.length || 0}</p>
+              <p className="stat-value" style={{ color: '#FF4D4D' }}>{stats.lowStock?.length || 0}</p>
               <p className="stat-change">Products below limit</p>
            </div>
         </div>
@@ -735,12 +741,16 @@ const Dashboard = () => {
           <h3>Sales Trend (Last 7 Days)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={stats.salesTrend}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="_id" />
-              <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(value)} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="_id" stroke="#A0A0A0" />
+              <YAxis stroke="#A0A0A0" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                itemStyle={{ color: '#FFFFFF' }}
+                formatter={(value) => formatCurrency(value)} 
+              />
               <Legend />
-              <Line type="monotone" dataKey="total" stroke="#D4AF37" strokeWidth={2} name="Sales (₹)" />
+              <Line type="monotone" dataKey="total" stroke="#C6FF3A" strokeWidth={3} dot={{ fill: '#C6FF3A', r: 4 }} activeDot={{ r: 6 }} name="Sales (₹)" />
             </LineChart>
           </ResponsiveContainer>
         </div>

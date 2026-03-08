@@ -391,18 +391,21 @@ const OrderCreate = () => {
 
         {/* Product Selection */}
         <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div className="tabs-header" style={{ display: 'flex', gap: '10px', marginBottom: '15px', borderBottom: '1px solid var(--border-color)' }}>
+          <div className="tabs-header" style={{ display: 'flex', gap: '10px', marginBottom: '15px', borderBottom: '1px solid var(--border-glass)' }}>
              <button 
                 className={`tab-btn ${activeTab === 'inventory' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('inventory')}
                 style={{
-                    padding: '10px 20px',
+                    padding: '12px 24px',
                     background: 'none',
                     border: 'none',
-                    borderBottom: activeTab === 'inventory' ? '2px solid var(--gold-primary)' : 'none',
-                    color: activeTab === 'inventory' ? 'var(--gold-primary)' : 'var(--text-secondary)',
+                    color: activeTab === 'inventory' ? 'var(--primary)' : 'var(--text-secondary)',
                     cursor: 'pointer',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
                 }}
              >
                 <FiSearch /> Inventory
@@ -411,13 +414,16 @@ const OrderCreate = () => {
                 className={`tab-btn ${activeTab === 'custom' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('custom')}
                 style={{
-                    padding: '10px 20px',
+                    padding: '12px 24px',
                     background: 'none',
                     border: 'none',
-                    borderBottom: activeTab === 'custom' ? '2px solid var(--gold-primary)' : 'none',
-                    color: activeTab === 'custom' ? 'var(--gold-primary)' : 'var(--text-secondary)',
+                    color: activeTab === 'custom' ? 'var(--primary)' : 'var(--text-secondary)',
                     cursor: 'pointer',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
                 }}
              >
                 <FiPlus /> Custom Design
@@ -436,9 +442,9 @@ const OrderCreate = () => {
               <div className="products-grid" style={{ overflowY: 'auto', flex: 1 }}>
                 {filteredProducts.map(product => (
                   <div key={product._id} className="product-card" onClick={() => openAddItemModal(product)}>
-                    <div style={{ fontWeight: 'bold' }}>{product.name}</div>
-                    <div style={{ fontSize: '0.9rem', color: '#666' }}>{product.sku}</div>
-                    <div style={{ marginTop: '5px', fontWeight: 'bold', color: '#2e7d32' }}>
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{product.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{product.sku}</div>
+                    <div className="price">
                       ₹{product.sellingPrice.toLocaleString()}
                     </div>
                   </div>
@@ -560,47 +566,49 @@ const OrderCreate = () => {
         <div className="cart-items">
           <div className="section-title" style={{ marginBottom: '8px' }}>Selected Items</div>
           {cart.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px' }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: '20px', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed var(--border-glass)' }}>
               No items in order
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="cart-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '8px' }}>Item</th>
-                  <th style={{ textAlign: 'left', padding: '8px' }}>Type</th>
-                  <th style={{ textAlign: 'right', padding: '8px' }}>Price</th>
-                  <th style={{ textAlign: 'center', padding: '8px' }}>Qty</th>
-                  <th style={{ textAlign: 'right', padding: '8px' }}>Total</th>
-                  <th style={{ textAlign: 'center', padding: '8px' }}>Action</th>
+                  <th style={{ textAlign: 'left' }}>Item</th>
+                  <th style={{ textAlign: 'left' }}>Type</th>
+                  <th style={{ textAlign: 'right' }}>Price</th>
+                  <th style={{ textAlign: 'center' }}>Qty</th>
+                  <th style={{ textAlign: 'right' }}>Total</th>
+                  <th style={{ textAlign: 'center' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {cart.map(item => (
-                  <tr key={item.isCustom ? item.tempId : item.product} style={{ borderTop: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '8px' }}>
+                  <tr key={item.isCustom ? item.tempId : item.product}>
+                    <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontWeight: 600 }}>{item.name}</span>
-                        {item.isCustom && <span style={{ fontSize: '0.7rem', background: 'var(--gold-secondary)', color: '#000', padding: '2px 6px', borderRadius: '4px' }}>Custom</span>}
+                        {item.isCustom && <span style={{ fontSize: '0.6rem', background: 'var(--primary)', color: '#000', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>Custom</span>}
                       </div>
                     </td>
-                    <td style={{ padding: '8px' }}>{item.isCustom ? 'Custom' : 'Inventory'}</td>
-                    <td style={{ padding: '8px', textAlign: 'right' }}>₹{item.price.toLocaleString()}</td>
-                    <td style={{ padding: '8px', textAlign: 'center' }}>
-                      <div className="qty-control" style={{ justifyContent: 'center' }}>
+                    <td><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{item.isCustom ? 'Custom' : 'Inventory'}</span></td>
+                    <td style={{ textAlign: 'right', fontWeight: '500' }}>₹{item.price.toLocaleString()}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <div className="qty-control" style={{ margin: '0 auto' }}>
                         <button className="qty-btn" onClick={() => updateQuantity(item, -1)}><FiMinus size={12}/></button>
-                        <span style={{ minWidth: 24, display: 'inline-block' }}>{item.quantity}</span>
+                        <span style={{ minWidth: 24, display: 'inline-block', fontWeight: '600' }}>{item.quantity}</span>
                         <button className="qty-btn" onClick={() => updateQuantity(item, 1)}><FiPlus size={12}/></button>
                       </div>
                     </td>
-                    <td style={{ padding: '8px', textAlign: 'right' }}>₹{(item.price * item.quantity).toLocaleString()}</td>
-                    <td style={{ padding: '8px', textAlign: 'center' }}>
-                      <button className="action-btn" onClick={() => openEditItem(item)} title="Edit item" style={{ marginRight: '6px' }}>
-                        <FiEdit />
-                      </button>
-                      <button className="action-btn" onClick={() => removeFromCart(item)} title="Remove item" style={{ color: 'var(--danger)' }}>
-                        Remove
-                      </button>
+                    <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--primary)' }}>₹{(item.price * item.quantity).toLocaleString()}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                        <button className="action-btn" onClick={() => openEditItem(item)} title="Edit item">
+                          <FiEdit size={14} />
+                        </button>
+                        <button className="action-btn" onClick={() => removeFromCart(item)} title="Remove item" style={{ color: '#FF4D4D' }}>
+                          <FiTrash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -704,11 +712,11 @@ const OrderCreate = () => {
           </div>
           <div className="summary-row">
             <span>Advance Paid</span>
-            <span style={{ color: '#2e7d32' }}>- ₹{Number(advanceAmount || 0).toLocaleString()}</span>
+            <span style={{ color: 'var(--primary)' }}>- ₹{Number(advanceAmount || 0).toLocaleString()}</span>
           </div>
           <div className="summary-row total-row">
             <span>Balance Due</span>
-            <span style={{ color: '#d32f2f' }}>₹{balanceAmount.toLocaleString()}</span>
+            <span style={{ color: '#FF4D4D' }}>₹{balanceAmount.toLocaleString()}</span>
           </div>
         </div>
 

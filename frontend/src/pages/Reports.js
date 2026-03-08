@@ -109,7 +109,18 @@ const Reports = () => {
     }).format(amount);
   };
 
-  const COLORS = ['#D4AF37', '#F4D03F', '#B8860B', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  const COLORS = ['#C6FF3A', '#7B61FF', '#FF9F43', '#FFD166', '#FF4D4D', '#00CFE8', '#1B2850'];
+
+  const chartTheme = {
+    grid: 'rgba(255, 255, 255, 0.05)',
+    text: 'rgba(255, 255, 255, 0.5)',
+    tooltip: {
+      backgroundColor: '#1A1A1A',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '12px',
+      color: '#FFFFFF'
+    }
+  };
 
   if (loading) {
     return <div className="loading">Loading reports...</div>;
@@ -172,181 +183,229 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Profit & Loss */}
-      {profitLoss && (
-        <div className="report-card">
-          <h2>Profit & Loss Report</h2>
-          <div className="pl-summary">
-            <div className="pl-item">
-              <span>Sales Revenue</span>
-              <span>{formatCurrency(profitLoss.sales.revenue)}</span>
+      <div className="reports-grid">
+        {/* Profit & Loss */}
+        {profitLoss && (
+          <div className="report-card pl-card">
+            <h2>Profit & Loss Report</h2>
+            <div className="pl-summary">
+              <div className="pl-item">
+                <span>Sales Revenue</span>
+                <span className="value">{formatCurrency(profitLoss.sales.revenue)}</span>
+              </div>
+              <div className="pl-item">
+                <span>Gross Profit</span>
+                <span className="value text-primary">{formatCurrency(profitLoss.sales.grossProfit)}</span>
+              </div>
+              <div className="pl-item">
+                <span>Operating Expenses</span>
+                <span className="value text-danger">{formatCurrency(profitLoss.expenses)}</span>
+              </div>
+              <div className="pl-item pl-profit">
+                <span>Net Profit</span>
+                <span className="value highlight">{formatCurrency(profitLoss.netProfit)}</span>
+              </div>
             </div>
-            <div className="pl-item">
-              <span>Cost of Goods Sold (COGS)</span>
-              <span>{formatCurrency(profitLoss.sales.cogs)}</span>
-            </div>
-            <div className="pl-item">
-              <span>Gross Profit</span>
-              <span className="text-green-600 font-bold">{formatCurrency(profitLoss.sales.grossProfit)}</span>
-            </div>
-            <div className="pl-item">
-              <span>Operating Expenses</span>
-              <span>{formatCurrency(profitLoss.expenses)}</span>
-            </div>
-            <div className="pl-item pl-profit">
-              <span>Net Profit</span>
-              <span>{formatCurrency(profitLoss.netProfit)}</span>
-            </div>
-            <div className="pl-item">
-              <span>Profit Margin</span>
-              <span>{profitLoss.profitMargin}%</span>
-            </div>
-          </div>
-          <div className="pl-details mt-4 text-sm text-gray-600 border-t pt-2">
-            <p><strong>Breakdown:</strong></p>
-            <div className="flex justify-between">
-              <span>Making Charges: {formatCurrency(profitLoss.sales.breakdown.makingCharges)}</span>
-              <span>Wastage: {formatCurrency(profitLoss.sales.breakdown.wastage)}</span>
-              <span>Discounts: {formatCurrency(profitLoss.sales.breakdown.discounts)}</span>
-            </div>
-            <div className="mt-2 text-xs text-gray-500">
-              * Total Purchases (Cash Flow): {formatCurrency(profitLoss.purchases)}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sales Chart */}
-      {salesData.length > 0 && (
-        <div className="report-card">
-          <h2>Sales Trend (Last 30 Days)</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={salesData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(value)} />
-              <Legend />
-              <Line type="monotone" dataKey="amount" stroke="#D4AF37" strokeWidth={2} name="Sales" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Stock Valuation */}
-      {stockValuation && (
-        <div className="report-card">
-          <h2>Stock Valuation</h2>
-          <div className="stock-summary">
-            <div className="stock-item">
-              <span>Total Stock Value</span>
-              <span>{formatCurrency(stockValuation.totalValue)}</span>
-            </div>
-            <div className="stock-item">
-              <span>Total Cost</span>
-              <span>{formatCurrency(stockValuation.totalCost)}</span>
-            </div>
-            <div className="stock-item">
-              <span>Potential Profit</span>
-              <span>{formatCurrency(stockValuation.potentialProfit)}</span>
+            
+            <div className="pl-breakdown">
+              <div className="breakdown-item">
+                <span>Making Charges</span>
+                <strong>{formatCurrency(profitLoss.sales.breakdown.makingCharges)}</strong>
+              </div>
+              <div className="breakdown-item">
+                <span>Wastage</span>
+                <strong>{formatCurrency(profitLoss.sales.breakdown.wastage)}</strong>
+              </div>
+              <div className="breakdown-item">
+                <span>Discounts</span>
+                <strong>{formatCurrency(profitLoss.sales.breakdown.discounts)}</strong>
+              </div>
+              <div className="breakdown-item total">
+                <span>Profit Margin</span>
+                <strong>{profitLoss.profitMargin}%</strong>
+              </div>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={stockValuation.byCategory}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="totalValue"
-              >
-                {stockValuation.byCategory.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => formatCurrency(value)} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+        )}
 
-      {/* Customer Arrears Chart */}
-      {customerArrears.length > 0 && (
-        <div className="report-card">
-          <h2>Top 10 Customer Arrears</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={customerArrears}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-              <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(value)} />
-              <Legend />
-              <Bar dataKey="amount" fill="#f59e0b" name="Outstanding Amount" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Aging Report */}
-      {aging && (
-        <div className="report-card">
-          <h2>Aging Report (Outstanding Dues)</h2>
-          <div className="aging-summary">
-            <div className="aging-group">
-              <h3>0-30 Days</h3>
-              <p className="aging-amount">{formatCurrency(aging['0-30'].reduce((sum, item) => sum + item.amount, 0))}</p>
-              <span>{aging['0-30'].length} invoices</span>
-            </div>
-            <div className="aging-group">
-              <h3>31-60 Days</h3>
-              <p className="aging-amount">{formatCurrency(aging['31-60'].reduce((sum, item) => sum + item.amount, 0))}</p>
-              <span>{aging['31-60'].length} invoices</span>
-            </div>
-            <div className="aging-group">
-              <h3>61-90 Days</h3>
-              <p className="aging-amount">{formatCurrency(aging['61-90'].reduce((sum, item) => sum + item.amount, 0))}</p>
-              <span>{aging['61-90'].length} invoices</span>
-            </div>
-            <div className="aging-group">
-              <h3>90+ Days</h3>
-              <p className="aging-amount aging-critical">{formatCurrency(aging['90+'].reduce((sum, item) => sum + item.amount, 0))}</p>
-              <span>{aging['90+'].length} invoices</span>
+        {/* Sales Chart */}
+        {salesData.length > 0 && (
+          <div className="report-card chart-card">
+            <h2>Sales Trend (Last 30 Days)</h2>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke={chartTheme.text} 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    stroke={chartTheme.text} 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tickFormatter={(value) => `₹${value/1000}k`}
+                  />
+                  <Tooltip 
+                    contentStyle={chartTheme.tooltip}
+                    itemStyle={{ color: '#C6FF3A' }}
+                    formatter={(value) => formatCurrency(value)} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke="#C6FF3A" 
+                    strokeWidth={3} 
+                    dot={{ r: 4, fill: '#C6FF3A', strokeWidth: 2, stroke: '#121212' }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    name="Sales" 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          
-          {/* Aging Details Table */}
-          <div className="aging-details">
-            {(aging['90+'].length > 0 || aging['61-90'].length > 0) && (
-              <div className="aging-table-section">
-                <h3>Critical Overdue Invoices (60+ Days)</h3>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Invoice</th>
-                      <th>Customer</th>
-                      <th>Amount</th>
-                      <th>Days Overdue</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...aging['61-90'], ...aging['90+']].map((item, idx) => (
-                      <tr key={idx}>
-                        <td>{item.invoice}</td>
-                        <td>{item.customer?.name || 'N/A'}</td>
-                        <td>{formatCurrency(item.amount)}</td>
-                        <td className={item.days > 90 ? 'critical' : ''}>{item.days} days</td>
-                      </tr>
+        )}
+
+        {/* Stock Valuation */}
+        {stockValuation && (
+          <div className="report-card pie-card">
+            <h2>Stock Valuation</h2>
+            <div className="stock-summary-small">
+              <div className="stock-item">
+                <span>Total Value</span>
+                <strong>{formatCurrency(stockValuation.totalValue)}</strong>
+              </div>
+              <div className="stock-item">
+                <span>Total Cost</span>
+                <strong>{formatCurrency(stockValuation.totalCost)}</strong>
+              </div>
+            </div>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={stockValuation.byCategory}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="totalValue"
+                  >
+                    {stockValuation.byCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
-                  </tbody>
-                </table>
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={chartTheme.tooltip}
+                    formatter={(value) => formatCurrency(value)} 
+                  />
+                  <Legend iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Customer Arrears Chart */}
+        {customerArrears.length > 0 && (
+          <div className="report-card chart-card">
+            <h2>Top 10 Customer Arrears</h2>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={customerArrears}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke={chartTheme.text} 
+                    fontSize={11} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={80}
+                  />
+                  <YAxis 
+                    stroke={chartTheme.text} 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={chartTheme.tooltip}
+                    itemStyle={{ color: '#FF9F43' }}
+                    formatter={(value) => formatCurrency(value)} 
+                  />
+                  <Bar dataKey="amount" fill="#FF9F43" radius={[4, 4, 0, 0]} name="Outstanding" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Aging Report */}
+        {aging && (
+          <div className="report-card aging-card">
+            <h2>Aging Report (Outstanding Dues)</h2>
+            <div className="aging-summary">
+              <div className="aging-group">
+                <span className="label">0-30 Days</span>
+                <span className="amount">{formatCurrency(aging['0-30'].reduce((sum, item) => sum + item.amount, 0))}</span>
+                <span className="count">{aging['0-30'].length} invoices</span>
+              </div>
+              <div className="aging-group">
+                <span className="label">31-60 Days</span>
+                <span className="amount">{formatCurrency(aging['31-60'].reduce((sum, item) => sum + item.amount, 0))}</span>
+                <span className="count">{aging['31-60'].length} invoices</span>
+              </div>
+              <div className="aging-group warning">
+                <span className="label">61-90 Days</span>
+                <span className="amount">{formatCurrency(aging['61-90'].reduce((sum, item) => sum + item.amount, 0))}</span>
+                <span className="count">{aging['61-90'].length} invoices</span>
+              </div>
+              <div className="aging-group danger">
+                <span className="label">90+ Days</span>
+                <span className="amount">{formatCurrency(aging['90+'].reduce((sum, item) => sum + item.amount, 0))}</span>
+                <span className="count">{aging['90+'].length} invoices</span>
+              </div>
+            </div>
+            
+            {/* Aging Details Table */}
+            {(aging['90+'].length > 0 || aging['61-90'].length > 0) && (
+              <div className="aging-details-table">
+                <h3>Critical Overdue Invoices (60+ Days)</h3>
+                <div className="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Invoice</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Days Overdue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...aging['61-90'], ...aging['90+']].map((item, idx) => (
+                        <tr key={idx}>
+                          <td>{item.invoice}</td>
+                          <td>{item.customer?.name || 'N/A'}</td>
+                          <td>{formatCurrency(item.amount)}</td>
+                          <td className={item.days > 90 ? 'critical' : 'warning'}>{item.days} days</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

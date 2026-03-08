@@ -114,7 +114,7 @@ const Orders = () => {
                     <td>{new Date(order.expectedDeliveryDate).toLocaleDateString()}</td>
                     <td>₹{order.totalAmount.toLocaleString()}</td>
                     <td>₹{order.advanceAmount.toLocaleString()}</td>
-                    <td style={{ fontWeight: 'bold', color: order.remainingAmount > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                    <td style={{ fontWeight: 'bold', color: order.remainingAmount > 0 ? '#FF4D4D' : 'var(--primary)' }}>
                       ₹{order.remainingAmount.toLocaleString()}
                     </td>
                     <td>

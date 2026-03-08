@@ -2,6 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg-main);
 }
 
 .layout-container {
@@ -13,20 +14,20 @@
 }
 
 .sidebar {
-  width: 260px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-  backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255,255,255,0.06);
+  width: 280px;
+  background: var(--bg-panel-gradient);
+  border-right: 1px solid var(--border-glass);
   display: flex;
   flex-direction: column;
-  transition: all 0.4s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: fixed;
   height: calc(100vh - 60px);
   overflow-y: auto;
   z-index: 100;
   left: 0;
   top: 60px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  backdrop-filter: blur(20px);
+  box-shadow: 20px 0 50px rgba(0,0,0,0.3);
 }
 
 .sidebar.closed {
@@ -38,7 +39,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-glass);
 }
 
 .logo {
@@ -48,17 +49,21 @@
   white-space: nowrap;
   overflow: hidden;
 }
+
 .brand-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--gold-primary);
-  letter-spacing: 0.8px;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: -1px;
+  text-shadow: 0 0 20px rgba(198, 255, 58, 0.3);
 }
+
 .brand-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   color: var(--text-secondary);
-  font-style: italic;
-  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.6;
 }
 
 .sidebar.closed .logo {
@@ -66,120 +71,115 @@
 }
 
 .sidebar-toggle {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
   color: var(--text-primary);
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
 }
 
-.search-bar {
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-tertiary);
-  margin: 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-}
-
-.search-bar input {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  outline: none;
-  font-size: 0.9rem;
-}
-
-.sidebar.closed .search-bar {
-  display: none;
+.sidebar-toggle:hover {
+  background: var(--primary);
+  color: #000;
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(198, 255, 58, 0.4);
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 1rem 0;
+  padding: 1.5rem 1rem;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
+  gap: 1.25rem;
+  padding: 12px 16px;
   color: var(--text-secondary);
   text-decoration: none;
-  transition: all 0.4s ease;
-  border-left: 3px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 14px;
+  margin-bottom: 8px;
   position: relative;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .nav-item:hover {
-  background: rgba(255,255,255,0.06);
-  color: var(--gold-primary);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  transform: translateX(4px);
 }
 
 .nav-item.active {
-  background: rgba(255,255,255,0.06);
-  color: var(--gold-primary);
-  border-left-color: var(--gold-primary);
-  box-shadow: inset 4px 0 0 rgba(124,255,146,0.9), 0 0 20px rgba(124,255,146,0.12);
+  background: rgba(198, 255, 58, 0.1);
+  color: var(--primary);
+  font-weight: 700;
 }
 
-/* Premium active underline */
-.nav-item::after {
+.nav-item.active::before {
   content: '';
   position: absolute;
-  left: 1.5rem;
-  bottom: 0.6rem;
-  height: 2px;
-  width: 0%;
-  background: var(--gold-primary);
-  transform-origin: left center;
-  transition: width 180ms ease;
-  opacity: 0.8;
-}
-.nav-item.active::after,
-.nav-item:hover::after {
-  width: calc(100% - 3rem);
+  left: -1rem;
+  top: 15%;
+  height: 70%;
+  width: 4px;
+  background: var(--primary);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 15px var(--primary);
 }
 
 .nav-item svg {
-  font-size: 1.25rem;
-  min-width: 20px;
+  font-size: 1.3rem;
+  min-width: 24px;
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover svg {
+  transform: scale(1.1);
+  color: var(--primary);
 }
 
 .sidebar.closed .nav-item span {
   display: none;
 }
 
+.sidebar.closed .nav-item {
+  justify-content: center;
+  padding: 12px;
+}
+
 .sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid var(--border-color);
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-glass);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--gold-primary);
-  color: var(--bg-primary);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--primary);
+  color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  font-weight: 800;
   font-size: 1.1rem;
+  box-shadow: 0 5px 15px rgba(198, 255, 58, 0.3);
 }
 
 .user-details {
@@ -187,15 +187,18 @@
 }
 
 .user-name {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
 }
 
 .user-role {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-transform: capitalize;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.6;
 }
 
 .sidebar.closed .user-details {
@@ -206,21 +209,30 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 12px;
+  background: rgba(255, 77, 77, 0.08);
+  border: 1px solid rgba(255, 77, 77, 0.2);
+  border-radius: 14px;
+  color: #FF4D4D;
   cursor: pointer;
-  transition: all 0.4s ease;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  transition: all 0.3s ease;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .logout-btn:hover {
-  background: var(--danger);
-  border-color: var(--danger);
+  background: #FF4D4D;
+  color: white;
+  border-color: #FF4D4D;
+  box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3);
+}
+
+.sidebar.closed .logout-btn {
+  padding: 12px;
 }
 
 .sidebar.closed .logout-btn span {
@@ -229,52 +241,45 @@
 
 .main-content {
   flex: 1;
-  margin-left: 260px;
-  padding: 2rem;
+  margin-left: 280px;
+  padding: 2.5rem;
   overflow-x: hidden;
   min-width: 0;
+  background: var(--bg-main);
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar.closed ~ .main-content {
   margin-left: 80px;
 }
 
-@media (max-width: 1199.98px) {
-  .main-content {
-    margin-left: 80px;
-  }
-}
-
 /* Mobile Header */
 .mobile-header {
   display: none;
   height: 60px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-panel-gradient);
+  border-bottom: 1px solid var(--border-glass);
   align-items: center;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
   position: fixed;
-  top: 60px; /* Below GoldPriceBar */
+  top: 60px;
   left: 0;
   right: 0;
   z-index: 90;
+  backdrop-filter: blur(10px);
 }
 
 .mobile-sidebar-toggle {
-  background: none;
-  border: none;
-  color: var(--gold-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--primary);
   font-size: 1.5rem;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
   margin-right: 1rem;
   display: flex;
   align-items: center;
-}
-
-.mobile-logo {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
 }
 
 .sidebar-overlay {
@@ -284,15 +289,29 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 95; /* Below sidebar (100) */
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 95;
+  backdrop-filter: blur(8px);
 }
 
-/* Responsive Styles */
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 80px;
+  }
+  .sidebar .logo, .sidebar .nav-item span, .sidebar .user-details, .sidebar .logout-btn span {
+    display: none;
+  }
+  .sidebar .nav-item {
+    justify-content: center;
+  }
+  .main-content {
+    margin-left: 80px;
+  }
+}
+
 @media (max-width: 768px) {
   .layout-container {
-    margin-top: 120px; /* 60px GoldPriceBar + 60px MobileHeader */
+    margin-top: 120px;
   }
 
   .mobile-header {
@@ -303,40 +322,16 @@
     top: 0;
     height: 100vh;
     transform: translateX(-100%);
-    z-index: 1100; /* Above GoldPriceBar (1000) */
-    width: 260px !important; /* Force full width when open */
+    z-index: 1100;
+    width: 280px !important;
   }
 
   .sidebar.open {
     transform: translateX(0);
   }
 
-  .sidebar-toggle {
-    display: none; /* Hide toggle inside sidebar on mobile */
-  }
-
   .main-content {
     margin-left: 0 !important;
-    padding: 1rem;
-    width: 100%;
-    min-width: 0;
+    padding: 1.5rem;
   }
-
-  .sidebar-overlay {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1050; /* Above GoldPriceBar */
-    backdrop-filter: blur(2px);
-  }
-  
-  /* Adjust GoldPriceBar to not cover mobile header? 
-     Actually GoldPriceBar is fixed top 0 height 60px.
-     MobileHeader is fixed top 60px height 60px.
-     So layout-container needs margin-top 120px.
-  */
 }

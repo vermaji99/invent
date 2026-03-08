@@ -55,62 +55,124 @@ const PledgeDetail = () => {
           <h1>Pledge Detail</h1>
           <p>Receipt: {pledge.receiptNumber}</p>
         </div>
-        <button className="btn" onClick={() => navigate('/pledges')}>
+        <button className="btn-secondary" onClick={() => navigate('/pledges')}>
           <FiArrowLeft /> Back
         </button>
       </div>
 
-      <div className="pledge-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div>
+      <div className="pledge-card detail-card">
+        <div className="detail-header">
+          <div className="customer-info">
             <h3>{pledge.customer?.name}</h3>
-            <p>{pledge.customer?.phone} • {pledge.customer?.email}</p>
-            <p>{pledge.customer?.address}</p>
-            <p>ID: {pledge.customer?.governmentId}</p>
+            <p className="contact-info">{pledge.customer?.phone} • {pledge.customer?.email}</p>
+            <p className="address-info">{pledge.customer?.address}</p>
+            <p className="id-info">Government ID: <strong>{pledge.customer?.governmentId}</strong></p>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          <div className="status-info">
             <div className={`status-badge ${pledge.status.toLowerCase()}`}>{pledge.status}</div>
-            <div style={{ marginTop: 6 }}>
-              <div><strong>Loan:</strong> {formatCurrency(pledge.loan?.amountGiven)}</div>
-              <div><strong>Interest:</strong> {formatCurrency(pledge.totalInterest)}</div>
-              <div><strong>Payable:</strong> {formatCurrency(pledge.totalPayable)}</div>
-              <div><strong>Remaining:</strong> {pledge.remainingDays} day(s)</div>
+            <div className="loan-summary">
+              <div className="summary-row">
+                <span>Loan Amount:</span>
+                <strong>{formatCurrency(pledge.loan?.amountGiven)}</strong>
+              </div>
+              <div className="summary-row">
+                <span>Interest:</span>
+                <strong>{formatCurrency(pledge.totalInterest)}</strong>
+              </div>
+              <div className="summary-row total">
+                <span>Total Payable:</span>
+                <strong>{formatCurrency(pledge.totalPayable)}</strong>
+              </div>
+              <div className="summary-row highlight">
+                <span>Remaining:</span>
+                <strong>{pledge.remainingDays} day(s)</strong>
+              </div>
             </div>
           </div>
         </div>
-        <hr />
-        <div className="form-grid">
-          <div>
-            <h4>Gold</h4>
-            <p>Item: {pledge.gold?.itemName}</p>
-            <p>Gross: {pledge.gold?.grossWeight}g</p>
-            <p>Net: {pledge.gold?.netWeight}g</p>
-            <p>Purity: {pledge.gold?.purity}</p>
-            <p>Valuation: {formatCurrency(pledge.gold?.valuationAmount)}</p>
-            <p>Damage: {pledge.gold?.damageStatus}</p>
-            {pledge.gold?.itemPhotoUrl && <a href={pledge.gold.itemPhotoUrl} target="_blank" rel="noreferrer">View Item Photo</a>}
+
+        <div className="detail-sections">
+          <div className="detail-section">
+            <h4><FiCheckCircle /> Gold Details</h4>
+            <div className="section-grid">
+              <div className="grid-item">
+                <span>Item Name:</span>
+                <strong>{pledge.gold?.itemName}</strong>
+              </div>
+              <div className="grid-item">
+                <span>Gross Weight:</span>
+                <strong>{pledge.gold?.grossWeight}g</strong>
+              </div>
+              <div className="grid-item">
+                <span>Net Weight:</span>
+                <strong>{pledge.gold?.netWeight}g</strong>
+              </div>
+              <div className="grid-item">
+                <span>Purity:</span>
+                <strong>{pledge.gold?.purity}</strong>
+              </div>
+              <div className="grid-item">
+                <span>Valuation:</span>
+                <strong>{formatCurrency(pledge.gold?.valuationAmount)}</strong>
+              </div>
+              <div className="grid-item">
+                <span>Damage:</span>
+                <strong>{pledge.gold?.damageStatus}</strong>
+              </div>
+            </div>
+            {pledge.gold?.itemPhotoUrl && (
+              <a href={pledge.gold.itemPhotoUrl} className="view-photo-btn" target="_blank" rel="noreferrer">
+                View Item Photo
+              </a>
+            )}
           </div>
-          <div>
-            <h4>Loan</h4>
-            <p>Interest Type: {pledge.loan?.interestPeriod === 'day' ? 'Per Day' : 'Per Month'}</p>
-            <p>Rate Mode: {pledge.loan?.interestUnit === 'amount' ? '₹' : '%'}</p>
-            <p>Interest Rate: {pledge.loan?.interestRate}</p>
-            <p>Start: {new Date(pledge.loan?.startDate).toLocaleDateString('en-IN')}</p>
-            <p>End: {new Date(pledge.loan?.endDate).toLocaleDateString('en-IN')}</p>
-            {pledge.loan?.lateExtraPerDay > 0 && <p>Late Extra: ₹{pledge.loan.lateExtraPerDay}/day</p>}
+
+          <div className="detail-section">
+            <h4><FiAlertTriangle /> Loan Details</h4>
+            <div className="section-grid">
+              <div className="grid-item">
+                <span>Interest Type:</span>
+                <strong>{pledge.loan?.interestPeriod === 'day' ? 'Per Day' : 'Per Month'}</strong>
+              </div>
+              <div className="grid-item">
+                <span>Rate Mode:</span>
+                <strong>{pledge.loan?.interestUnit === 'amount' ? '₹' : '%'}</strong>
+              </div>
+              <div className="grid-item">
+                <span>Interest Rate:</span>
+                <strong>{pledge.loan?.interestRate}</strong>
+              </div>
+              <div className="grid-item">
+                <span>Start Date:</span>
+                <strong>{new Date(pledge.loan?.startDate).toLocaleDateString('en-IN')}</strong>
+              </div>
+              <div className="grid-item">
+                <span>End Date:</span>
+                <strong>{new Date(pledge.loan?.endDate).toLocaleDateString('en-IN')}</strong>
+              </div>
+              {pledge.loan?.lateExtraPerDay > 0 && (
+                <div className="grid-item highlight">
+                  <span>Late Extra:</span>
+                  <strong>₹{pledge.loan.lateExtraPerDay}/day</strong>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="pledge-actions" style={{ marginTop: 12 }}>
-        <button className="btn-icon" title="Print" onClick={() => window.print()} disabled={updating}>
-          {updating ? <FiAlertTriangle className="spin" /> : <FiPrinter />}
-        </button>
-        <button className="btn-icon" title="Download" onClick={() => window.print()} disabled={updating}>
-          {updating ? <FiAlertTriangle className="spin" /> : <FiDownload />}
-        </button>
+      <div className="pledge-actions-bar">
+        <div className="action-group">
+          <button className="btn-icon" title="Print" onClick={() => window.print()} disabled={updating}>
+            {updating ? <FiAlertTriangle className="spin" /> : <FiPrinter />}
+          </button>
+          <button className="btn-icon" title="Download" onClick={() => window.print()} disabled={updating}>
+            {updating ? <FiAlertTriangle className="spin" /> : <FiDownload />}
+          </button>
+        </div>
+        
         {pledge.status === 'Active' && (
-          <button className="btn-primary" onClick={async () => {
+          <button className="btn-primary redeem-btn" onClick={async () => {
             if (updating) return;
             setUpdating(true);
             try {
@@ -123,7 +185,7 @@ const PledgeDetail = () => {
               setUpdating(false);
             }
           }}>
-            <FiCheckCircle /> Redeem
+            <FiCheckCircle /> Redeem Gold
           </button>
         )}
       </div>

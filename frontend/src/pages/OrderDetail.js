@@ -217,7 +217,7 @@ const OrderDetail = () => {
         <div className="order-title">
           <h2>
              Order #{order.orderNumber}
-             <span className={`status-badge status-${order.orderStatus.toLowerCase()}`} style={{ fontSize: '0.9rem', marginLeft: '10px' }}>
+             <span className={`status-badge status-${order.orderStatus.toLowerCase()}`} style={{ marginLeft: '15px' }}>
                 {order.orderStatus.replace('_', ' ')}
              </span>
           </h2>
@@ -299,26 +299,28 @@ const OrderDetail = () => {
                       {order.items.map((item, idx) => (
                           <tr key={idx}>
                               <td>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                       {resolveImageUrl(item) && (
                                         <img
                                           src={resolveImageUrl(item)}
                                           alt={item.name}
-                                          style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border-color)', cursor: 'zoom-in' }}
+                                          style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border-glass)', cursor: 'zoom-in', background: 'rgba(255,255,255,0.02)' }}
                                           onClick={() => setPreviewImage(resolveImageUrl(item))}
                                         />
                                       )}
-                                      <span style={{ fontWeight: '500' }}>{item.name}</span>
-                                      {order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'CANCELLED' && (
-                                        <button 
-                                          className="btn btn-secondary" 
-                                          style={{ padding: '4px 8px' }} 
-                                          onClick={() => openEditItem(item)}
-                                          title="Edit item"
-                                        >
-                                          <FiEdit /> Edit
-                                        </button>
-                                      )}
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '1rem' }}>{item.name}</span>
+                                        {order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'CANCELLED' && (
+                                          <button 
+                                            className="btn btn-secondary" 
+                                            style={{ padding: '4px 10px', fontSize: '0.75rem', width: 'fit-content' }} 
+                                            onClick={() => openEditItem(item)}
+                                            title="Edit item"
+                                          >
+                                            <FiEdit size={12} /> Edit
+                                          </button>
+                                        )}
+                                      </div>
                                   </div>
                               </td>
                               <td>
@@ -412,17 +414,17 @@ const OrderDetail = () => {
                 </div>
                 <div className="info-row">
                     <span className="info-label">Advance Paid</span>
-                    <span className="info-value" style={{ color: 'var(--success)' }}>- ₹{advancePaid.toLocaleString()}</span>
+                    <span className="info-value" style={{ color: 'var(--primary)' }}>- ₹{advancePaid.toLocaleString()}</span>
                 </div>
                 <div className="info-row">
                     <span className="info-label">Paid Since</span>
-                    <span className="info-value" style={{ color: 'var(--success)' }}>
+                    <span className="info-value" style={{ color: 'var(--primary)' }}>
                         - ₹{paidSince.toLocaleString()}
                     </span>
                 </div>
-                <div className="info-row" style={{ marginTop: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
+                <div className="info-row" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1rem' }}>
                     <span className="info-label" style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>Balance Due</span>
-                    <span className="info-value" style={{ fontWeight: 'bold', color: order.remainingAmount > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                    <span className="info-value" style={{ fontWeight: 'bold', fontSize: '1.2rem', color: order.remainingAmount > 0 ? '#FF4D4D' : 'var(--primary)' }}>
                         ₹{order.remainingAmount.toLocaleString()}
                     </span>
                 </div>
