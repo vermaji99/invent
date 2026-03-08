@@ -17,35 +17,15 @@ router.get('/live', async (req, res) => {
       req.query.api_key ||
       req.headers['x-api-key'] ||
       process.env.METALS_DEV_API_KEY ||
+      req.headers['x-api-key'] ||
       process.env.REACT_APP_METALS_DEV_API_KEY ||
       null;
 
-    if (!apiKey) {
-      const latest = await GoldPrice.getLatest();
-      const fallback = {
-        source: 'fallback',
-        currency: 'INR',
-        unit: 'g',
-        spot: {
-          gold: null,
-          silver: null,
-          platinum: null,
-          palladium: null
-        },
-        gold_rates: latest
-          ? {
-              '24k': Number((latest.rate24K || 0).toFixed(2)),
-              '22k': Number(((latest.rate24K || 0) * 0.916).toFixed(2)),
-              '18k': Number(((latest.rate24K || 0) * 0.75).toFixed(2))
-            }
-          : null
-      };
-      metalsLiveCache = { data: fallback, timestamp: now };
-      return res.json(fallback);
-    }
-
     let response;
     try {
+      if (!apiKey) {
+        throw new Error('No API key provided');
+      }
       response = await axios.get('https://api.metals.dev/v1/latest', {
         params: {
           api_key: apiKey,
@@ -57,6 +37,7 @@ router.get('/live', async (req, res) => {
         }
       });
     } catch (apiError) {
+      console.error('Metals API Error:', apiError.message);
       const latest = await GoldPrice.getLatest();
       const fallback = {
         source: 'fallback',

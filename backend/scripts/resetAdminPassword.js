@@ -10,37 +10,38 @@ const resetAdminPassword = async () => {
 
     console.log('✅ Connected to MongoDB');
 
-    // Find admin user
-    const admin = await User.findOne({ email: 'admin@jewellery.com' });
+    const email = 'shubhamverma66133@gmail.com';
+    const password = 'Radha09@';
 
-    if (!admin) {
-      console.log('❌ Admin user not found. Creating new admin...');
+    // Find user
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      console.log(`❌ User ${email} not found. Creating new admin...`);
       
-      // Create admin user (password will be hashed by pre-save hook)
-      const newAdmin = new User({
-        name: 'Admin',
-        email: 'admin@jewellery.com',
-        password: 'admin123', // Will be hashed automatically
+      user = new User({
+        name: 'Shubham Verma',
+        email: email,
+        password: password,
         role: 'admin',
         isActive: true
       });
-      await newAdmin.save();
-      console.log('✅ Admin user created successfully!');
+      await user.save();
+      console.log('✅ User created successfully!');
     } else {
-      console.log('✅ Admin user found. Resetting password...');
+      console.log(`✅ User ${email} found. Resetting password and activating...`);
       
-      // Reset password (will be hashed by pre-save hook)
-      // Mark password as modified to trigger hashing
-      admin.password = 'admin123';
-      admin.isActive = true;
-      admin.markModified('password'); // Ensure pre-save hook runs
-      await admin.save();
-      console.log('✅ Admin password reset successfully!');
+      user.password = password;
+      user.isActive = true;
+      user.role = 'admin'; // Ensure it's admin
+      user.markModified('password');
+      await user.save();
+      console.log('✅ Password reset successfully!');
     }
 
-    // Verify the password
-    const verifyAdmin = await User.findOne({ email: 'admin@jewellery.com' });
-    const isMatch = await verifyAdmin.comparePassword('admin123');
+    // Verify
+    const verifyUser = await User.findOne({ email });
+    const isMatch = await verifyUser.comparePassword(password);
     
     if (isMatch) {
       console.log('✅ Password verification successful!');
@@ -48,9 +49,8 @@ const resetAdminPassword = async () => {
       console.log('❌ Password verification failed!');
     }
 
-    console.log('\n📧 Email: admin@jewellery.com');
-    console.log('🔑 Password: admin123');
-    console.log('⚠️  Please change the password after first login!\n');
+    console.log(`\n📧 Email: ${email}`);
+    console.log(`🔑 Password: ${password}\n`);
 
     process.exit(0);
   } catch (error) {
