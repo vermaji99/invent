@@ -147,13 +147,13 @@
 .product-card {
   background: var(--bg-panel-gradient);
   border-radius: 16px;
-  padding: 14px;
+  padding: 12px;
   border: 1px solid var(--border-glass);
   transition: var(--transition);
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 420px; /* Reduced from 520px for a more compact professional look */
+  min-height: 380px;
   backdrop-filter: blur(10px);
   overflow: hidden;
 }
@@ -166,11 +166,11 @@
 
 .product-image-container {
   width: 100%;
-  aspect-ratio: 1.1/1; /* Slightly less tall image container */
+  aspect-ratio: 1/1;
   background: #121417;
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -240,10 +240,10 @@
 .product-meta {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px; /* Reduced gap for compactness */
-  padding: 12px 0;
+  gap: 6px;
+  padding: 10px 0;
   border-top: 1px solid var(--border-glass);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .meta-item {
