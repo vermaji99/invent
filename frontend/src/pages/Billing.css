@@ -577,7 +577,7 @@
 
 .action-buttons .btn-save {
   background: var(--primary);
-  color: var(--bg-dark);
+  color: black;
   padding: 12px 15px;
   border-radius: 10px;
   font-weight: 700;
