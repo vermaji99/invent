@@ -325,7 +325,7 @@
 }
 
 @media (max-width: 1024px) {
-  .suppliers-grid {
+  .suppliers-page .suppliers-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }

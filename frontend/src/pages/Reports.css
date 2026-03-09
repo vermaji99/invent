@@ -286,7 +286,7 @@
 }
 
 @media (max-width: 1024px) {
-  .reports-grid {
+  .reports-page .reports-grid {
     grid-template-columns: 1fr;
   }
   

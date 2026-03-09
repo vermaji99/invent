@@ -254,7 +254,7 @@
     min-width: 0;
   }
 
-  .orders-table-container {
+  .orders-container .orders-table-container {
     overflow-x: auto;
     margin: 0 -1rem;
     padding: 0 1rem;

@@ -350,7 +350,7 @@
     display: flex;
   }
 
-  .main-content {
+  .layout-container .main-content {
     margin-left: 0 !important;
     padding: 1.5rem;
   }
