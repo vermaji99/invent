@@ -632,37 +632,22 @@ const Billing = () => {
         <p>Create new invoices and process sales</p>
       </div>
 
-      <div className="billing-container">
-        {/* Scanner Input (Always Focused) */}
-        <input
-          ref={scannerInputRef}
-          type="text"
-          className="scanner-input"
-          placeholder={isScanning ? "Processing..." : "Scan Barcode..."}
-          onKeyDown={handleScanInput}
-          autoComplete="off"
-          autoFocus
-          disabled={isScanning}
-        />
-
-        {/* Camera Scanner Modal */}
-        {showCameraScanner && (
-          <div className="camera-modal-overlay">
-            <div className="camera-modal">
-              <div className="camera-header">
-                <h3>Scan Barcode/QR</h3>
-                <button onClick={() => setShowCameraScanner(false)}><FiX /></button>
-              </div>
-              <div id={scannerContainerId}></div>
-              <p className="camera-instruction">Point camera at a barcode</p>
-            </div>
+      <div className="billing-layout-grid">
+        <div className="billing-col-left">
+          <div className="card">
+            <input
+              ref={scannerInputRef}
+              type="text"
+              className="scanner-input"
+              placeholder={isScanning ? "Processing..." : "Scan Barcode..."}
+              onKeyDown={handleScanInput}
+              autoComplete="off"
+              autoFocus
+              disabled={isScanning}
+            />
           </div>
-        )}
 
-        {/* Left Side: Customer & Product Search */}
-        <div className="billing-left">
-          {/* Customer Section */}
-          <div className="section">
+          <div className="card">
             <div className="customer-header">
               <h3>Select Customer</h3>
               <button 
@@ -670,7 +655,7 @@ const Billing = () => {
                 className="btn-add-customer"
                 onClick={() => setShowCustomerModal(true)}
               >
-                <FiPlus /> Add New Customer
+                <FiPlus /> Add New
               </button>
             </div>
             
@@ -678,13 +663,11 @@ const Billing = () => {
               <FiSearch />
               <input
                 type="text"
-                placeholder="Search User (Name/Mobile)..."
+                placeholder="Search by Name/Mobile..."
                 value={customerSearch}
                 onChange={(e) => {
                   setCustomerSearch(e.target.value);
-                  if (e.target.value.length < 2) {
-                    setCustomers([]);
-                  }
+                  if (e.target.value.length < 2) setCustomers([]);
                 }}
               />
             </div>
@@ -697,17 +680,12 @@ const Billing = () => {
                     <strong>{selectedCustomer.name}</strong>
                     <p>{selectedCustomer.phone}</p>
                     {selectedCustomer.totalDue > 0 && (
-                      <p className="due-warning">
-                        Outstanding: {formatCurrency(selectedCustomer.totalDue)}
-                      </p>
+                      <p className="due-warning">Due: {formatCurrency(selectedCustomer.totalDue)}</p>
                     )}
                   </div>
                   <button 
                     className="btn-clear-customer"
-                    onClick={() => {
-                      setSelectedCustomer(null);
-                      setCustomerSearch('');
-                    }}
+                    onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }}
                     title="Clear selection"
                   >
                     <FiX />
@@ -719,14 +697,10 @@ const Billing = () => {
             {!selectedCustomer && customerSearch.length >= 2 && (
               <div className="customer-list">
                 {customers.length === 0 ? (
-                  <p className="no-customers">User not found. Check number or Add New.</p>
+                  <p className="no-customers">User not found. Try adding new.</p>
                 ) : (
                   customers.map(customer => (
-                    <div
-                      key={customer._id}
-                      className="customer-list-item"
-                      onClick={() => handleCustomerSelect(customer)}
-                    >
+                    <div key={customer._id} className="customer-list-item" onClick={() => handleCustomerSelect(customer)}>
                       <FiUser />
                       <div>
                         <strong>{customer.name}</strong>
@@ -739,8 +713,99 @@ const Billing = () => {
             )}
           </div>
 
-          {/* Product Section */}
-          <div className="section">
+          <div className="card">
+            <h3>Old Gold / Exchange</h3>
+            <div className="exchange-inputs-grid">
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  value={exchangeInput.category}
+                  onChange={(e) => setExchangeInput({ ...exchangeInput, category: e.target.value })}
+                >
+                  <option value="Gold">Gold</option>
+                  <option value="Silver">Silver</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <input 
+                  type="text" 
+                  placeholder="Item description"
+                  value={exchangeInput.description}
+                  onChange={(e) => setExchangeInput({...exchangeInput, description: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Weight (g)</label>
+                <input 
+                  type="number" 
+                  placeholder="0.00"
+                  value={exchangeInput.weight}
+                  onChange={(e) => setExchangeInput({...exchangeInput, weight: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Purity (%)</label>
+                <input 
+                  type="number" 
+                  placeholder="100"
+                  value={exchangeInput.purity}
+                  onChange={(e) => setExchangeInput({...exchangeInput, purity: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Rate/g</label>
+                <input 
+                  type="number" 
+                  placeholder="5000"
+                  value={exchangeInput.rate}
+                  onChange={(e) => setExchangeInput({...exchangeInput, rate: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>&nbsp;</label>
+                <button onClick={addExchangeItem} className="btn-add-exchange">
+                  <FiPlus /> Add
+                </button>
+              </div>
+            </div>
+
+            {exchangeItems.length > 0 && (
+              <div className="exchange-list">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Desc.</th>
+                      <th>Wt</th>
+                      <th>Rate</th>
+                      <th>Amount</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {exchangeItems.map((item, index) => (
+                      <tr key={index}>
+                        <td>{item.description}</td>
+                        <td>{item.weight}g</td>
+                        <td>{item.rate}</td>
+                        <td>{formatCurrency(item.amount)}</td>
+                        <td>
+                          <button onClick={() => removeExchangeItem(index)} className="btn-icon-danger">
+                            <FiTrash2 />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="billing-col-center">
+          <div className="card">
             <h3>Add Products</h3>
             <div className="product-search-controls">
               <div className="product-search-box">
@@ -749,10 +814,7 @@ const Billing = () => {
                   type="text"
                   placeholder="Search by SKU, Name, or Category..."
                   value={productSearch}
-                  onChange={(e) => {
-                    setProductSearch(e.target.value);
-                    setShowProductSearch(true);
-                  }}
+                  onChange={(e) => { setProductSearch(e.target.value); setShowProductSearch(true); }}
                   onFocus={() => setShowProductSearch(true)}
                 />
               </div>
@@ -768,7 +830,7 @@ const Billing = () => {
                 onChange={(e) => setProductCategoryFilter(e.target.value)}
                 className="category-filter"
               >
-                <option value="">Category</option>
+                <option value="">All Categories</option>
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
@@ -784,9 +846,7 @@ const Billing = () => {
                     <div key={product._id} className="product-item" onClick={() => handleAddToCart(product)}>
                       <div>
                         <strong>{product.name}</strong>
-                        <p>
-                          {product.sku} | {product.category} | {product.isWeightManaged ? `${product.availableWeight}g avail` : `${product.netWeight}g`}
-                        </p>
+                        <p>{product.sku} | {product.category} | {product.isWeightManaged ? `${product.availableWeight}g avail` : `${product.netWeight}g`}</p>
                       </div>
                       <div className="product-price">{formatCurrency(product.sellingPrice)} /g</div>
                     </div>
@@ -795,17 +855,13 @@ const Billing = () => {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Main Column: Cart + Exchange + Payment */}
-        <div className="billing-center">
-          <div className="cart-section">
+          <div className="card cart-section">
             <h3><FiShoppingCart /> Cart ({cart.length})</h3>
             {cart.length === 0 ? (
-              <p className="empty-cart">Cart is empty</p>
+              <p className="empty-cart">Cart is empty. Scan or search to add products.</p>
             ) : (
               <>
-                {/* Desktop/Tablet Table */}
                 <div className="cart-table-container">
                   <table className="cart-table">
                      <thead>
@@ -814,7 +870,7 @@ const Billing = () => {
                          <th>Wt(g)</th>
                          <th>Rate</th>
                          <th>MC</th>
-                         <th>Wst</th>
+                         <th>Wastage</th>
                          <th>GST</th>
                          <th>Total</th>
                          <th></th>
@@ -823,81 +879,22 @@ const Billing = () => {
                      <tbody>
                        {cart.map((item, index) => (
                          <tr key={index}>
-                           <td data-label="Product">
+                           <td>
                              <div className="cart-product-name">{item.productName}</div>
                              <div className="cart-product-sku">{item.sku}</div>
                            </td>
-                           <td data-label="Wt(g)">
-                             <input 
-                               type="number" 
-                               step="0.01" 
-                               value={item.weight || ''} 
-                               onChange={(e) => updateCartItem(index, 'weight', e.target.value)}
-                               className="table-input number-input"
-                               placeholder="0.00 g"
-                               title="Weight in grams"
-                               min="0"
-                             />
-                           </td>
-                           <td data-label="Rate">
-                             <input 
-                               type="number" 
-                               value={item.rate || ''} 
-                               onChange={(e) => updateCartItem(index, 'rate', e.target.value)}
-                               className="table-input number-input"
-                               placeholder="₹/g"
-                               title="Rate per gram"
-                               min="0"
-                             />
-                           </td>
-                           <td data-label="MC">
-                             <input 
-                               type="number" 
-                               value={item.makingCharge || ''} 
-                               onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)}
-                               className="table-input number-input"
-                               placeholder="Making"
-                               title="Making charge"
-                               min="0"
-                             />
-                           </td>
-                           <td data-label="Wst">
-                             <input 
-                               type="number" 
-                               value={item.wastage || ''} 
-                               onChange={(e) => updateCartItem(index, 'wastage', e.target.value)}
-                               className="table-input number-input"
-                               placeholder="Wastage"
-                               title="Wastage"
-                               min="0"
-                             />
-                           </td>
-                           <td data-label="GST">
-                             <input 
-                               type="number" 
-                               value={item.gst || ''} 
-                               onChange={(e) => updateCartItem(index, 'gst', e.target.value)}
-                               className="table-input number-input"
-                               placeholder="GST"
-                               title="GST amount"
-                               min="0"
-                             />
-                           </td>
-                           <td className="text-right" data-label="Total">
-                             {formatCurrency(item.subtotal)}
-                           </td>
-                           <td>
-                             <button onClick={() => removeFromCart(index)} className="btn-icon-danger">
-                               <FiTrash2 />
-                             </button>
-                           </td>
+                           <td><input type="number" step="0.01" value={item.weight || ''} onChange={(e) => updateCartItem(index, 'weight', e.target.value)} className="table-input" placeholder="g" /></td>
+                           <td><input type="number" value={item.rate || ''} onChange={(e) => updateCartItem(index, 'rate', e.target.value)} className="table-input" placeholder="₹/g" /></td>
+                           <td><input type="number" value={item.makingCharge || ''} onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)} className="table-input" placeholder="₹" /></td>
+                           <td><input type="number" value={item.wastage || ''} onChange={(e) => updateCartItem(index, 'wastage', e.target.value)} className="table-input" placeholder="₹" /></td>
+                           <td><input type="number" value={item.gst || ''} onChange={(e) => updateCartItem(index, 'gst', e.target.value)} className="table-input" placeholder="₹" /></td>
+                           <td className="text-right">{formatCurrency(item.subtotal)}</td>
+                           <td><button onClick={() => removeFromCart(index)} className="btn-icon-danger"><FiTrash2 /></button></td>
                          </tr>
                        ))}
                      </tbody>
                   </table>
                 </div>
-
-                {/* Mobile Cards */}
                 <div className="cart-cards">
                   {cart.map((item, index) => (
                     <div key={index} className="cart-card">
@@ -906,278 +903,69 @@ const Billing = () => {
                           <div className="cart-card-title">{item.productName}</div>
                           <div className="cart-card-sku">{item.sku}</div>
                         </div>
-                        <button onClick={() => removeFromCart(index)} className="btn-icon-danger" aria-label="Remove item">
-                          <FiTrash2 />
-                        </button>
+                        <button onClick={() => removeFromCart(index)} className="btn-icon-danger"><FiTrash2 /></button>
                       </div>
-                      <div className="cart-field">
-                        <div className="cart-label">Wt(g)</div>
-                        <div className="cart-value">
-                          <input 
-                            type="number" 
-                            step="0.01" 
-                            value={item.weight || ''} 
-                            onChange={(e) => updateCartItem(index, 'weight', e.target.value)}
-                            placeholder="0.00"
-                            min="0"
-                          />
-                        </div>
+                      <div className="cart-card-grid">
+                        <div className="form-group"><label>Wt(g)</label><input type="number" step="0.01" value={item.weight || ''} onChange={(e) => updateCartItem(index, 'weight', e.target.value)} /></div>
+                        <div className="form-group"><label>Rate</label><input type="number" value={item.rate || ''} onChange={(e) => updateCartItem(index, 'rate', e.target.value)} /></div>
+                        <div className="form-group"><label>MC</label><input type="number" value={item.makingCharge || ''} onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)} /></div>
+                        <div className="form-group"><label>Wastage</label><input type="number" value={item.wastage || ''} onChange={(e) => updateCartItem(index, 'wastage', e.target.value)} /></div>
+                        <div className="form-group"><label>GST</label><input type="number" value={item.gst || ''} onChange={(e) => updateCartItem(index, 'gst', e.target.value)} /></div>
+                        <div className="form-group"><label>Discount</label><input type="number" value={item.discount || ''} onChange={(e) => updateCartItem(index, 'discount', e.target.value)} /></div>
                       </div>
-                      <div className="cart-field">
-                        <div className="cart-label">Rate</div>
-                        <div className="cart-value">
-                          <input 
-                            type="number" 
-                            value={item.rate || ''} 
-                            onChange={(e) => updateCartItem(index, 'rate', e.target.value)}
-                            placeholder="₹/g"
-                            min="0"
-                          />
-                        </div>
-                      </div>
-                      <div className="cart-field">
-                        <div className="cart-label">MC</div>
-                        <div className="cart-value">
-                          <input 
-                            type="number" 
-                            value={item.makingCharge || ''} 
-                            onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)}
-                            placeholder="0"
-                            min="0"
-                          />
-                        </div>
-                      </div>
-                      <div className="cart-field">
-                        <div className="cart-label">GST</div>
-                        <div className="cart-value">
-                          <input 
-                            type="number" 
-                            value={item.gst || ''} 
-                            onChange={(e) => updateCartItem(index, 'gst', e.target.value)}
-                            placeholder="0"
-                            min="0"
-                          />
-                        </div>
-                      </div>
-                      <div className="cart-field">
-                        <div className="cart-label">Wst</div>
-                        <div className="cart-value">
-                          <input 
-                            type="number" 
-                            value={item.wastage || ''} 
-                            onChange={(e) => updateCartItem(index, 'wastage', e.target.value)}
-                            placeholder="0"
-                            min="0"
-                          />
-                        </div>
-                      </div>
-                      <div className="cart-total">
-                        <span>Total</span>
-                        <span>{formatCurrency(item.subtotal)}</span>
-                      </div>
+                      <div className="cart-total"><span>Total</span><span>{formatCurrency(item.subtotal)}</span></div>
                     </div>
                   ))}
                 </div>
               </>
             )}
           </div>
-          <div className="exchange-section">
-            <h3>Old Gold / Exchange</h3>
-            <div className="exchange-inputs">
-              <select
-                value={exchangeInput.category}
-                onChange={(e) => setExchangeInput({ ...exchangeInput, category: e.target.value })}
-                className="ex-category"
-              >
-                <option value="Gold">Gold</option>
-                <option value="Silver">Silver</option>
-                <option value="Platinum">Platinum</option>
-                <option value="Other">Other</option>
-              </select>
-              <input 
-                type="text" 
-                placeholder="Description" 
-                value={exchangeInput.description}
-                onChange={(e) => setExchangeInput({...exchangeInput, description: e.target.value})}
-                className="ex-desc"
-              />
-              <input 
-                type="number" 
-                placeholder="Wt (g)" 
-                value={exchangeInput.weight}
-                onChange={(e) => setExchangeInput({...exchangeInput, weight: e.target.value})}
-                className="ex-wt"
-              />
-              <input 
-                type="number" 
-                placeholder="Purity %" 
-                value={exchangeInput.purity}
-                onChange={(e) => setExchangeInput({...exchangeInput, purity: e.target.value})}
-                className="ex-purity"
-              />
-              <input 
-                type="number" 
-                placeholder="Rate/g" 
-                value={exchangeInput.rate}
-                onChange={(e) => setExchangeInput({...exchangeInput, rate: e.target.value})}
-                className="ex-rate"
-              />
-              <button onClick={addExchangeItem} className="btn-add-exchange">
-                <FiPlus /> Add
-              </button>
-            </div>
+        </div>
 
-            {exchangeItems.length > 0 && (
-              <div className="exchange-list">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Category</th>
-                      <th>Description</th>
-                      <th>Wt</th>
-                      <th>Purity</th>
-                      <th>Rate</th>
-                      <th>Amount</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {exchangeItems.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.category}</td>
-                        <td>{item.description}</td>
-                        <td>{item.weight}</td>
-                        <td>{item.purity}%</td>
-                        <td>{item.rate}</td>
-                        <td>{formatCurrency(item.amount)}</td>
-                        <td>
-                          <button onClick={() => removeExchangeItem(index)} className="btn-icon-danger">
-                            <FiTrash2 />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+        <div className="billing-col-right">
+          <div className="summary-panel is-sticky">
+            <h3>Billing Summary</h3>
+            <div className="summary-row"><span>Subtotal</span> <span>{renderAmount(totals.subtotal)}</span></div>
+            <div className="summary-row"><span>Discount</span> <span>- {renderAmount(totals.discount)}</span></div>
+            {totals.exchangeTotal > 0 && (
+              <div className="summary-row"><span>Exchange</span> <span>- {renderAmount(totals.exchangeTotal)}</span></div>
             )}
-          </div>
+            <div className="summary-row total"><span>Total</span> <span>{renderAmount(totals.total)}</span></div>
+            
+            <div className="payment-section">
+              <div className="form-group">
+                  <label>Discount (₹)</label>
+                  <input type="number" value={formData.discount} onChange={(e) => setFormData({ ...formData, discount: e.target.value })} />
+              </div>
+              <div className="form-group">
+                  <label>Payment Mode</label>
+                  <select value={formData.paymentMode} onChange={(e) => setFormData({...formData, paymentMode: e.target.value})}>
+                      <option value="Cash">Cash</option>
+                      <option value="UPI">UPI</option>
+                      <option value="Card">Card</option>
+                      <option value="Split">Split</option>
+                      <option value="Credit">Credit</option>
+                  </select>
+              </div>
 
-          <div className="payment-section">
-            <div className="totals-display">
-              <div className="total-row"><span>Subtotal:</span> <span>{renderAmount(totals.subtotal)}</span></div>
-              <div className="total-row"><span>Discount:</span> <span>- {renderAmount(totals.discount)}</span></div>
-              {totals.exchangeTotal > 0 && (
-                <div className="total-row"><span>Exchange:</span> <span>- {renderAmount(totals.exchangeTotal)}</span></div>
+              {formData.paymentMode === 'Split' ? (
+                 <div className="split-payment">
+                     <input type="number" placeholder="Cash" value={formData.paymentDetails.cash} onChange={(e) => setFormData({ ...formData, paymentDetails: { ...formData.paymentDetails, cash: e.target.value }})} />
+                     <input type="number" placeholder="UPI" value={formData.paymentDetails.upi} onChange={(e) => setFormData({ ...formData, paymentDetails: { ...formData.paymentDetails, upi: e.target.value }})} />
+                     <input type="number" placeholder="Card" value={formData.paymentDetails.card} onChange={(e) => setFormData({ ...formData, paymentDetails: { ...formData.paymentDetails, card: e.target.value }})} />
+                 </div>
+              ) : formData.paymentMode !== 'Credit' && (
+                 <div className="form-group">
+                     <label>Paid Amount</label>
+                     <input type="number" value={formData.paymentDetails[formData.paymentMode.toLowerCase()]} onChange={(e) => setFormData({ ...formData, paymentDetails: { cash: '', upi: '', card: '', [formData.paymentMode.toLowerCase()]: e.target.value }})} />
+                 </div>
               )}
-              <div className="total-row grand-total"><span>Total:</span> <span>{renderAmount(totals.total)}</span></div>
+              
+              <div className="summary-row due-row"><span>Due</span> <span>{renderAmount(totals.dueAmount)}</span></div>
             </div>
 
-            <div className="payment-controls">
-                <div className="form-group">
-                    <label>Discount</label>
-                    <input 
-                      type="number" 
-                      value={formData.discount === '' ? '' : formData.discount} 
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setFormData({ ...formData, discount: val === '' ? '' : parseFloat(val) });
-                      }} 
-                    />
-                </div>
-                
-                <div className="form-group">
-                    <label>Payment Mode</label>
-                    <select value={formData.paymentMode} onChange={(e) => setFormData({...formData, paymentMode: e.target.value})}>
-                        <option value="Cash">Cash</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Card">Card</option>
-                        <option value="Split">Split</option>
-                    </select>
-                </div>
-
-                {formData.paymentMode === 'Split' ? (
-                   <div className="split-payment">
-                       <input 
-                         type="number" 
-                         placeholder="Cash" 
-                         value={formData.paymentDetails.cash === '' ? '' : formData.paymentDetails.cash} 
-                         onChange={(e) => {
-                           const val = e.target.value;
-                           setFormData({
-                             ...formData, 
-                             paymentDetails: { 
-                               ...formData.paymentDetails, 
-                               cash: val === '' ? '' : parseFloat(val) 
-                             }
-                           });
-                         }} 
-                       />
-                       <input 
-                         type="number" 
-                         placeholder="UPI" 
-                         value={formData.paymentDetails.upi === '' ? '' : formData.paymentDetails.upi} 
-                         onChange={(e) => {
-                           const val = e.target.value;
-                           setFormData({
-                             ...formData, 
-                             paymentDetails: { 
-                               ...formData.paymentDetails, 
-                               upi: val === '' ? '' : parseFloat(val) 
-                             }
-                           });
-                         }} 
-                       />
-                       <input 
-                         type="number" 
-                         placeholder="Card" 
-                         value={formData.paymentDetails.card === '' ? '' : formData.paymentDetails.card} 
-                         onChange={(e) => {
-                           const val = e.target.value;
-                           setFormData({
-                             ...formData, 
-                             paymentDetails: { 
-                               ...formData.paymentDetails, 
-                               card: val === '' ? '' : parseFloat(val) 
-                             }
-                           });
-                         }} 
-                       />
-                   </div>
-                ) : (
-                   <div className="form-group">
-                       <label>Paid Amount</label>
-                       <input 
-                         type="number" 
-                         value={(() => {
-                           const key = formData.paymentMode.toLowerCase();
-                           const v = formData.paymentDetails[key];
-                           return v === '' ? '' : v ?? '';
-                         })()} 
-                         onChange={(e) => {
-                             const raw = e.target.value;
-                             const val = raw === '' ? '' : parseFloat(raw);
-                             setFormData({
-                                 ...formData, 
-                                 paymentDetails: { 
-                                     cash: formData.paymentMode === 'Cash' ? val : '',
-                                     upi: formData.paymentMode === 'UPI' ? val : '',
-                                     card: formData.paymentMode === 'Card' ? val : ''
-                                 }
-                             });
-                         }} 
-                       />
-                   </div>
-                )}
-                
-                <div className="total-row due-row"><span>Due:</span> <span>{renderAmount(totals.dueAmount)}</span></div>
-
-                <div className="action-buttons">
-                    <button className="btn-save" onClick={handleSubmit} disabled={cart.length === 0 || isSubmittingInvoice}><FiSave /> {isSubmittingInvoice ? 'Saving…' : 'Save Invoice'}</button>
-                    {createdInvoice && (
-                        <button className="btn-print" onClick={handlePrintInvoice}><FiPrinter /> Print</button>
-                    )}
-                </div>
+            <div className="action-buttons">
+                <button className="btn-save" onClick={() => setShowConfirmModal(true)} disabled={cart.length === 0 || isSubmittingInvoice}><FiSave /> {isSubmittingInvoice ? 'Saving…' : 'Save Invoice'}</button>
             </div>
           </div>
         </div>
