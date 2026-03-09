@@ -395,7 +395,7 @@ const Products = () => {
               <div className="product-image-container">
                 {product.images && product.images.length > 0 ? (
                   <img 
-                    src={`${api.defaults.baseURL}${product.images[0]}`} 
+                    src={product.images[0].startsWith('http') ? product.images[0] : `${api.defaults.baseURL}${product.images[0]}`} 
                     alt={product.name} 
                     className="product-thumb"
                     onError={(e) => { e.target.onerror = null; e.target.src = product.thumbnailBase64 || PLACEHOLDER_DATA_URI; }} 

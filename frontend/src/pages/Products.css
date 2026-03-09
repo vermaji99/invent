@@ -44,6 +44,25 @@
   backdrop-filter: blur(10px);
 }
 
+@media (max-width: 1024px) {
+  .filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .search-box {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+  .search-box {
+    grid-column: span 1;
+  }
+}
+
 .search-box {
   position: relative;
   flex: 1;
@@ -145,47 +164,95 @@
 
 .product-card {
   background: var(--bg-panel-gradient);
-  border-radius: 18px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 16px;
   border: 1px solid var(--border-glass);
   transition: var(--transition);
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 520px; /* Consistent professional height */
   backdrop-filter: blur(10px);
+  overflow: hidden;
 }
 
 .product-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   border-color: var(--primary);
-  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
 .product-image-container {
   width: 100%;
-  aspect-ratio: 1.2/1;
+  aspect-ratio: 1/1; /* Square images for consistent grid */
   background: #121417;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border-glass);
+  position: relative;
+}
+
+.product-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Professional image fitting */
+  transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-thumb {
+  transform: scale(1.05);
 }
 
 .product-header {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .product-title {
   font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 8px;
   letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.category-badge {
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+}
+
+.category-badge.gold { background: rgba(255, 209, 102, 0.1); color: #FFD166; border-color: rgba(255, 209, 102, 0.2); }
+.category-badge.silver { background: rgba(160, 167, 174, 0.1); color: #A0A7AE; border-color: rgba(160, 167, 174, 0.2); }
+.category-badge.diamond { background: rgba(123, 97, 255, 0.1); color: #7B61FF; border-color: rgba(123, 97, 255, 0.2); }
+
+.huid-badge {
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.huid-badge.enabled { background: rgba(198, 255, 58, 0.1); color: var(--primary); border: 1px solid var(--primary); }
+.huid-badge.disabled { background: rgba(255, 77, 77, 0.1); color: #FF4D4D; border: 1px solid rgba(255, 77, 77, 0.2); }
 
 .product-meta {
   display: grid;
@@ -203,7 +270,7 @@
 }
 
 .meta-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -211,22 +278,42 @@
 }
 
 .meta-value {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.meta-value.price {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+.meta-value.low-stock {
+  color: #FF4D4D;
+  font-weight: 800;
 }
 
 .product-actions {
   display: flex;
   gap: 8px;
   margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-glass);
+}
+
+.product-actions.compact-actions {
+  gap: 6px;
+}
+
+.product-actions.compact-actions button {
+  padding: 8px;
 }
 
 .product-actions button {
   flex: 1;
-  height: 36px;
+  height: 38px;
   border-radius: 10px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -237,6 +324,8 @@
   cursor: pointer;
   background: #1E2327;
   color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .product-actions button:hover {

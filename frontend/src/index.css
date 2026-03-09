@@ -171,12 +171,23 @@ code {
   border-radius: 12px;
   padding: 10px 18px;
   box-shadow: 0 0 12px rgba(198, 255, 58, 0.4);
+  font-weight: 700;
+  transition: var(--transition);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
   box-shadow: 0 0 20px rgba(198, 255, 58, 0.6);
   transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-secondary {
@@ -186,6 +197,24 @@ code {
   border-radius: 12px;
   padding: 10px 18px;
   transition: var(--transition);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 768px) {
+  .btn-primary, .btn-secondary {
+    width: 100%; /* Full width buttons on mobile */
+    padding: 12px;
+  }
 }
 
 .btn-secondary:hover {

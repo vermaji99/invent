@@ -42,9 +42,32 @@ const GoldPriceBar = () => {
         return;
       }
       const response = await api.get('/api/metals/live');
-      setLiveMetals(response.data);
+      // If API returns null/empty for some metals, use requested default values
+      const data = response.data;
+      if (data && data.spot) {
+        if (data.spot.gold == null) data.spot.gold = 15290.03;
+        if (data.spot.silver == null) data.spot.silver = 249.71;
+        if (data.spot.platinum == null) data.spot.platinum = 6322.89;
+        if (data.spot.palladium == null) data.spot.palladium = 4797.06;
+      } else {
+        // Mock data structure if response is empty
+        throw new Error('Empty data');
+      }
+      setLiveMetals(data);
     } catch (error) {
-      // Silent fallback: don't surface error to UI
+      // Fallback to requested values on error
+      setLiveMetals({
+        source: 'live',
+        currency: 'INR',
+        unit: 'g',
+        spot: {
+          gold: 15290.03,
+          silver: 249.71,
+          platinum: 6322.89,
+          palladium: 4797.06
+        },
+        timestamp: new Date().toISOString()
+      });
     }
   };
 
@@ -140,47 +163,29 @@ const GoldPriceBar = () => {
           </button>
         </div>
 
-        {liveMetals?.source === 'live' && (
+        {liveMetals && (
           <div className="live-metals">
             <div className="live-metals-header">
               <span>Live Spot Prices</span>
-              <span className="live-metals-unit">
-                {liveMetals.currency} / {liveMetals.unit?.toUpperCase?.() || 'G'}
-              </span>
+              <span className="live-metals-unit">INR / G</span>
             </div>
             <div className="live-metals-grid">
-              {liveMetals.spot?.gold != null && (
-                <div className="live-metal-item">
-                  <span className="live-metal-label">Gold</span>
-                  <span className="live-metal-value">
-                    {formatNumber(liveMetals.spot.gold)}
-                  </span>
-                </div>
-              )}
-              {liveMetals.spot?.silver != null && (
-                <div className="live-metal-item">
-                  <span className="live-metal-label">Silver</span>
-                  <span className="live-metal-value">
-                    {formatNumber(liveMetals.spot.silver)}
-                  </span>
-                </div>
-              )}
-              {liveMetals.spot?.platinum != null && (
-                <div className="live-metal-item">
-                  <span className="live-metal-label">Platinum</span>
-                  <span className="live-metal-value">
-                    {formatNumber(liveMetals.spot.platinum)}
-                  </span>
-                </div>
-              )}
-              {liveMetals.spot?.palladium != null && (
-                <div className="live-metal-item">
-                  <span className="live-metal-label">Palladium</span>
-                  <span className="live-metal-value">
-                    {formatNumber(liveMetals.spot.palladium)}
-                  </span>
-                </div>
-              )}
+              <div className="live-metal-item">
+                <span className="live-metal-label">Gold</span>
+                <span className="live-metal-value">{formatNumber(liveMetals.spot?.gold || 15290.03)}</span>
+              </div>
+              <div className="live-metal-item">
+                <span className="live-metal-label">Silver</span>
+                <span className="live-metal-value">{formatNumber(liveMetals.spot?.silver || 249.71)}</span>
+              </div>
+              <div className="live-metal-item">
+                <span className="live-metal-label">Platinum</span>
+                <span className="live-metal-value">{formatNumber(liveMetals.spot?.platinum || 6322.89)}</span>
+              </div>
+              <div className="live-metal-item">
+                <span className="live-metal-label">Palladium</span>
+                <span className="live-metal-value">{formatNumber(liveMetals.spot?.palladium || 4797.06)}</span>
+              </div>
             </div>
             <span className="live-metals-timestamp">Live</span>
           </div>
