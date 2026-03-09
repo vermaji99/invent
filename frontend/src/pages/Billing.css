@@ -859,8 +859,54 @@
     padding: 16px;
     margin: 0;
     border-radius: 0;
-    border-top: 1px solid var(--border-glass);
-    background: var(--bg-panel);
+    background: var(--primary);
+    color: var(--bg-dark);
     z-index: 1000;
+    box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .billing-page {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .product-search-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .category-filter {
+    grid-column: 1;
+  }
+
+  .exchange-inputs-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .split-payment {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .modal-content {
+    padding: 16px;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .customer-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .selected-customer-info {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
