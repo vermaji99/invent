@@ -965,7 +965,7 @@ const Billing = () => {
             </div>
 
             <div className="action-buttons">
-                <button className="btn-save save-invoice-btn" onClick={() => setShowConfirmModal(true)} disabled={cart.length === 0 || isSubmittingInvoice}><FiSave /> {isSubmittingInvoice ? 'Saving…' : 'Save Invoice'}</button>
+                <button className="btn-save" style={{color: 'black'}} onClick={() => setShowConfirmModal(true)} disabled={cart.length === 0 || isSubmittingInvoice}><FiSave style={{color: 'black'}} /> {isSubmittingInvoice ? 'Saving…' : 'Save Invoice'}</button>
             </div>
           </div>
         </div>
