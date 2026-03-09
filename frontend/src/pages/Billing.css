@@ -575,6 +575,10 @@
   margin-top: 20px;
 }
 
+.action-buttons .btn-save svg {
+  color: black !important;
+}
+
 .action-buttons .btn-save {
   background: var(--primary);
   color: black !important;
