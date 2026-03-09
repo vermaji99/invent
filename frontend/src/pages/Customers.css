@@ -188,15 +188,20 @@
 
 .icon-btn.btn-danger {
   background: transparent;
-  color: #ff6b6b;
-  border: 1px solid #ff6b6b;
+  border: 1px solid #ff4d4d;
+}
+
+.icon-btn.btn-danger svg {
+  stroke: #ff4d4d;
 }
 
 .icon-btn.btn-danger:hover {
   background: #ff4d4d;
-  color: #ffffff;
   border-color: #ff4d4d;
-  box-shadow: 0 0 20px rgba(255, 77, 77, 0.5);
+}
+
+.icon-btn.btn-danger:hover svg {
+  stroke: #ffffff;
 }
 
 .icon-btn.icon-gold {
