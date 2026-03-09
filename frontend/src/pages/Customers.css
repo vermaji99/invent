@@ -187,9 +187,9 @@
 }
 
 .icon-btn.btn-danger {
-  background: rgba(255, 77, 77, 0.2);
+  background: transparent;
   color: #ff6b6b;
-  border: 1px solid rgba(255, 77, 77, 0.4);
+  border: 1px solid #ff6b6b;
 }
 
 .icon-btn.btn-danger:hover {
