@@ -330,6 +330,26 @@
     transform: translateX(0);
   }
 
+  .sidebar.open .logo,
+  .sidebar.open .nav-item span,
+  .sidebar.open .user-details,
+  .sidebar.open .logout-btn span {
+    display: block;
+  }
+
+  .sidebar.open .logo {
+    display: flex;
+  }
+
+  .sidebar.open .nav-item {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .sidebar.open .logout-btn {
+    display: flex;
+  }
+
   .main-content {
     margin-left: 0 !important;
     padding: 1.5rem;
