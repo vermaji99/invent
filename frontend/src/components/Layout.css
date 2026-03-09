@@ -311,7 +311,7 @@
 
 @media (max-width: 768px) {
   .layout-container {
-    margin-top: 120px;
+    margin-top: 110px; /* Tighter spacing for mobile headers */
   }
 
   .mobile-header {

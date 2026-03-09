@@ -215,3 +215,59 @@
     flex: none;
   }
 }
+
+@media (max-width: 768px) {
+  .orders-container {
+    padding: 1rem;
+  }
+
+  .orders-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .orders-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .add-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .orders-filters {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .filter-group {
+    justify-content: space-between;
+  }
+
+  .filter-group select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .orders-table-container {
+    overflow-x: auto;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+
+  .orders-table th, .orders-table td {
+    padding: 12px 10px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .action-btn {
+    width: 36px;
+    height: 36px;
+  }
+}

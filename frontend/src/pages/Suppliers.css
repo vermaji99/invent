@@ -324,19 +324,106 @@
   color: #000000;
 }
 
+@media (max-width: 1024px) {
+  .suppliers-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 @media (max-width: 768px) {
-  .suppliers-filters {
-    grid-template-columns: 1fr;
+  .suppliers-page {
+    padding: 1rem;
   }
-  
-  .specialization-input {
-    grid-template-columns: 1fr;
-  }
-  
+
   .suppliers-page .page-header {
     flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .suppliers-page .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .suppliers-page .page-header p {
+    font-size: 0.85rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .suppliers-filters {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .suppliers-filters .search-bar {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .suppliers-filters .filter-select {
+    height: 40px;
+    font-size: 0.85rem;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .supplier-card {
+    padding: 16px;
+  }
+
+  .supplier-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .supplier-stats {
+    padding: 12px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin: 1.25rem 0;
+  }
+
+  .specialization-input {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .btn-add-spec {
+    width: 100%;
+    height: 40px;
+    padding: 0;
+  }
+
+  .modal-content {
+    padding: 1.25rem;
+    border-radius: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .supplier-card-header {
+    flex-direction: column;
     align-items: flex-start;
-    gap: 1.5rem;
+    gap: 8px;
+  }
+
+  .supplier-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .supplier-actions button {
+    width: 100%;
+    justify-content: center;
   }
 }
 

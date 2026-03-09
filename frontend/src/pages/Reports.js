@@ -233,7 +233,7 @@ const Reports = () => {
           <div className="report-card chart-card">
             <h2>Sales Trend (Last 30 Days)</h2>
             <div className="chart-container">
-              <ResponsiveContainer width="100%" height={350}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                 <LineChart data={salesData}>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
                   <XAxis 
@@ -286,7 +286,7 @@ const Reports = () => {
               </div>
             </div>
             <div className="chart-container">
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                 <PieChart>
                   <Pie
                     data={stockValuation.byCategory}
@@ -317,7 +317,7 @@ const Reports = () => {
           <div className="report-card chart-card">
             <h2>Top 10 Customer Arrears</h2>
             <div className="chart-container">
-              <ResponsiveContainer width="100%" height={350}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={350}>
                 <BarChart data={customerArrears}>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
                   <XAxis 
