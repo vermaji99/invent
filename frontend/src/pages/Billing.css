@@ -61,7 +61,7 @@
 
 .customer-header .btn-add-customer {
   background: var(--primary);
-  color: var(--bg-dark);
+  color: black;
   padding: 8px 12px;
   border-radius: 8px;
   font-weight: 600;
