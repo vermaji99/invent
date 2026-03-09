@@ -187,16 +187,16 @@
 }
 
 .icon-btn.btn-danger {
-  background: rgba(255, 77, 77, 0.1);
-  color: #ff4d4d;
-  border-color: rgba(255, 77, 77, 0.2);
+  background: rgba(255, 77, 77, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 77, 77, 0.4);
 }
 
 .icon-btn.btn-danger:hover {
   background: #ff4d4d;
   color: #ffffff;
   border-color: #ff4d4d;
-  box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+  box-shadow: 0 0 20px rgba(255, 77, 77, 0.5);
 }
 
 .icon-btn.icon-gold {
