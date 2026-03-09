@@ -582,6 +582,11 @@
 .action-buttons .btn-save {
   background: var(--primary);
   color: black !important;
+}
+
+.action-buttons .btn-save svg {
+  color: black !important;
+}
   padding: 12px 15px;
   border-radius: 10px;
   font-weight: 700;
