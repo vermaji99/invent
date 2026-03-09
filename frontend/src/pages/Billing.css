@@ -579,9 +579,14 @@
   color: black !important;
 }
 
+.save-invoice-btn,
+.save-invoice-btn svg {
+  color: black !important;
+}
+
 .action-buttons .btn-save {
   background: var(--primary);
-  color: black !important;
+  color: var(--bg-dark);black !important;
 }
 
 .action-buttons .btn-save svg {
