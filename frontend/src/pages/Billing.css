@@ -61,7 +61,7 @@
 
 .customer-header .btn-add-customer {
   background: var(--primary);
-  color: black;
+  color: var(--bg-dark);
   padding: 8px 12px;
   border-radius: 8px;
   font-weight: 600;
@@ -575,23 +575,9 @@
   margin-top: 20px;
 }
 
-.action-buttons .btn-save svg {
-  color: black !important;
-}
-
-.save-invoice-btn,
-.save-invoice-btn svg {
-  color: black !important;
-}
-
 .action-buttons .btn-save {
   background: var(--primary);
-  color: var(--bg-dark);black !important;
-}
-
-.action-buttons .btn-save svg {
-  color: black !important;
-}
+  color: var(--bg-dark);
   padding: 12px 15px;
   border-radius: 10px;
   font-weight: 700;
@@ -768,7 +754,7 @@
 
 .form-actions .btn-primary {
   background: var(--primary);
-  color: var(--bg-dark);
+  color: black;
   border: none;
 }
 

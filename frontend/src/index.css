@@ -166,7 +166,7 @@ code {
 /* Premium button palette */
 .btn-primary {
   background: var(--primary);
-  color: black;
+  color: #0D0F11;
   border: none;
   border-radius: 12px;
   padding: 10px 18px;
