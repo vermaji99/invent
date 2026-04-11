@@ -221,23 +221,46 @@ const Billing = () => {
 
   // Camera Scanner Effect
   useEffect(() => {
+    let scanner = null;
     if (showCameraScanner) {
-      const scanner = new Html5QrcodeScanner(
-        scannerContainerId,
-        { fps: 10, qrbox: 250 },
-        /* verbose= */ false
-      );
-      
-      scanner.render((decodedText) => {
-        processScannedCode(decodedText);
-        scanner.clear();
-        setShowCameraScanner(false);
-      }, (error) => {
-        // console.warn(error);
-      });
+      const initScanner = async () => {
+        // Delay to ensure DOM element is ready
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const element = document.getElementById(scannerContainerId);
+        if (!element) {
+          console.error(`Scanner container element #${scannerContainerId} not found`);
+          return;
+        }
+
+        try {
+          scanner = new Html5QrcodeScanner(
+            scannerContainerId,
+            { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
+            /* verbose= */ false
+          );
+          
+          scanner.render((decodedText) => {
+            processScannedCode(decodedText);
+            if (scanner) {
+              scanner.clear().catch(e => console.error("Failed to clear", e));
+            }
+            setShowCameraScanner(false);
+          }, (error) => {
+            // console.warn(error);
+          });
+        } catch (err) {
+          console.error("Failed to initialize scanner:", err);
+          toast.error("Failed to start camera scanner");
+        }
+      };
+
+      initScanner();
 
       return () => {
-        scanner.clear().catch(error => console.error("Failed to clear scanner", error));
+        if (scanner) {
+          scanner.clear().catch(error => console.error("Failed to clear scanner", error));
+        }
       };
     }
   }, [showCameraScanner]);
@@ -1010,6 +1033,24 @@ const Billing = () => {
               </div>
             </div>
             <InvoiceTemplate ref={printRef} invoice={createdInvoice} shopDetails={shopDetails} />
+          </div>
+        </div>
+      )}
+
+      {/* Camera Scanner Modal */}
+      {showCameraScanner && (
+        <div className="modal-overlay">
+          <div className="modal-content scanner-modal">
+            <div className="modal-header">
+              <h3>Scan Barcode</h3>
+              <button onClick={() => setShowCameraScanner(false)}><FiX /></button>
+            </div>
+            <div className="scanner-container">
+              <div id={scannerContainerId}></div>
+            </div>
+            <div className="scanner-instructions">
+              <p>Place the product barcode within the frame to scan</p>
+            </div>
           </div>
         </div>
       )}

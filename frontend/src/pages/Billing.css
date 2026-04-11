@@ -251,6 +251,37 @@
   background-size: 1.2em;
 }
 
+/* Scanner Modal */
+.scanner-modal {
+  max-width: 500px !important;
+  width: 90% !important;
+}
+
+.scanner-container {
+  width: 100%;
+  margin: 20px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--border-glass);
+}
+
+#reader {
+  width: 100% !important;
+  border: none !important;
+}
+
+#reader video {
+  border-radius: 8px;
+}
+
+.scanner-instructions {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
 .products-list {
   max-height: 300px;
   overflow-y: auto;
