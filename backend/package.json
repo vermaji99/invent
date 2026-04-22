@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "truncate": "node scripts/truncateDatabase.js --yes"
+    "truncate": "node scripts/truncateDatabase.js --yes",
+    "seed:demo": "node seed/demoSeed.js"
   },
   "keywords": [
     "jewellery",
