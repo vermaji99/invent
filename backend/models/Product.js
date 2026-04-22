@@ -36,6 +36,18 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true // e.g., "22K", "18K", "925"
   },
+  purityPercent: {
+    type: Number,
+    default: 100
+  },
+  fineGold: {
+    type: Number,
+    default: 0
+  },
+  costPricePerGram: {
+    type: Number,
+    default: 0
+  },
   makingChargePerGram: {
     type: Number,
     default: 0

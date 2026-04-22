@@ -6,6 +6,7 @@ const Transaction = require('../models/Transaction');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
 const OldGold = require('../models/OldGold');
+const { calculateFineGold } = require('../utils/calculateFineGold');
 const { body, validationResult } = require('express-validator');
 
 // @route   GET /api/invoices
@@ -118,6 +119,14 @@ router.post('/', [
       const itemSubtotal = item.rate * item.weight + item.makingCharge + item.wastage - item.discount - (item.oldGoldAdjustment || 0);
       item.subtotal = itemSubtotal;
       item.purchaseRate = product.purchasePrice || 0; // Capture cost price
+      
+      // Fine Gold and Profit Calculation
+      item.purityPercent = item.purityPercent || product.purityPercent || 100;
+      item.fineGold = calculateFineGold(item.weight, item.purityPercent);
+      item.costPricePerGram = product.costPricePerGram || 0;
+      item.sellingPricePerGram = item.rate;
+      item.profit = (item.sellingPricePerGram - item.costPricePerGram) * item.fineGold;
+
       subtotal += itemSubtotal;
       totalGST += item.gst || 0;
 

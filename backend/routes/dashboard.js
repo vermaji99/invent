@@ -514,6 +514,36 @@ router.get('/stats', auth, async (req, res) => {
 
     const goldPrice = await GoldPrice.getLatest();
 
+    // Fine Gold and Profit Stats
+    const fineGoldInStock = await Product.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: null, total: { $sum: '$fineGold' } } }
+    ]);
+
+    const fineGoldSoldToday = await Invoice.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow } } },
+      { $unwind: '$items' },
+      { $group: { _id: null, total: { $sum: '$items.fineGold' } } }
+    ]);
+
+    const fineGoldSoldMonth = await Invoice.aggregate([
+      { $match: { createdAt: { $gte: startOfMonth, $lt: startOfNextMonth } } },
+      { $unwind: '$items' },
+      { $group: { _id: null, total: { $sum: '$items.fineGold' } } }
+    ]);
+
+    const profitToday = await Invoice.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow } } },
+      { $unwind: '$items' },
+      { $group: { _id: null, total: { $sum: '$items.profit' } } }
+    ]);
+
+    const profitMonth = await Invoice.aggregate([
+      { $match: { createdAt: { $gte: startOfMonth, $lt: startOfNextMonth } } },
+      { $unwind: '$items' },
+      { $group: { _id: null, total: { $sum: '$items.profit' } } }
+    ]);
+
     // Sales Trend
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -574,8 +604,15 @@ router.get('/stats', auth, async (req, res) => {
       pendingDues: pendingDues[0]?.total || 0,
       lowStock,
       goldPrice,
-      salesTrend
-      ,
+      salesTrend,
+      
+      // Fine Gold & Profit Stats
+      fineGoldInStock: fineGoldInStock[0]?.total || 0,
+      fineGoldSoldToday: fineGoldSoldToday[0]?.total || 0,
+      fineGoldSoldMonth: fineGoldSoldMonth[0]?.total || 0,
+      profitToday: profitToday[0]?.total || 0,
+      profitMonth: profitMonth[0]?.total || 0,
+
       // Profit/Loss summary
       todayNetProfit: todayPL.netProfit,
       todayRevenue: todayPL.netSales,

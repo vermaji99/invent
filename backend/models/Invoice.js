@@ -14,11 +14,31 @@ const invoiceItemSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  purityPercent: {
+    type: Number,
+    default: 100
+  },
+  fineGold: {
+    type: Number,
+    default: 0
+  },
   rate: {
     type: Number,
     required: true
   },
   purchaseRate: { // Cost price at time of sale
+    type: Number,
+    default: 0
+  },
+  costPricePerGram: {
+    type: Number,
+    default: 0
+  },
+  sellingPricePerGram: {
+    type: Number,
+    default: 0
+  },
+  profit: {
     type: Number,
     default: 0
   },

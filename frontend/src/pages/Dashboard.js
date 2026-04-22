@@ -405,6 +405,29 @@ const Dashboard = () => {
       bgColor: '#ecfdf5'
     },
     {
+      title: 'Fine Gold in Stock',
+      value: `${(stats.fineGoldInStock || 0).toFixed(3)}g`,
+      icon: FiPackage,
+      color: '#f59e0b', // Gold/Amber
+      bgColor: '#fffbeb'
+    },
+    {
+      title: "Today's Profit",
+      value: formatCurrency(stats.profitToday),
+      icon: FiTrendingUp,
+      color: '#10b981', // Green
+      bgColor: '#ecfdf5',
+      trend: `Monthly: ${formatCurrency(stats.profitMonth)}`
+    },
+    {
+      title: 'Fine Gold Sold (Today)',
+      value: `${(stats.fineGoldSoldToday || 0).toFixed(3)}g`,
+      icon: FiActivity,
+      color: '#3b82f6', // Blue
+      bgColor: '#eff6ff',
+      trend: `Monthly: ${(stats.fineGoldSoldMonth || 0).toFixed(3)}g`
+    },
+    {
       title: 'Bank Balance',
       value: formatCurrency(stats.bankBalance),
       icon: FiCreditCard,

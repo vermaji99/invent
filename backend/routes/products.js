@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { auth, authorize } = require('../middleware/auth');
 const Product = require('../models/Product');
+const { calculateFineGold } = require('../utils/calculateFineGold');
 const { body, validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
@@ -180,7 +181,7 @@ router.post('/weight-managed', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, category, purity, totalWeight, purchasePrice, sellingPrice } = req.body;
+    const { name, category, purity, totalWeight, purchasePrice, sellingPrice, purityPercent, costPricePerGram } = req.body;
     let { sku } = req.body;
 
     if (!sku) {
@@ -197,15 +198,31 @@ router.post('/weight-managed', [
       product.availableWeight = (product.availableWeight || 0) + Number(totalWeight || 0);
       if (purchasePrice !== undefined) product.purchasePrice = purchasePrice;
       if (sellingPrice !== undefined) product.sellingPrice = sellingPrice;
+      
+      // Update fine gold if purityPercent is provided
+      if (purityPercent !== undefined) {
+        product.purityPercent = purityPercent;
+        product.fineGold = calculateFineGold(product.availableWeight, purityPercent);
+      } else if (product.purityPercent) {
+        product.fineGold = calculateFineGold(product.availableWeight, product.purityPercent);
+      }
+
+      if (costPricePerGram !== undefined) product.costPricePerGram = costPricePerGram;
+
       await product.save();
       return res.json(product);
     }
+
+    const fineGold = calculateFineGold(totalWeight, purityPercent || 100);
 
     product = new Product({
       name,
       category,
       sku,
       purity,
+      purityPercent: purityPercent || 100,
+      fineGold,
+      costPricePerGram: costPricePerGram || 0,
       purchasePrice: purchasePrice || 0,
       sellingPrice: sellingPrice || 0,
       grossWeight: 0,
@@ -263,6 +280,11 @@ router.post('/', [
       images: imageUrls,
       createdBy: req.user.id
     };
+
+    // Calculate fine gold
+    const weightForFineGold = productData.netWeight || productData.grossWeight || 0;
+    const purityForFineGold = productData.purityPercent || 100;
+    productData.fineGold = calculateFineGold(weightForFineGold, purityForFineGold);
 
     if (req.files && req.files.length > 0) {
       try {
@@ -382,6 +404,11 @@ router.put('/:id', [
       if (['huid', 'existingImages'].includes(key)) return;
       product[key] = req.body[key];
     });
+
+    // Recalculate fine gold on update
+    const weightForFineGold = product.isWeightManaged ? product.availableWeight : (product.netWeight || product.grossWeight || 0);
+    const purityForFineGold = product.purityPercent || 100;
+    product.fineGold = calculateFineGold(weightForFineGold, purityForFineGold);
 
     if (req.files.length > 0 || req.body.existingImages) {
       product.images = [...existingImages, ...newImageUrls];

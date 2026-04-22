@@ -461,20 +461,26 @@ const Billing = () => {
   };
 
   const handleAddToCart = (product) => {
+    const purityPercent = product.purityPercent || 100;
+    const weight = product.isWeightManaged ? 0 : (product.netWeight || 0);
+    const fineGold = (weight * purityPercent) / 100;
     const cartItem = {
       product: product._id,
       productName: product.name,
       sku: product.sku || 'N/A',
       category: product.category,
       quantity: 1,
-      weight:product.isWeightManaged ? 0 : (product.netWeight || 0),
+      weight,
       rate: product.sellingPrice || '',
       makingCharge: '',
       wastage: '',
       gst: '',
       discount: '',
       oldGoldAdjustment: 0,
-      subtotal: 0
+      subtotal: 0,
+      purityPercent,
+      fineGold,
+      costPricePerGram: product.costPricePerGram || 0
     };
     setCart([...cart, cartItem]);
     setProductSearch('');
@@ -498,6 +504,9 @@ const Billing = () => {
     const discount = parseFloat(item.discount) || 0;
     const oldGold = parseFloat(item.oldGoldAdjustment) || 0;
     const gst = parseFloat(item.gst) || 0;
+
+    // Recalculate Fine Gold
+    item.fineGold = (weight * (item.purityPercent || 100)) / 100;
 
     const baseAmount = (rate * weight) + making + wastage - discount - oldGold;
     item.subtotal = baseAmount + gst;
@@ -563,6 +572,9 @@ const Billing = () => {
           quantity: item.quantity,
           weight: item.weight,
           rate: item.rate,
+          purityPercent: item.purityPercent,
+          fineGold: item.fineGold,
+          costPricePerGram: item.costPricePerGram,
           makingCharge: item.makingCharge,
           wastage: item.wastage,
           gst: item.gst,
@@ -891,11 +903,12 @@ const Billing = () => {
                        <tr>
                          <th>Product</th>
                          <th>Wt(g)</th>
+                         <th>Purity%</th>
+                         <th>Fine Gold</th>
                          <th>Rate</th>
                          <th>MC</th>
-                         <th>Wastage</th>
-                         <th>GST</th>
                          <th>Total</th>
+                         <th>Profit</th>
                          <th></th>
                        </tr>
                      </thead>
@@ -907,11 +920,14 @@ const Billing = () => {
                              <div className="cart-product-sku">{item.sku}</div>
                            </td>
                            <td><input type="number" step="0.01" value={item.weight || ''} onChange={(e) => updateCartItem(index, 'weight', e.target.value)} className="table-input" placeholder="g" /></td>
+                           <td><input type="number" step="0.01" value={item.purityPercent || ''} onChange={(e) => updateCartItem(index, 'purityPercent', e.target.value)} className="table-input" placeholder="%" /></td>
+                           <td><div className="table-readonly-val">{item.fineGold.toFixed(3)}g</div></td>
                            <td><input type="number" value={item.rate || ''} onChange={(e) => updateCartItem(index, 'rate', e.target.value)} className="table-input" placeholder="₹/g" /></td>
                            <td><input type="number" value={item.makingCharge || ''} onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)} className="table-input" placeholder="₹" /></td>
-                           <td><input type="number" value={item.wastage || ''} onChange={(e) => updateCartItem(index, 'wastage', e.target.value)} className="table-input" placeholder="₹" /></td>
-                           <td><input type="number" value={item.gst || ''} onChange={(e) => updateCartItem(index, 'gst', e.target.value)} className="table-input" placeholder="₹" /></td>
                            <td className="text-right">{formatCurrency(item.subtotal)}</td>
+                           <td className="text-right" style={{ color: 'var(--success)', fontWeight: 'bold' }}>
+                             {formatCurrency((item.rate - item.costPricePerGram) * item.fineGold)}
+                           </td>
                            <td><button onClick={() => removeFromCart(index)} className="btn-icon-danger"><FiTrash2 /></button></td>
                          </tr>
                        ))}
@@ -930,11 +946,14 @@ const Billing = () => {
                       </div>
                       <div className="cart-card-grid">
                         <div className="form-group"><label>Wt(g)</label><input type="number" step="0.01" value={item.weight || ''} onChange={(e) => updateCartItem(index, 'weight', e.target.value)} /></div>
+                        <div className="form-group"><label>Purity%</label><input type="number" step="0.01" value={item.purityPercent || ''} onChange={(e) => updateCartItem(index, 'purityPercent', e.target.value)} /></div>
+                        <div className="form-group"><label>Fine Gold</label><div className="readonly-val">{item.fineGold.toFixed(3)}g</div></div>
                         <div className="form-group"><label>Rate</label><input type="number" value={item.rate || ''} onChange={(e) => updateCartItem(index, 'rate', e.target.value)} /></div>
                         <div className="form-group"><label>MC</label><input type="number" value={item.makingCharge || ''} onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)} /></div>
                         <div className="form-group"><label>Wastage</label><input type="number" value={item.wastage || ''} onChange={(e) => updateCartItem(index, 'wastage', e.target.value)} /></div>
                         <div className="form-group"><label>GST</label><input type="number" value={item.gst || ''} onChange={(e) => updateCartItem(index, 'gst', e.target.value)} /></div>
                         <div className="form-group"><label>Discount</label><input type="number" value={item.discount || ''} onChange={(e) => updateCartItem(index, 'discount', e.target.value)} /></div>
+                        <div className="form-group"><label>Profit</label><div className="readonly-val success-text">{formatCurrency((item.rate - item.costPricePerGram) * item.fineGold)}</div></div>
                       </div>
                       <div className="cart-total"><span>Total</span><span>{formatCurrency(item.subtotal)}</span></div>
                     </div>

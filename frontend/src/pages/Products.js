@@ -35,9 +35,11 @@ const Products = () => {
     category: 'Gold',
     sku: '',
     purity: '22K',
+    purityPercent: '91.67',
     totalWeight: '',
     purchasePrice: '',
-    sellingPrice: ''
+    sellingPrice: '',
+    costPricePerGram: ''
   });
   
   // Image states
@@ -52,8 +54,10 @@ const Products = () => {
     grossWeight: '',
     netWeight: '',
     purity: '22K',
+    purityPercent: '91.67',
     purchasePrice: '',
     sellingPrice: '',
+    costPricePerGram: '',
     quantity: '',
     lowStockAlert: '5'
   });
@@ -93,9 +97,11 @@ const Products = () => {
         category: weightFormData.category,
         sku: weightFormData.sku,
         purity: weightFormData.purity,
+        purityPercent: parseFloat(weightFormData.purityPercent) || 100,
         totalWeight: parseFloat(weightFormData.totalWeight) || 0,
         purchasePrice: parseFloat(weightFormData.purchasePrice) || 0,
-        sellingPrice: parseFloat(weightFormData.sellingPrice) || 0
+        sellingPrice: parseFloat(weightFormData.sellingPrice) || 0,
+        costPricePerGram: parseFloat(weightFormData.costPricePerGram) || 0
       };
       const res = await api.post('/api/products/weight-managed', payload);
       toast.success('Weight-based stock updated');
@@ -105,9 +111,11 @@ const Products = () => {
         category: 'Gold',
         sku: '',
         purity: '22K',
+        purityPercent: '91.67',
         totalWeight: '',
         purchasePrice: '',
-        sellingPrice: ''
+        sellingPrice: '',
+        costPricePerGram: ''
       });
       fetchProducts();
     } catch (error) {
@@ -190,8 +198,10 @@ const Products = () => {
       grossWeight: product.grossWeight,
       netWeight: product.netWeight,
       purity: product.purity,
+      purityPercent: product.purityPercent || 100,
       purchasePrice: product.purchasePrice,
       sellingPrice: product.sellingPrice,
+      costPricePerGram: product.costPricePerGram || 0,
       quantity: product.quantity,
       lowStockAlert: product.lowStockAlert || 5
     });
@@ -224,8 +234,10 @@ const Products = () => {
       grossWeight: '',
       netWeight: '',
       purity: '22K',
+      purityPercent: '91.67',
       purchasePrice: '',
       sellingPrice: '',
+      costPricePerGram: '',
       quantity: '',
       lowStockAlert: '5'
     });
@@ -444,8 +456,14 @@ const Products = () => {
                 )}
                 <div className="meta-item">
                   <span className="meta-label">Purity</span>
-                  <span className="meta-value">{product.purity}</span>
+                  <span className="meta-value">{product.purity} ({product.purityPercent || 100}%)</span>
                 </div>
+                {product.fineGold > 0 && (
+                  <div className="meta-item">
+                    <span className="meta-label">Fine Gold</span>
+                    <span className="meta-value">{product.fineGold.toFixed(3)}g</span>
+                  </div>
+                )}
                 <div className="meta-item">
                   <span className="meta-label">Stock</span>
                   <span className={`meta-value ${product.quantity <= product.lowStockAlert ? 'low-stock' : ''}`}>{product.isWeightManaged ? 'N/A' : product.quantity}</span>
@@ -575,7 +593,7 @@ const Products = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Purity</label>
+                  <label>Purity Label</label>
                   <select
                     value={formData.purity}
                     onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
@@ -587,6 +605,28 @@ const Products = () => {
                     <option value="Silver 925">Silver 925</option>
                     <option value="Other">Other</option>
                   </select>
+                </div>
+                <div className="form-group">
+                  <label>Purity (%)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.purityPercent}
+                    onChange={(e) => setFormData({ ...formData, purityPercent: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Fine Gold (Auto)</label>
+                  <input
+                    type="number"
+                    value={((parseFloat(formData.netWeight || formData.grossWeight || 0) * parseFloat(formData.purityPercent || 0)) / 100).toFixed(3)}
+                    disabled
+                    style={{ backgroundColor: 'var(--bg-secondary)' }}
+                  />
                 </div>
                 <div className="form-group">
                 <label>Low Stock Alert</label>
@@ -609,6 +649,19 @@ const Products = () => {
                   />
                 </div>
                 <div className="form-group">
+                  <label>Cost Price Per Gram (₹/g)</label>
+                  <input
+                    type="number"
+                    value={formData.costPricePerGram}
+                    onChange={(e) => setFormData({ ...formData, costPricePerGram: e.target.value })}
+                    required
+                    placeholder="Base cost price for profit"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
                   <label>Selling Price (₹/g)</label>
                   <input
                     type="number"
@@ -617,16 +670,15 @@ const Products = () => {
                     required
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>Quantity</label>
-                <input
-                  type="number"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  required
-                />
+                <div className="form-group">
+                  <label>Quantity</label>
+                  <input
+                    type="number"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="modal-actions">
@@ -840,7 +892,7 @@ const Products = () => {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Purity</label>
+                  <label>Purity Label</label>
                   <select
                     value={weightFormData.purity}
                     onChange={(e) => setWeightFormData({ ...weightFormData, purity: e.target.value })}
@@ -854,6 +906,18 @@ const Products = () => {
                   </select>
                 </div>
                 <div className="form-group">
+                  <label>Purity (%)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={weightFormData.purityPercent}
+                    onChange={(e) => setWeightFormData({ ...weightFormData, purityPercent: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
                   <label>Total Weight (g)</label>
                   <input
                     type="number"
@@ -861,6 +925,15 @@ const Products = () => {
                     value={weightFormData.totalWeight}
                     onChange={(e) => setWeightFormData({ ...weightFormData, totalWeight: e.target.value })}
                     required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Fine Gold (Auto)</label>
+                  <input
+                    type="number"
+                    value={((parseFloat(weightFormData.totalWeight || 0) * parseFloat(weightFormData.purityPercent || 0)) / 100).toFixed(3)}
+                    disabled
+                    style={{ backgroundColor: 'var(--bg-secondary)' }}
                   />
                 </div>
               </div>
@@ -873,6 +946,17 @@ const Products = () => {
                     onChange={(e) => setWeightFormData({ ...weightFormData, purchasePrice: e.target.value })}
                   />
                 </div>
+                <div className="form-group">
+                  <label>Cost Price Per Gram (₹/g)</label>
+                  <input
+                    type="number"
+                    value={weightFormData.costPricePerGram}
+                    onChange={(e) => setWeightFormData({ ...weightFormData, costPricePerGram: e.target.value })}
+                    placeholder="Base cost price for profit"
+                  />
+                </div>
+              </div>
+              <div className="form-row">
                 <div className="form-group">
                   <label>Selling Price (₹/g)</label>
                   <input
