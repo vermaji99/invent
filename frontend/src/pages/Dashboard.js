@@ -6,6 +6,7 @@ import {
   FiPackage,
   FiAlertCircle,
   FiActivity,
+  FiShoppingCart,
   FiCreditCard,
   FiRefreshCw
 } from 'react-icons/fi';

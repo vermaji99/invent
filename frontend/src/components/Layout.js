@@ -14,6 +14,7 @@ import {
   FiSettings,
   FiLogOut,
   FiMenu,
+  FiPlus,
   FiX,
   FiSearch,
   FiCreditCard,
