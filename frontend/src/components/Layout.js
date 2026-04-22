@@ -18,9 +18,9 @@ import {
   FiX,
   FiSearch,
   FiCreditCard,
-  FiClipboard
+  FiClipboard,
+  FiLock
 } from 'react-icons/fi';
-import { FiLock } from 'react-icons/fi';
 import GoldPriceBar from './GoldPriceBar';
 import './Layout.css';
 
