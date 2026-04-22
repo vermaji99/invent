@@ -42,7 +42,7 @@ const OldGold = () => {
   const fetchOldGold = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/old-gold');
+      const response = await api.get('/api/old-gold-exchange');
       setOldGoldRecords(response.data);
     } catch (error) {
       toast.error('Failed to load old gold records');

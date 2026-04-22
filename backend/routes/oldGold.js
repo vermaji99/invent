@@ -4,6 +4,7 @@ const { auth } = require('../middleware/auth');
 const OldGold = require('../models/OldGold');
 const Invoice = require('../models/Invoice');
 const Transaction = require('../models/Transaction');
+const { calculateFineGold } = require('../utils/goldCalculations');
 const { body, validationResult } = require('express-validator');
 
 // @route   GET /api/old-gold

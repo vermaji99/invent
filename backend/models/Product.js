@@ -48,6 +48,11 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  sourceType: {
+    type: String,
+    enum: ['new', 'old'],
+    default: 'new'
+  },
   makingChargePerGram: {
     type: Number,
     default: 0

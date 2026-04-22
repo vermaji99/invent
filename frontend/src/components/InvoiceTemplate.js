@@ -44,13 +44,8 @@ const InvoiceTemplate = React.forwardRef(({ invoice, shopDetails }, ref) => {
           <tr>
             <th>SN</th>
             <th>Description</th>
-            <th>HUID</th>
-            <th>HSN/SAC</th>
             <th>Weight (g)</th>
-            <th>Purity</th>
             <th>Rate</th>
-            <th>Making</th>
-            <th>Wastage</th>
             <th>Total</th>
           </tr>
         </thead>
@@ -60,16 +55,9 @@ const InvoiceTemplate = React.forwardRef(({ invoice, shopDetails }, ref) => {
               <td>{index + 1}</td>
               <td>
                 {item.product?.name || item.name}
-                <br />
-                <small>{item.product?.category}</small>
               </td>
-              <td>{item.product?.huid || '-'}</td>
-              <td>{item.product?.hsnCode || '7113'}</td>
               <td>{item.weight}</td>
-              <td>{item.purity || '22K'}</td>
               <td>{item.rate}</td>
-              <td>{item.makingCharge}</td>
-              <td>{item.wastage}</td>
               <td>{item.subtotal}</td>
             </tr>
           ))}
@@ -85,7 +73,6 @@ const InvoiceTemplate = React.forwardRef(({ invoice, shopDetails }, ref) => {
                     <tr>
                         <th>Description</th>
                         <th>Weight (g)</th>
-                        <th>Purity (%)</th>
                         <th>Rate</th>
                         <th>Amount</th>
                     </tr>
@@ -95,7 +82,6 @@ const InvoiceTemplate = React.forwardRef(({ invoice, shopDetails }, ref) => {
                         <tr key={index}>
                             <td>{item.description}</td>
                             <td>{item.weight}</td>
-                            <td>{item.purity}</td>
                             <td>{item.rate}</td>
                             <td>{item.amount.toFixed(2)}</td>
                         </tr>

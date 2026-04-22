@@ -428,6 +428,14 @@ const Dashboard = () => {
       trend: `Monthly: ${(stats.fineGoldSoldMonth || 0).toFixed(3)}g`
     },
     {
+      title: 'Fine Gold Purchased (Today)',
+      value: `${(stats.fineGoldPurchasedToday || 0).toFixed(3)}g`,
+      icon: FiShoppingCart,
+      color: '#8b5cf6', // Purple
+      bgColor: '#f5f3ff',
+      trend: `Monthly: ${(stats.fineGoldPurchasedMonth || 0).toFixed(3)}g`
+    },
+    {
       title: 'Bank Balance',
       value: formatCurrency(stats.bankBalance),
       icon: FiCreditCard,

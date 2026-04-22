@@ -6,7 +6,7 @@ const Transaction = require('../models/Transaction');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
 const OldGold = require('../models/OldGold');
-const { calculateFineGold } = require('../utils/calculateFineGold');
+const { calculateFineGold } = require('../utils/goldCalculations');
 const { body, validationResult } = require('express-validator');
 
 // @route   GET /api/invoices
@@ -130,35 +130,48 @@ router.post('/', [
       subtotal += itemSubtotal;
       totalGST += item.gst || 0;
 
-      // Update product stock
+      // Update product stock using fine gold internally
       if (product.isWeightManaged) {
         const wt = Number(item.weight || 0);
+        const fineWt = Number(item.fineGold || 0);
+        
         if (wt <= 0) {
           return res.status(400).json({ message: `Weight required for ${product.name}` });
         }
-        if ((product.availableWeight || 0) < wt) {
-          return res.status(400).json({ message: `Insufficient weight for ${product.name}` });
+        
+        // Deduct from fineGold internally
+        if ((product.fineGold || 0) < fineWt) {
+          return res.status(400).json({ message: `Insufficient fine gold for ${product.name}` });
         }
+        
+        product.fineGold = (product.fineGold || 0) - fineWt;
+        // Also update availableWeight for backward compatibility in UI
         product.availableWeight = (product.availableWeight || 0) - wt;
+        
         product.history = product.history || [];
         product.history.push({
           type: 'SOLD',
           date: new Date(),
           reference: { model: 'Invoice', id: null },
-          details: { quantity: item.quantity, weight: wt, rate: item.rate }
+          details: { quantity: item.quantity, weight: wt, fineGold: fineWt, rate: item.rate }
         });
         await product.save();
       } else {
+        const fineWt = Number(item.fineGold || 0);
         if (product.quantity < item.quantity) {
           return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
         }
+        
         product.quantity -= item.quantity;
+        // Also deduct fine gold
+        product.fineGold = (product.fineGold || 0) - fineWt;
+        
         product.history = product.history || [];
         product.history.push({
           type: 'SOLD',
           date: new Date(),
           reference: { model: 'Invoice', id: null },
-          details: { quantity: item.quantity, weight: item.weight, rate: item.rate }
+          details: { quantity: item.quantity, weight: item.weight, fineGold: fineWt, rate: item.rate }
         });
         await product.save();
       }

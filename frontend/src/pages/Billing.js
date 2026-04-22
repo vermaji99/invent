@@ -44,6 +44,7 @@ const Billing = () => {
   const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [showInternalData, setShowInternalData] = useState(false);
   
   // Scanning State
   const [showCameraScanner, setShowCameraScanner] = useState(false);
@@ -665,6 +666,14 @@ const Billing = () => {
       <div className="page-header">
         <h1>Billing & Invoice</h1>
         <p>Create new invoices and process sales</p>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)', fontWeight: 'bold', cursor: 'pointer', marginLeft: 'auto' }}>
+            <input
+              type="checkbox"
+              checked={showInternalData}
+              onChange={(e) => setShowInternalData(e.target.checked)}
+            />
+            Show Internal Data (Admin)
+          </label>
       </div>
 
       <div className="billing-layout-grid">
@@ -903,12 +912,16 @@ const Billing = () => {
                        <tr>
                          <th>Product</th>
                          <th>Wt(g)</th>
-                         <th>Purity%</th>
-                         <th>Fine Gold</th>
+                         {showInternalData && (
+                           <>
+                             <th>Purity%</th>
+                             <th>Fine Gold</th>
+                           </>
+                         )}
                          <th>Rate</th>
                          <th>MC</th>
                          <th>Total</th>
-                         <th>Profit</th>
+                         {showInternalData && <th>Profit</th>}
                          <th></th>
                        </tr>
                      </thead>
@@ -920,14 +933,20 @@ const Billing = () => {
                              <div className="cart-product-sku">{item.sku}</div>
                            </td>
                            <td><input type="number" step="0.01" value={item.weight || ''} onChange={(e) => updateCartItem(index, 'weight', e.target.value)} className="table-input" placeholder="g" /></td>
-                           <td><input type="number" step="0.01" value={item.purityPercent || ''} onChange={(e) => updateCartItem(index, 'purityPercent', e.target.value)} className="table-input" placeholder="%" /></td>
-                           <td><div className="table-readonly-val">{item.fineGold.toFixed(3)}g</div></td>
+                           {showInternalData && (
+                             <>
+                               <td><input type="number" step="0.01" value={item.purityPercent || ''} onChange={(e) => updateCartItem(index, 'purityPercent', e.target.value)} className="table-input" placeholder="%" /></td>
+                               <td><div className="table-readonly-val">{item.fineGold.toFixed(3)}g</div></td>
+                             </>
+                           )}
                            <td><input type="number" value={item.rate || ''} onChange={(e) => updateCartItem(index, 'rate', e.target.value)} className="table-input" placeholder="₹/g" /></td>
                            <td><input type="number" value={item.makingCharge || ''} onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)} className="table-input" placeholder="₹" /></td>
                            <td className="text-right">{formatCurrency(item.subtotal)}</td>
-                           <td className="text-right" style={{ color: 'var(--success)', fontWeight: 'bold' }}>
-                             {formatCurrency((item.rate - item.costPricePerGram) * item.fineGold)}
-                           </td>
+                           {showInternalData && (
+                             <td className="text-right" style={{ color: 'var(--success)', fontWeight: 'bold' }}>
+                               {formatCurrency((item.rate - item.costPricePerGram) * item.fineGold)}
+                             </td>
+                           )}
                            <td><button onClick={() => removeFromCart(index)} className="btn-icon-danger"><FiTrash2 /></button></td>
                          </tr>
                        ))}
@@ -946,14 +965,18 @@ const Billing = () => {
                       </div>
                       <div className="cart-card-grid">
                         <div className="form-group"><label>Wt(g)</label><input type="number" step="0.01" value={item.weight || ''} onChange={(e) => updateCartItem(index, 'weight', e.target.value)} /></div>
-                        <div className="form-group"><label>Purity%</label><input type="number" step="0.01" value={item.purityPercent || ''} onChange={(e) => updateCartItem(index, 'purityPercent', e.target.value)} /></div>
-                        <div className="form-group"><label>Fine Gold</label><div className="readonly-val">{item.fineGold.toFixed(3)}g</div></div>
+                        {showInternalData && (
+                          <>
+                            <div className="form-group"><label>Purity%</label><input type="number" step="0.01" value={item.purityPercent || ''} onChange={(e) => updateCartItem(index, 'purityPercent', e.target.value)} /></div>
+                            <div className="form-group"><label>Fine Gold</label><div className="readonly-val">{item.fineGold.toFixed(3)}g</div></div>
+                          </>
+                        )}
                         <div className="form-group"><label>Rate</label><input type="number" value={item.rate || ''} onChange={(e) => updateCartItem(index, 'rate', e.target.value)} /></div>
                         <div className="form-group"><label>MC</label><input type="number" value={item.makingCharge || ''} onChange={(e) => updateCartItem(index, 'makingCharge', e.target.value)} /></div>
                         <div className="form-group"><label>Wastage</label><input type="number" value={item.wastage || ''} onChange={(e) => updateCartItem(index, 'wastage', e.target.value)} /></div>
                         <div className="form-group"><label>GST</label><input type="number" value={item.gst || ''} onChange={(e) => updateCartItem(index, 'gst', e.target.value)} /></div>
                         <div className="form-group"><label>Discount</label><input type="number" value={item.discount || ''} onChange={(e) => updateCartItem(index, 'discount', e.target.value)} /></div>
-                        <div className="form-group"><label>Profit</label><div className="readonly-val success-text">{formatCurrency((item.rate - item.costPricePerGram) * item.fineGold)}</div></div>
+                        {showInternalData && <div className="form-group"><label>Profit</label><div className="readonly-val success-text">{formatCurrency((item.rate - item.costPricePerGram) * item.fineGold)}</div></div>}
                       </div>
                       <div className="cart-total"><span>Total</span><span>{formatCurrency(item.subtotal)}</span></div>
                     </div>

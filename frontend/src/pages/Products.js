@@ -30,6 +30,7 @@ const Products = () => {
   const [isWeightSubmitting, setIsWeightSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showInternalData, setShowInternalData] = useState(false);
   const [weightFormData, setWeightFormData] = useState({
     name: '',
     category: 'Gold',
@@ -366,14 +367,22 @@ const Products = () => {
           <option value="qty">Qty</option>
         </select>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <input
-            type="checkbox"
-            checked={lowOnly}
-            onChange={(e) => setLowOnly(e.target.checked)}
-          />
-          Low Stock Only
-        </label>
-      </div>
+            <input
+              type="checkbox"
+              checked={lowOnly}
+              onChange={(e) => setLowOnly(e.target.checked)}
+            />
+            Low Stock Only
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)', fontWeight: 'bold' }}>
+            <input
+              type="checkbox"
+              checked={showInternalData}
+              onChange={(e) => setShowInternalData(e.target.checked)}
+            />
+            Show Internal Data
+          </label>
+        </div>
 
       <div className="selection-bar">
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
@@ -456,9 +465,9 @@ const Products = () => {
                 )}
                 <div className="meta-item">
                   <span className="meta-label">Purity</span>
-                  <span className="meta-value">{product.purity} ({product.purityPercent || 100}%)</span>
+                  <span className="meta-value">{product.purity} {showInternalData && `(${product.purityPercent || 100}%)`}</span>
                 </div>
-                {product.fineGold > 0 && (
+                {showInternalData && product.fineGold > 0 && (
                   <div className="meta-item">
                     <span className="meta-label">Fine Gold</span>
                     <span className="meta-value">{product.fineGold.toFixed(3)}g</span>

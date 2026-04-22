@@ -514,10 +514,22 @@ router.get('/stats', auth, async (req, res) => {
 
     const goldPrice = await GoldPrice.getLatest();
 
+    const OldGoldPurchase = require('../models/OldGoldPurchase');
+
     // Fine Gold and Profit Stats
     const fineGoldInStock = await Product.aggregate([
       { $match: { isActive: true } },
       { $group: { _id: null, total: { $sum: '$fineGold' } } }
+    ]);
+
+    const fineGoldPurchasedToday = await OldGoldPurchase.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow } } },
+      { $group: { _id: null, total: { $sum: '$finalFineGold' } } }
+    ]);
+
+    const fineGoldPurchasedMonth = await OldGoldPurchase.aggregate([
+      { $match: { createdAt: { $gte: startOfMonth, $lt: startOfNextMonth } } },
+      { $group: { _id: null, total: { $sum: '$finalFineGold' } } }
     ]);
 
     const fineGoldSoldToday = await Invoice.aggregate([
@@ -608,6 +620,8 @@ router.get('/stats', auth, async (req, res) => {
       
       // Fine Gold & Profit Stats
       fineGoldInStock: fineGoldInStock[0]?.total || 0,
+      fineGoldPurchasedToday: fineGoldPurchasedToday[0]?.total || 0,
+      fineGoldPurchasedMonth: fineGoldPurchasedMonth[0]?.total || 0,
       fineGoldSoldToday: fineGoldSoldToday[0]?.total || 0,
       fineGoldSoldMonth: fineGoldSoldMonth[0]?.total || 0,
       profitToday: profitToday[0]?.total || 0,
