@@ -915,7 +915,7 @@ const Billing = () => {
                          {showInternalData && (
                            <>
                              <th>Purity%</th>
-                             <th>Fine Gold</th>
+                             <th>Fine Wt</th>
                            </>
                          )}
                          <th>Rate</th>
@@ -968,7 +968,7 @@ const Billing = () => {
                         {showInternalData && (
                           <>
                             <div className="form-group"><label>Purity%</label><input type="number" step="0.01" value={item.purityPercent || ''} onChange={(e) => updateCartItem(index, 'purityPercent', e.target.value)} /></div>
-                            <div className="form-group"><label>Fine Gold</label><div className="readonly-val">{item.fineGold.toFixed(3)}g</div></div>
+                            <div className="form-group"><label>Fine Wt</label><div className="readonly-val">{item.fineGold.toFixed(3)}g</div></div>
                           </>
                         )}
                         <div className="form-group"><label>Rate</label><input type="number" value={item.rate || ''} onChange={(e) => updateCartItem(index, 'rate', e.target.value)} /></div>

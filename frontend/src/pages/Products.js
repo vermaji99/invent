@@ -469,7 +469,7 @@ const Products = () => {
                 </div>
                 {showInternalData && product.fineGold > 0 && (
                   <div className="meta-item">
-                    <span className="meta-label">Fine Gold</span>
+                    <span className="meta-label">Fine {product.category === 'Silver' ? 'Silver' : 'Gold'}</span>
                     <span className="meta-value">{product.fineGold.toFixed(3)}g</span>
                   </div>
                 )}
