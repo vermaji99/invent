@@ -26,6 +26,7 @@ app.use('/api/suppliers', require('./routes/suppliers'));
 app.use('/api/purchases', require('./routes/purchases'));
 app.use('/api/old-gold-exchange', require('./routes/oldGold'));
 app.use('/api/old-gold', require('./routes/oldGoldPurchases'));
+app.use('/api/silver-purchase', require('./routes/silverPurchases'));
 app.use('/api/gold-price', require('./routes/goldPrice'));
 app.use('/api/metals', require('./routes/metals'));
 app.use('/api/reports', require('./routes/reports'));

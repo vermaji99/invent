@@ -19,7 +19,8 @@ import {
   FiSearch,
   FiCreditCard,
   FiClipboard,
-  FiLock
+  FiLock,
+  FiAward
 } from 'react-icons/fi';
 import GoldPriceBar from './GoldPriceBar';
 import './Layout.css';
@@ -65,6 +66,7 @@ const Layout = () => {
     { path: '/purchases', icon: FiShoppingBag, label: 'Purchases' },
     { path: '/old-gold', icon: FiDollarSign, label: 'Old Gold Exchange' },
     { path: '/old-gold-purchase', icon: FiPlus, label: 'Old Gold Buy' },
+    { path: '/silver-purchase', icon: FiAward, label: 'Silver Buy' },
     { path: '/pledges', icon: FiLock, label: 'Pledged Gold' },
     { path: '/expenses', icon: FiCreditCard, label: 'Expenses' },
     { path: '/reports', icon: FiBarChart2, label: 'Reports' },

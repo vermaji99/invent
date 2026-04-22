@@ -515,10 +515,17 @@ router.get('/stats', auth, async (req, res) => {
     const goldPrice = await GoldPrice.getLatest();
 
     const OldGoldPurchase = require('../models/OldGoldPurchase');
+    const SilverPurchase = require('../models/SilverPurchase');
 
     // Fine Gold and Profit Stats
     const fineGoldInStock = await Product.aggregate([
-      { $match: { isActive: true } },
+      { $match: { isActive: true, category: 'Gold' } },
+      { $group: { _id: null, total: { $sum: '$fineGold' } } }
+    ]);
+
+    // Fine Silver in Stock
+    const fineSilverInStock = await Product.aggregate([
+      { $match: { isActive: true, category: 'Silver' } },
       { $group: { _id: null, total: { $sum: '$fineGold' } } }
     ]);
 
@@ -530,6 +537,17 @@ router.get('/stats', auth, async (req, res) => {
     const fineGoldPurchasedMonth = await OldGoldPurchase.aggregate([
       { $match: { createdAt: { $gte: startOfMonth, $lt: startOfNextMonth } } },
       { $group: { _id: null, total: { $sum: '$finalFineGold' } } }
+    ]);
+
+    // Fine Silver Purchased
+    const fineSilverPurchasedToday = await SilverPurchase.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow } } },
+      { $group: { _id: null, total: { $sum: '$finalFineSilver' } } }
+    ]);
+
+    const fineSilverPurchasedMonth = await SilverPurchase.aggregate([
+      { $match: { createdAt: { $gte: startOfMonth, $lt: startOfNextMonth } } },
+      { $group: { _id: null, total: { $sum: '$finalFineSilver' } } }
     ]);
 
     const fineGoldSoldToday = await Invoice.aggregate([
@@ -626,6 +644,11 @@ router.get('/stats', auth, async (req, res) => {
       fineGoldSoldMonth: fineGoldSoldMonth[0]?.total || 0,
       profitToday: profitToday[0]?.total || 0,
       profitMonth: profitMonth[0]?.total || 0,
+
+      // Fine Silver Stats
+      fineSilverInStock: fineSilverInStock[0]?.total || 0,
+      fineSilverPurchasedToday: fineSilverPurchasedToday[0]?.total || 0,
+      fineSilverPurchasedMonth: fineSilverPurchasedMonth[0]?.total || 0,
 
       // Profit/Loss summary
       todayNetProfit: todayPL.netProfit,

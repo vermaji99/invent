@@ -6,6 +6,8 @@ import {
   FiPackage,
   FiAlertCircle,
   FiActivity,
+  FiAward,
+  FiShoppingBag,
   FiShoppingCart,
   FiCreditCard,
   FiRefreshCw
@@ -432,9 +434,24 @@ const Dashboard = () => {
       title: 'Fine Gold Purchased (Today)',
       value: `${(stats.fineGoldPurchasedToday || 0).toFixed(3)}g`,
       icon: FiShoppingCart,
-      color: '#8b5cf6', // Purple
+      color: '#8b5cf6',
       bgColor: '#f5f3ff',
       trend: `Monthly: ${(stats.fineGoldPurchasedMonth || 0).toFixed(3)}g`
+    },
+    {
+      title: 'Fine Silver in Stock',
+      value: `${(stats.fineSilverInStock || 0).toFixed(3)}g`,
+      icon: FiAward,
+      color: '#94a3b8',
+      bgColor: '#f8fafc'
+    },
+    {
+      title: 'Fine Silver Purchased (Today)',
+      value: `${(stats.fineSilverPurchasedToday || 0).toFixed(3)}g`,
+      icon: FiShoppingBag,
+      color: '#64748b',
+      bgColor: '#f1f5f9',
+      trend: `Monthly: ${(stats.fineSilverPurchasedMonth || 0).toFixed(3)}g`
     },
     {
       title: 'Bank Balance',

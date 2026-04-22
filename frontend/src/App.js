@@ -13,6 +13,7 @@ import Suppliers from './pages/Suppliers';
 import Purchases from './pages/Purchases';
 import OldGold from './pages/OldGold';
 import OldGoldPurchase from './pages/OldGoldPurchase';
+import SilverPurchase from './pages/SilverPurchase';
 import Expenses from './pages/Expenses';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
@@ -65,6 +66,7 @@ function App() {
             <Route path="purchases" element={<Purchases />} />
             <Route path="old-gold" element={<OldGold />} />
             <Route path="old-gold-purchase" element={<OldGoldPurchase />} />
+            <Route path="silver-purchase" element={<SilverPurchase />} />
             <Route path="pledges" element={<Pledges />} />
             <Route path="pledges/create" element={<PledgeCreate />} />
             <Route path="pledges/:id" element={<PledgeDetail />} />
